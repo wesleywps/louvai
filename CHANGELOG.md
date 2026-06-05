@@ -8,6 +8,19 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+---
+
+## v0.4.1 — Correção do compartilhamento
+**Correção.**
+- **Bug:** ao compartilhar uma cifra em alguns navegadores/contexto `file://`,
+  a checagem do compartilhamento nativo (`navigator.canShare`) podia lançar
+  exceção e escapar sem cair no download — gerando erro ao clicar em ↗.
+- Agora o compartilhamento é à prova de falhas: tenta o nativo (celular) e, em
+  qualquer erro, baixa o arquivo automaticamente. Cancelar continua sendo
+  respeitado (não baixa). Vale para cifra, escala e backup do repertório.
+- Validado: 8 verificações cobrindo 4 cenários (exceção, rejeição genérica,
+  cancelamento e ausência de Web Share).
+
 ## v0.4.0 — Escalas / Setlists (ordem do culto)
 **Recurso novo (grande).** Baseado nos melhores recursos de Planning Center,
 OnSong e dos apps brasileiros (LouvorAPP, LouveApp, iPraise).

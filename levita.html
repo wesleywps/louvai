@@ -477,7 +477,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.4.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.4.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -881,12 +881,22 @@ function download(filename, text){
   setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
 async function shareFile(filename, text, title){
-  const file=new File([text],filename,{type:"application/json"});
-  if(navigator.canShare && navigator.canShare({files:[file]})){
-    try{ await navigator.share({files:[file],title}); return true; }
-    catch(e){ if(e.name==="AbortError") return true; }
+  // 1) tenta o compartilhamento nativo (celular) — protegido contra qualquer falha
+  try{
+    if(navigator.share && navigator.canShare){
+      const file=new File([text],filename,{type:"application/json"});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title});
+        return true;                       // compartilhou (ou o usuário concluiu)
+      }
+    }
+  }catch(e){
+    if(e && e.name==="AbortError") return true;   // usuário cancelou: tudo certo
+    /* qualquer outro erro: segue para o download abaixo */
   }
-  download(filename,text); return false;
+  // 2) fallback universal: baixa o arquivo (desktop, file://, tipos não suportados…)
+  try{ download(filename,text); return false; }
+  catch(e){ toast("Não consegui gerar o arquivo 😕"); return false; }
 }
 const slug=s=>(s||"cifra").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"-").replace(/^-|-$/g,"").toLowerCase();
 
