@@ -6,6 +6,28 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+---
+
+## v0.4.0 — Escalas / Setlists (ordem do culto)
+**Recurso novo (grande).** Baseado nos melhores recursos de Planning Center,
+OnSong e dos apps brasileiros (LouvorAPP, LouveApp, iPraise).
+- Nova aba **Escalas**, separada das Cifras.
+- Montagem do **culto/ensaio**: título, data, hora e tipo (Culto, Ensaio, Ceia…).
+- **Ordem do culto** com músicas E itens não-musicais (avisos, oração, palavra,
+  ceia) — como o "order of service".
+- **Tom e capo por escala**: cada música guarda o tom daquele culto sem alterar
+  a cifra original (o recurso mais elogiado dos apps de referência).
+- **Momento** por item (Abertura, Adoração, Ceia, Oferta…), **duração** por item
+  e **tempo total** estimado do culto.
+- **Escala de pessoas** por função (Ministrante, Vocal, Violão, Teclado, Baixo,
+  Bateria…).
+- Reordenar itens (↑/↓) e seletor de música a partir do repertório.
+- **Modo Apresentar**: abre música a música já no tom do culto, com navegação
+  anterior/próxima e contador "X de N".
+- **Compartilhar escala** num arquivo que já leva as cifras junto; importação
+  reconhece o arquivo e mescla as cifras automaticamente.
+- Validado: suíte E2E com 21 verificações em navegador real, zero erro de JS.
+
 ## v0.3.0 — Fonte da verdade de acordes + corretor no editor
 **Recurso novo.**
 - Criada a função `parseChord()` como **fonte única da verdade** do que é um
