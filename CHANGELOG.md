@@ -12,6 +12,18 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+---
+
+## v0.5.1 — Ajuste no colar do Cifra Club
+**Correção.**
+- **Bug:** quando a cifra começava com `[Intro] C7M G/B…` (rótulo de seção e
+  acordes na MESMA linha, padrão do Cifra Club), o app não reconhecia a linha
+  como seção e mandava o "[Intro]…" para o campo **Título**.
+- Agora o parser trata qualquer linha que comece com `[rótulo]` como estrutura
+  (nunca como título), e o exibidor renderiza `[Seção] + acordes` na mesma linha
+  — rótulo destacado e acordes coloridos (vale para Intro, Solo, Interlúdio, Final…).
+- Validado com o texto real colado do Cifra Club: 11 verificações, zero erro de JS.
+
 ## v0.5.0 — Importar colando texto (Cifra Club etc.)
 **Recurso novo.**
 - Botão **“Colar cifra pronta”** ao criar uma nova cifra: você cola o texto

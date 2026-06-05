@@ -493,7 +493,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.5.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.5.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -592,10 +592,21 @@ function renderCifra(body, semis, showChords, acc){
   const lines = (body||"").replace(/\r/g,"").split("\n");
   const out = [];
   for(const line of lines){
-    // 1) Seções
+    // 1) Seções (rótulo sozinho na linha)
     if(isSectionLine(line)){
       if(showChords) out.push('<span class="sec">'+esc(line.trim())+'</span>');
       else out.push('<span class="sec">'+esc(line.trim().replace(/^\[|\]$/g,""))+'</span>');
+      continue;
+    }
+    // 1b) Seção + acordes na mesma linha (ex.: "[Intro] C7M  G/B  Am7") — padrão Cifra Club
+    const sc = line.match(/^(\s*)(\[[^\]]+\])(\s+)(\S.*)$/);
+    if(sc && !isChord(sc[2].replace(/^\[|\]$/g,""))){
+      const label = sc[2];
+      if(!showChords){ out.push('<span class="sec">'+esc(label.replace(/^\[|\]$/g,""))+'</span>'); continue; }
+      const rest = isChordLine(sc[4])
+        ? sc[4].replace(/(\S+)/g, t => isChord(t) ? '<span class="chord">'+esc(transposeChord(t,semis,acc))+'</span>' : esc(t))
+        : esc(sc[4]);
+      out.push(sc[1]+'<span class="sec">'+esc(label)+'</span>'+sc[3]+rest);
       continue;
     }
     // 2) Linha só de acordes (estilo Cifra Club)
@@ -881,7 +892,7 @@ function parseImport(raw){
     const l=lines[idx];
     if(isMeta(l)){idx++;continue;}
     if(l.trim()===""){idx++;continue;}
-    if(isChordLine(l)||isSectionLine(l)) break;
+    if(isChordLine(l)||isSectionLine(l)||/^\s*\[[^\]]+\]/.test(l)) break;  // estrutura -> fim do cabeçalho
     leading.push(l.trim()); idx++;
   }
   const rest=[];
