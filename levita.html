@@ -362,6 +362,7 @@ input,textarea,select{font-family:inherit}
       <button class="iconbtn gold" id="e-save" style="width:auto;padding:0 18px;font-size:15px">Salvar</button>
     </div>
     <div class="editor">
+      <button class="addrow hidden" id="e-paste" style="margin-bottom:14px">📋 Colar cifra pronta (Cifra Club…)</button>
       <div class="field"><label>Título</label><input id="e-title" placeholder="Ex.: Tua Graça Me Basta"></div>
       <div class="field"><label>Artista / autor</label><input id="e-artist" placeholder="Opcional"></div>
       <div class="row2">
@@ -469,6 +470,21 @@ input,textarea,select{font-family:inherit}
   </div>
   <div id="picklist" style="max-height:50dvh;overflow:auto"></div>
 </div>
+<!-- Importar texto colado (Cifra Club etc.) -->
+<div class="sheetbg" id="pastebg"></div>
+<div class="sheet" id="pastesheet">
+  <div class="grip"></div>
+  <h3>Colar cifra pronta</h3>
+  <div class="hint" style="margin:0 2px 8px">
+    Copie a cifra (ex.: do Cifra Club) e cole abaixo. Eu reconheço título, artista,
+    tom e capotraste — você confere antes de salvar.
+  </div>
+  <textarea id="pastebox" spellcheck="false" placeholder="Cole aqui o texto copiado…"
+    style="width:100%;min-height:46dvh;padding:13px;border-radius:13px;background:var(--panel2);
+    border:1px solid var(--line);color:var(--text);font-family:'JetBrains Mono',monospace;
+    font-size:13px;line-height:1.6;white-space:pre;outline:none"></textarea>
+  <button class="btn primary" id="paste-go" style="width:100%;margin-top:10px">Reconhecer e preencher</button>
+</div>
 <input type="file" id="fileInput" accept=".json,application/json" class="hidden">
 
 <script>
@@ -477,7 +493,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.4.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.5.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -828,6 +844,7 @@ function openEditor(id){
   fillSelect($("#e-key"),KEYS,"G");
   fillSelect($("#e-capo"),Array.from({length:12},(_,i)=>i),0);
   const del=$("#e-delete");
+  $("#e-paste").classList.toggle("hidden", !!id);   // botão "colar" só ao criar nova
   if(id){
     const s=songs.find(x=>x.id===id);
     $("#e-mode").textContent="Editar";
@@ -845,6 +862,63 @@ function openEditor(id){
   show("editor");
 }
 $("#e-body").addEventListener("input", runLint);
+
+/* ---------- Importar texto colado (Cifra Club etc.) ---------- */
+function normKey(k){ if(!k)return""; const m=k.trim().match(/^([A-Ga-g])([#b]?)(m?)/i); return m?m[1].toUpperCase()+(m[2]||"")+(m[3]?"m":""):""; }
+function parseImport(raw){
+  const text=(raw||"").replace(/\r/g,"").replace(/\t/g,"  ");
+  let key="",capo=0;
+  const tomM=text.match(/\btom:\s*([A-Ga-g][#b]?m?)\b/i); if(tomM) key=normKey(tomM[1]);
+  if(/sem\s+capotraste/i.test(text)) capo=0;
+  else{ const c=text.match(/capotraste[^\d]*(\d+)/i)||text.match(/\bcapo\s*[:\-]?\s*(\d+)/i); if(c) capo=+c[1]; }
+  const isMeta=l=>/^\s*(tom:|afina|cifra ?club|ver no app|imprimir|adicionar|tocar|ouvir|enviar|salvar|favoritar|https?:\/\/|www\.|©|todos os direitos|\d+\s*(visualiza|exibi|acess))/i.test(l)
+    || /capotraste/i.test(l) || /afina[çc][aã]o/i.test(l) || /cifraclub/i.test(l);
+  const lines=text.split("\n");
+  let idx=0;
+  while(idx<lines.length && (lines[idx].trim()===""||isMeta(lines[idx]))) idx++;
+  const leading=[];
+  while(idx<lines.length && leading.length<2){
+    const l=lines[idx];
+    if(isMeta(l)){idx++;continue;}
+    if(l.trim()===""){idx++;continue;}
+    if(isChordLine(l)||isSectionLine(l)) break;
+    leading.push(l.trim()); idx++;
+  }
+  const rest=[];
+  for(; idx<lines.length; idx++){ if(!isMeta(lines[idx])) rest.push(lines[idx]); }
+  let title="",artist="";
+  if(leading[0]){
+    const d=leading[0].split(/\s+[-–—]\s+/);
+    if(d.length>=2 && !leading[1]){ title=d[0].trim(); artist=d.slice(1).join(" - ").trim(); }
+    else { title=leading[0]; artist=leading[1]||""; }
+  }
+  let body=rest.join("\n").replace(/\n{3,}/g,"\n\n").replace(/^\n+|\n+$/g,"");
+  if(!key){ for(const l of rest){ if(isChordLine(l)){ const p=parseChord(l.trim().split(/\s+/)[0]); if(p){ key=p.root+(/^m(?!aj)/.test(p.suffix)?"m":""); break; } } } }
+  return {title,artist,key,capo,body};
+}
+function openPaste(){
+  $("#pastebox").value="";
+  $("#pastebg").classList.add("show");
+  requestAnimationFrame(()=>$("#pastesheet").classList.add("show"));
+  setTimeout(()=>$("#pastebox").focus(),200);
+}
+function closePaste(){ $("#pastesheet").classList.remove("show"); $("#pastebg").classList.remove("show"); }
+$("#pastebg").onclick=closePaste;
+$("#e-paste").onclick=openPaste;
+$("#paste-go").onclick=()=>{
+  const raw=$("#pastebox").value;
+  if(!raw.trim()){toast("Cole o texto primeiro 🙂");return;}
+  const r=parseImport(raw);
+  if(!r.body.trim()){toast("Não encontrei a cifra no texto 😕");return;}
+  if(r.title)  $("#e-title").value=r.title;
+  if(r.artist) $("#e-artist").value=r.artist;
+  if(r.key && KEYS.includes(r.key)) $("#e-key").value=r.key;
+  if(r.capo>=0 && r.capo<=11) $("#e-capo").value=r.capo;
+  $("#e-body").value=r.body;
+  closePaste(); runLint();
+  const bits=[]; if(r.title)bits.push("título"); if(r.key)bits.push("tom "+r.key); if(r.capo)bits.push("capo "+r.capo);
+  toast("Reconheci "+(bits.length?bits.join(", "):"o corpo")+" · confira e salve ✓");
+};
 $("#newBtn").onclick=()=>openEditor(null);
 $("#e-cancel").onclick=()=>{ editingId?openPlayer(editingId):show("lib"); editingId||renderLibrary(); };
 $("#e-save").onclick=()=>{

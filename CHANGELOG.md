@@ -10,6 +10,22 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+---
+
+## v0.5.0 — Importar colando texto (Cifra Club etc.)
+**Recurso novo.**
+- Botão **“Colar cifra pronta”** ao criar uma nova cifra: você cola o texto
+  copiado (ex.: do Cifra Club) e o app **reconhece automaticamente** título,
+  artista, tom e capotraste, e limpa o lixo (URLs, “Cifra Club”, linhas de
+  metadado), preenchendo o editor.
+- Quando não há “Tom:” no texto, o tom é **inferido do primeiro acorde** (inclui
+  menores, ex.: Em).
+- Filosofia: nada é salvo no escuro — o resultado cai no formulário editável
+  (com o corretor de acordes) para você conferir e ajustar antes de salvar.
+- O botão fica oculto ao editar uma cifra já existente (evita sobrescrever).
+- Validado: 19 verificações no parser (5 formatos de colagem) + suíte E2E no
+  navegador, zero erro de JS.
+
 ## v0.4.1 — Correção do compartilhamento
 **Correção.**
 - **Bug:** ao compartilhar uma cifra em alguns navegadores/contexto `file://`,
