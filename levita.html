@@ -330,6 +330,9 @@ input,textarea,select{font-family:inherit}
         <div class="ctrl toggle"><span class="lbl">Só letra</span>
           <button id="lyr-toggle">𝄞</button>
         </div>
+        <div class="ctrl toggle"><span class="lbl">Tabs</span>
+          <button id="tabs-toggle">≣</button>
+        </div>
         <div class="ctrl toggle"><span class="lbl">♯/♭</span>
           <button id="acc-toggle">♯</button>
         </div>
@@ -493,7 +496,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.5.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.6.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -588,10 +591,17 @@ function isSectionLine(line){
 /* ---------- Renderização da cifra ---------- */
 function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
 
-function renderCifra(body, semis, showChords, acc){
+function renderCifra(body, semis, showChords, acc, hideTabs){
   const lines = (body||"").replace(/\r/g,"").split("\n");
+  const isTabLine = l => /^\s*[A-Ga-g][#b]?\s*\|/.test(l) && (l.match(/-/g)||[]).length>=4;
   const out = [];
   for(const line of lines){
+    // 0) Tablatura (escondida quando "Tabs" off): linhas E|--, cabeçalho [Tab…], "Parte X de Y"
+    if(hideTabs){
+      if(isTabLine(line)) continue;
+      if(/^\s*parte\s+\d+\s+de\s+\d+/i.test(line)) continue;
+      if(isSectionLine(line) && /tab/i.test(line)) continue;
+    }
     // 1) Seções (rótulo sozinho na linha)
     if(isSectionLine(line)){
       if(showChords) out.push('<span class="sec">'+esc(line.trim())+'</span>');
@@ -753,6 +763,7 @@ function openPlayer(id, ctx){
   transp=0; capo=0; showChords=true; stopScroll();
   $("#acc-toggle").classList.remove("on"); $("#acc-toggle").textContent="♯";
   $("#lyr-toggle").classList.remove("on");
+  $("#tabs-toggle").classList.toggle("on",!!settings.hideTabs);
   if(escalaCtx){
     const it=escalaCtx.list[escalaCtx.idx];
     if(it.key) transp = offsetToKey(current.key, it.key);  // já abre no tom do culto
@@ -796,7 +807,7 @@ function drawPlayer(){
   $("#c-val").textContent=capo;
   const b=$("#p-body");
   b.style.fontSize=fontSize+"px";
-  b.innerHTML=renderCifra(current.body, shapeShift(), showChords, acc());
+  b.innerHTML=renderCifra(current.body, shapeShift(), showChords, acc(), !!settings.hideTabs);
 }
 
 /* controles do player */
@@ -808,6 +819,7 @@ $("#f-up").onclick=()=>{fontSize=Math.min(28,fontSize+1);drawPlayer();};
 $("#f-down").onclick=()=>{fontSize=Math.max(10,fontSize-1);drawPlayer();};
 $("#acc-toggle").onclick=()=>{const b=$("#acc-toggle");b.classList.toggle("on");b.textContent=b.classList.contains("on")?"♭":"♯";drawPlayer();};
 $("#lyr-toggle").onclick=()=>{const b=$("#lyr-toggle");showChords=!showChords;b.classList.toggle("on",!showChords);drawPlayer();};
+$("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings();$("#tabs-toggle").classList.toggle("on",!!settings.hideTabs);drawPlayer();};
 $("#p-back").onclick=()=>{stopScroll(); if(escalaCtx){const id=escalaCtx.id;escalaCtx=null;openEscala(id);} else {show("lib");renderLibrary();}};
 $("#p-edit").onclick=()=>openEditor(current.id);
 $("#p-share").onclick=()=>shareSheet(current);
@@ -882,8 +894,8 @@ function parseImport(raw){
   const tomM=text.match(/\btom:\s*([A-Ga-g][#b]?m?)\b/i); if(tomM) key=normKey(tomM[1]);
   if(/sem\s+capotraste/i.test(text)) capo=0;
   else{ const c=text.match(/capotraste[^\d]*(\d+)/i)||text.match(/\bcapo\s*[:\-]?\s*(\d+)/i); if(c) capo=+c[1]; }
-  const isMeta=l=>/^\s*(tom:|afina|cifra ?club|ver no app|imprimir|adicionar|tocar|ouvir|enviar|salvar|favoritar|https?:\/\/|www\.|©|todos os direitos|\d+\s*(visualiza|exibi|acess))/i.test(l)
-    || /capotraste/i.test(l) || /afina[çc][aã]o/i.test(l) || /cifraclub/i.test(l);
+  const isMeta=l=>/^\s*(tom:|cifra:|afina|cifra ?club|ver no app|ver as cifras|imprimir|adicionar|tocar|ouvir|enviar|salvar|gravar|receber|https?:\/\/|www\.|©|todos os direitos|\d+\s*(visualiza|exibi|acess))/i.test(l)
+    || /capotraste/i.test(l) || /afina[çc][aã]o/i.test(l) || /cifraclub/i.test(l) || /\bfavoritar\b/i.test(l);
   const lines=text.split("\n");
   let idx=0;
   while(idx<lines.length && (lines[idx].trim()===""||isMeta(lines[idx]))) idx++;

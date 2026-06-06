@@ -14,6 +14,18 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+---
+
+## v0.6.0 — Ocultar tablaturas + limpeza no colar
+**Recurso novo + correção.**
+- **Botão "Tabs"** no player: oculta/mostra as tablaturas (linhas `E|--…`, os
+  cabeçalhos `[Tab - …]` e os rótulos "Parte X de Y") para uma leitura limpa no
+  palco. As tabs continuam guardadas — é só exibição. A preferência fica salva.
+- **Correção do colar:** linhas como `Cifra: Principal (violão e guitarra)
+  Favoritar Cifra` (cabeçalho da página do Cifra Club) eram incluídas no corpo
+  da cifra. Agora são reconhecidas como metadado e removidas na importação.
+- Validado com texto real colado: 14 verificações, zero erro de JS.
+
 ## v0.5.1 — Ajuste no colar do Cifra Club
 **Correção.**
 - **Bug:** quando a cifra começava com `[Intro] C7M G/B…` (rótulo de seção e
