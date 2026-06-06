@@ -16,6 +16,21 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+---
+
+## v0.7.0 — Navegação por estrutura da música
+**Recurso novo.**
+- Botão **☰ Estrutura da música** no player: abre a lista das seções da cifra
+  (Intro, Verso, Refrão, Ponte, Final…) e, ao tocar numa delas, **rola suave**
+  até aquela seção — já descontando a barra fixa do topo.
+- Reconhece tanto seções sozinhas (`[Refrão]`) quanto seções com acordes na
+  mesma linha (`[Intro] C7M G/B…`).
+- Seções repetidas são numeradas (ex.: "Refrão ·1", "Refrão ·2") para você pular
+  para a ocorrência certa.
+- Se a cifra não tiver seções marcadas, avisa em vez de abrir um menu vazio.
+- Validado: suíte E2E (lista, repetição numerada, rolagem ancorada à barra,
+  caso sem seções), zero erro de JS.
+
 ## v0.6.0 — Ocultar tablaturas + limpeza no colar
 **Recurso novo + correção.**
 - **Botão "Tabs"** no player: oculta/mostra as tablaturas (linhas `E|--…`, os

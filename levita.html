@@ -314,6 +314,7 @@ input,textarea,select{font-family:inherit}
       <div class="topbar" style="position:static;background:none;border:none;backdrop-filter:none;padding:6px 0 10px">
         <button class="iconbtn" id="p-back">←</button>
         <div class="spacer"></div>
+        <button class="iconbtn" id="p-struct" title="Estrutura da música">☰</button>
         <button class="iconbtn" id="p-edit" title="Editar">✎</button>
         <button class="iconbtn gold" id="p-share" title="Compartilhar">↗</button>
       </div>
@@ -496,7 +497,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.6.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.7.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -823,6 +824,26 @@ $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings
 $("#p-back").onclick=()=>{stopScroll(); if(escalaCtx){const id=escalaCtx.id;escalaCtx=null;openEscala(id);} else {show("lib");renderLibrary();}};
 $("#p-edit").onclick=()=>openEditor(current.id);
 $("#p-share").onclick=()=>shareSheet(current);
+
+/* navegação por estrutura da música (☰) */
+function scrollToSec(el){
+  const ctrl=document.querySelector("#view-player .controls");
+  const off=(ctrl?ctrl.offsetHeight:110)+14;
+  const y=el.getBoundingClientRect().top+window.scrollY-off;
+  window.scrollTo({top:Math.max(0,y),behavior:"smooth"});
+}
+$("#p-struct").onclick=()=>{
+  const secs=[...document.querySelectorAll("#p-body .sec")];
+  if(!secs.length){ toast("Esta cifra não tem seções marcadas"); return; }
+  const labels=secs.map(el=>el.textContent.replace(/^\[|\]$/g,"").trim());
+  const total={}; labels.forEach(l=>total[l]=(total[l]||0)+1);
+  const seen={};
+  const items=secs.map((el,i)=>{
+    const l=labels[i]; seen[l]=(seen[l]||0)+1;
+    return {ic:"▸", label: total[l]>1 ? l+"  ·"+seen[l] : l, fn:()=>{ closeSheet(); scrollToSec(el); }};
+  });
+  openSheet("Estrutura da música", items);
+};
 
 /* auto-scroll */
 let scrollRAF=null;
