@@ -22,6 +22,21 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.13.1 — Contraste da cifra no modo escuro
+**Correção (legibilidade no palco).**
+- **Problema:** no dark, acorde (violeta-claro) e letra (branco) tinham
+  luminosidade parecida — de longe se confundiam, atrapalhando a execução
+  durante o culto. No claro estava bom.
+- Agora o acorde fala mais alto em três camadas: **violeta mais vivo**, um
+  **chip de fundo sutil** atrás do acorde e um **halo de brilho** (pensado para
+  palco escuro); a letra desceu um tom do branco puro (84%) — continua com
+  contraste altíssimo com o fundo, mas não compete com o acorde.
+- O chip não tem padding lateral de propósito: o alinhamento monoespaçado
+  acorde-sobre-letra não se move um pixel.
+- O modo claro ficou como estava (chip e halo desligados por token).
+- Validado: 39 verificações (nova: acorde ≠ letra em cor e com chip no dark),
+  zero erro de JS.
+
 ## v0.13.0 — Redesign, Fase 4: escalas, editor e polimento (fim do redesign)
 **Recurso novo (visual/UX).** Última fase do redesign (ver `PLANO-redesign-ui.md`).
 - **Formulários com foco violeta:** inputs/selects/textarea ganham borda de

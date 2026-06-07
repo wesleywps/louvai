@@ -63,6 +63,7 @@ instalação complexa.
 | **v0.11.0** | recurso | **Redesign F2:** bottom nav fixa (Cifras\|Escalas), FAB "+" único contextual, Backup na topbar. |
 | **v0.12.0** | recurso | **Redesign F3:** barra do player enxuta (só Tom + auto-scroll) e sheet "⚙ Ajustes". |
 | **v0.13.0** | recurso | **Redesign F4:** foco violeta nos formulários, vidro fosco em sheets/toast, fade entre telas. |
+| **v0.13.1** | correção | **Contraste da cifra no dark:** acorde com chip + halo, letra um tom abaixo do branco — leitura clara no palco. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -153,4 +154,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.13.0.*
+*Última atualização deste roteiro: v0.13.1.*

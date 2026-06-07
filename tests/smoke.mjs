@@ -86,6 +86,15 @@ ok((await page.locator("#t-key").textContent()) === "A", "Transpor +2 leva a A")
 let wl = await page.evaluate(() => window.__wl);
 ok(wl.req >= 1, "Player pede o Wake Lock (tela acesa)");
 
+// 4b2) Leitura no escuro: acorde e letra não podem se confundir (modo dark padrão)
+const cifraColors = await page.evaluate(() => {
+  const c = getComputedStyle(document.querySelector("#p-body .chord"));
+  const l = getComputedStyle(document.querySelector("#p-body .lyr"));
+  return { chord: c.color, lyr: l.color, chordBg: c.backgroundColor };
+});
+ok(cifraColors.chord !== cifraColors.lyr && cifraColors.chordBg !== "rgba(0, 0, 0, 0)",
+   "Acorde se destaca da letra no dark (cor própria + chip de fundo)");
+
 // 4c) Redesign (Fase 3): barra enxuta (Tom + auto-scroll à vista) e sheet Ajustes
 ok((await page.locator("#t-key").isVisible()) && (await page.locator("#scroll-toggle").isVisible()),
    "Tom e auto-scroll visíveis direto na tela");

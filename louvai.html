@@ -21,7 +21,12 @@
   --accent-glow:rgba(139,92,246,.45);   /* sombras/brilhos do acento */
   --glass:rgba(18,18,18,.78);           /* superfícies translúcidas (blur) */
   --glass2:rgba(24,24,24,.92);          /* sheets/toast: translúcido mais denso */
-  --chord:#c4b5fd; --section:#5eead4;
+  /* cifra no escuro: acorde e letra em LUMINOSIDADES diferentes p/ ler de longe */
+  --chord:#c7a9ff;                       /* acorde: violeta vivo */
+  --chord-bg:rgba(139,92,246,.18);       /* chip sutil atrás do acorde */
+  --chord-halo:rgba(167,139,250,.45);    /* brilho do acorde (palco escuro) */
+  --lyric:rgba(255,255,255,.84);         /* letra: um tom abaixo do branco puro */
+  --section:#5eead4;
   --danger:#f87171; --shadow:0 18px 50px -20px rgba(0,0,0,.7);
   --r:16px; --r-lg:24px; --dur:.2s;
   /* aliases da paleta antiga: o resto do CSS continua funcionando */
@@ -35,7 +40,10 @@
   --accent-glow:rgba(124,58,237,.35);
   --glass:rgba(246,245,248,.82);
   --glass2:rgba(255,255,255,.92);
-  --chord:#6d28d9; --section:#0f766e;
+  /* no claro o contraste já é bom: sem chip nem halo */
+  --chord:#6d28d9; --chord-bg:transparent; --chord-halo:transparent;
+  --lyric:#17131f;
+  --section:#0f766e;
   --danger:#dc2626; --shadow:0 18px 50px -24px rgba(40,25,80,.18);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -173,10 +181,12 @@ input,textarea,select{font-family:inherit}
 .cifra{font-family:'JetBrains Mono',ui-monospace,'Courier New',monospace;
   font-size:15px;line-height:1.85;padding:8px 18px 220px;white-space:pre;
   overflow-x:auto;-webkit-overflow-scrolling:touch}
-.cifra .chord{color:var(--chord);font-weight:700}
+.cifra .chord{color:var(--chord);font-weight:700;
+  background:var(--chord-bg);border-radius:4px;          /* sem padding lateral: não desloca o alinhamento */
+  text-shadow:0 0 14px var(--chord-halo)}
 .cifra .sec{color:var(--section);font-weight:700;font-style:normal;
   display:inline-block;margin-top:6px}
-.cifra .lyr{color:var(--text)}
+.cifra .lyr{color:var(--lyric)}
 .scrollbar-mini{position:fixed;left:0;right:0;bottom:0;z-index:24;max-width:860px;margin:0 auto;
   padding:12px 16px calc(14px + env(safe-area-inset-bottom));
   display:flex;align-items:center;gap:12px;
@@ -557,7 +567,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.13.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.13.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
