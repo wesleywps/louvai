@@ -22,6 +22,20 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.12.0 — Redesign, Fase 3: player focado no palco
+**Recurso novo (visual/UX).** Terceira fase do redesign (ver `PLANO-redesign-ui.md`).
+- **Barra do player enxuta:** ao vivo, só o que importa fica à vista — **Tom**
+  (♭ / tom / ♯) e o auto-scroll na base. A barra ficou mais baixa, sobrando mais
+  tela para a cifra.
+- **Sheet "⚙ Ajustes":** Capo, tamanho da fonte, só-letra, tablaturas e ♯/♭
+  agora moram num painel que sobe da base — são ajustes que você define antes
+  de tocar, não durante. Os controles mantêm os mesmos IDs e funções (~10
+  linhas de JS aditivas, só para abrir/fechar o painel).
+- A navegação por estrutura (☰) se adapta sozinha à barra mais baixa (o offset
+  do scroll é medido em tempo real).
+- Validado: 37 verificações (novas: Tom/auto-scroll à vista, capo dentro do
+  sheet funcionando, abre/fecha do painel), zero erro de JS.
+
 ## v0.11.0 — Redesign, Fase 2: navegação repensada
 **Recurso novo (visual/UX).** Segunda fase do redesign (ver `PLANO-redesign-ui.md`).
 - **Bottom nav fixa** estilo Spotify: as abas **Cifras | Escalas** saíram do meio

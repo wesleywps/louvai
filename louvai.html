@@ -150,7 +150,16 @@ input,textarea,select{font-family:inherit}
 .ctrl button:active{background:var(--panel2)}
 .ctrl .val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;
   color:var(--gold);padding:0 4px;min-width:46px;text-align:center;align-self:center}
-.ctrl.toggle button.on{background:var(--gold);color:var(--accent-ink)}
+.ctrl.toggle button.on{background:var(--accent);color:var(--accent-ink)}
+.settingsbtn{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:0 18px;
+  background:var(--panel);border:1px solid var(--line);border-radius:13px;
+  font-size:13.5px;font-weight:700;color:var(--text);transition:var(--dur)}
+.settingsbtn:active{background:var(--panel2)}
+/* controles dentro do sheet Ajustes: lista vertical, rótulo à esquerda */
+.sheetctrls{display:flex;flex-direction:column;gap:10px;padding:4px 2px 8px}
+.sheetctrls .ctrl{justify-content:space-between;padding-left:6px}
+.sheetctrls .ctrl .lbl{font-size:12.5px;letter-spacing:.4px}
+.sheetctrls .grp{display:flex;align-items:center;flex:0 0 auto}
 .songhead{padding:18px 18px 4px}
 .songhead .h{font-size:24px;font-weight:800;letter-spacing:-.4px;line-height:1.15}
 .songhead .s{color:var(--muted);font-size:14px;margin-top:4px}
@@ -349,25 +358,12 @@ input,textarea,select{font-family:inherit}
         <button class="iconbtn" id="p-edit" title="Editar">✎</button>
         <button class="iconbtn gold" id="p-share" title="Compartilhar">↗</button>
       </div>
+      <!-- ao vivo só importa o Tom; o resto mora no sheet ⚙ Ajustes -->
       <div class="ctrlrow">
         <div class="ctrl"><span class="lbl">Tom</span>
           <button id="t-down">♭</button><span class="val" id="t-key">C</span><button id="t-up">♯</button>
         </div>
-        <div class="ctrl"><span class="lbl">Capo</span>
-          <button id="c-down">−</button><span class="val" id="c-val">0</span><button id="c-up">＋</button>
-        </div>
-        <div class="ctrl"><span class="lbl">Fonte</span>
-          <button id="f-down">A−</button><button id="f-up">A＋</button>
-        </div>
-        <div class="ctrl toggle"><span class="lbl">Só letra</span>
-          <button id="lyr-toggle">𝄞</button>
-        </div>
-        <div class="ctrl toggle"><span class="lbl">Tabs</span>
-          <button id="tabs-toggle">≣</button>
-        </div>
-        <div class="ctrl toggle"><span class="lbl">♯/♭</span>
-          <button id="acc-toggle">♯</button>
-        </div>
+        <button class="settingsbtn" id="p-settings">⚙ Ajustes</button>
       </div>
     </div>
     <div class="presentbar hidden" id="presentbar">
@@ -520,6 +516,29 @@ input,textarea,select{font-family:inherit}
     font-size:13px;line-height:1.6;white-space:pre;outline:none"></textarea>
   <button class="btn primary" id="paste-go" style="width:100%;margin-top:10px">Reconhecer e preencher</button>
 </div>
+<!-- Ajustes do player (capo, fonte, só-letra, tabs, ♯/♭) — IDs preservados -->
+<div class="sheetbg" id="playerbg"></div>
+<div class="sheet" id="playersheet">
+  <div class="grip"></div>
+  <h3>Ajustes da cifra</h3>
+  <div class="sheetctrls">
+    <div class="ctrl"><span class="lbl">Capo</span>
+      <span class="grp"><button id="c-down">−</button><span class="val" id="c-val">0</span><button id="c-up">＋</button></span>
+    </div>
+    <div class="ctrl"><span class="lbl">Tamanho da fonte</span>
+      <span class="grp"><button id="f-down">A−</button><button id="f-up">A＋</button></span>
+    </div>
+    <div class="ctrl toggle"><span class="lbl">Só letra (esconde acordes)</span>
+      <span class="grp"><button id="lyr-toggle">𝄞</button></span>
+    </div>
+    <div class="ctrl toggle"><span class="lbl">Tablaturas</span>
+      <span class="grp"><button id="tabs-toggle">≣</button></span>
+    </div>
+    <div class="ctrl toggle"><span class="lbl">Sustenido / bemol</span>
+      <span class="grp"><button id="acc-toggle">♯</button></span>
+    </div>
+  </div>
+</div>
 <input type="file" id="fileInput" accept=".json,application/json" class="hidden">
 
 <script>
@@ -528,7 +547,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.11.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.12.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -885,6 +904,15 @@ $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings
 $("#p-back").onclick=()=>{stopScroll(); if(escalaCtx){const id=escalaCtx.id;escalaCtx=null;openEscala(id);} else {show("lib");renderLibrary();}};
 $("#p-edit").onclick=()=>openEditor(current.id);
 $("#p-share").onclick=()=>shareSheet(current);
+
+/* sheet ⚙ Ajustes do player (os controles mantêm os IDs e handlers de sempre) */
+function openPlayerSheet(){
+  $("#playerbg").classList.add("show");
+  requestAnimationFrame(()=>$("#playersheet").classList.add("show"));
+}
+function closePlayerSheet(){ $("#playersheet").classList.remove("show"); $("#playerbg").classList.remove("show"); }
+$("#p-settings").onclick=openPlayerSheet;
+$("#playerbg").onclick=closePlayerSheet;
 
 /* navegação por estrutura da música (☰) */
 function scrollToSec(el){

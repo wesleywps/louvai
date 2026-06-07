@@ -86,6 +86,21 @@ ok((await page.locator("#t-key").textContent()) === "A", "Transpor +2 leva a A")
 let wl = await page.evaluate(() => window.__wl);
 ok(wl.req >= 1, "Player pede o Wake Lock (tela acesa)");
 
+// 4c) Redesign (Fase 3): barra enxuta (Tom + auto-scroll à vista) e sheet Ajustes
+ok((await page.locator("#t-key").isVisible()) && (await page.locator("#scroll-toggle").isVisible()),
+   "Tom e auto-scroll visíveis direto na tela");
+ok(await page.evaluate(() => document.getElementById("c-val").getBoundingClientRect().top >= window.innerHeight),
+   "Capo fora da barra (guardado no sheet Ajustes)");
+await page.locator("#p-settings").click(); await page.waitForTimeout(300);
+ok(await page.evaluate(() => document.getElementById("playersheet").classList.contains("show")),
+   "Sheet Ajustes abre");
+await page.locator("#c-up").click(); await page.waitForTimeout(120);
+ok((await page.locator("#c-val").textContent()) === "1", "Capo funciona dentro do sheet Ajustes");
+await page.locator("#c-down").click(); await page.waitForTimeout(80);   // devolve capo 0
+await page.locator("#playerbg").click({ position: { x: 10, y: 10 } }); await page.waitForTimeout(300);
+ok(await page.evaluate(() => !document.getElementById("playersheet").classList.contains("show")),
+   "Sheet Ajustes fecha ao tocar fora");
+
 // 5) Importar colando texto estilo Cifra Club
 await page.locator("#p-back").click(); await page.waitForTimeout(120);
 wl = await page.evaluate(() => window.__wl);
