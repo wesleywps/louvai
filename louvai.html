@@ -3,35 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#171210">
+<meta name="theme-color" content="#121212">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Louvai · Cifras</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#171210; --bg2:#1f1916; --panel:#241d19; --panel2:#2c241f;
-  --line:#3a302a; --text:#f4ece2; --muted:#a99a8b;
-  --gold:#e0a85a; --gold-soft:#f0c98a; --chord:#e8b06a; --section:#8fb39a;
-  --danger:#d9785f; --shadow:0 18px 50px -20px rgba(0,0,0,.7);
-  --r:16px;
+  /* superfícies em camadas de brilho (elevação = mais claro, estilo Spotify) */
+  --bg:#121212; --bg2:#181818; --panel:#1e1e1e; --panel2:#282828;
+  --line:rgba(255,255,255,.09); --text:#ffffff; --muted:#b3b3b3;
+  /* acento violeta (worship) — token único: trocar aqui muda o app todo */
+  --accent:#a78bfa; --accent-strong:#8b5cf6; --accent-soft:#c4b5fd;
+  --accent-ink:#190b2e;                 /* tinta sobre o acento (contraste AA) */
+  --accent-glow:rgba(139,92,246,.45);   /* sombras/brilhos do acento */
+  --glass:rgba(18,18,18,.78);           /* superfícies translúcidas (blur) */
+  --chord:#c4b5fd; --section:#5eead4;
+  --danger:#f87171; --shadow:0 18px 50px -20px rgba(0,0,0,.7);
+  --r:16px; --r-lg:24px; --dur:.2s;
+  /* aliases da paleta antiga: o resto do CSS continua funcionando */
+  --gold:var(--accent); --gold-soft:var(--accent-soft);
 }
 .light{
-  --bg:#f3ece1; --bg2:#efe6d8; --panel:#fbf6ec; --panel2:#f3ebdd;
-  --line:#e0d4c0; --text:#2a221c; --muted:#7d6e5d;
-  --gold:#a86f23; --gold-soft:#7a5012; --chord:#9a5a12; --section:#3f7a55;
-  --danger:#b5462c; --shadow:0 18px 50px -24px rgba(80,55,20,.35);
+  --bg:#f6f5f8; --bg2:#edebf2; --panel:#ffffff; --panel2:#f1eff6;
+  --line:rgba(28,20,46,.13); --text:#17131f; --muted:#5f5a6e;
+  --accent:#7c3aed; --accent-strong:#6d28d9; --accent-soft:#5b21b6;
+  --accent-ink:#ffffff;
+  --accent-glow:rgba(124,58,237,.35);
+  --glass:rgba(246,245,248,.82);
+  --chord:#6d28d9; --section:#0f766e;
+  --danger:#dc2626; --shadow:0 18px 50px -24px rgba(40,25,80,.18);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;height:100%}
 body{
+  /* atmosfera: brilho violeta sutil no topo que se dissolve no near-black */
   background:
-    radial-gradient(120% 80% at 50% -10%, rgba(224,168,90,.10), transparent 60%),
-    var(--bg);
+    radial-gradient(110% 52% at 50% -12%, var(--accent-glow), transparent 62%),
+    linear-gradient(180deg, var(--bg2), var(--bg) 420px);
+  background-color:var(--bg);
+  background-repeat:no-repeat;
   color:var(--text);
-  font-family:'Hanken Grotesk',ui-sans-serif,system-ui,sans-serif;
+  font-family:'Inter',ui-sans-serif,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;
   overscroll-behavior-y:none;
 }
@@ -46,21 +61,24 @@ input,textarea,select{font-family:inherit}
   display:flex;align-items:center;gap:10px;
   padding:14px 16px calc(14px) 16px;
   padding-top:max(14px,env(safe-area-inset-top));
-  background:linear-gradient(var(--bg),rgba(23,18,16,.82));
-  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+  background:var(--glass);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
 }
-.brand{font-family:'Fraunces',serif;font-weight:600;font-size:24px;letter-spacing:.3px;
+/* o wordmark serif (Fraunces) é o selo da marca — só no logo da biblioteca */
+.brand{font-family:'Inter',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.2px;
   display:flex;align-items:center;gap:9px}
+#view-lib .brand{font-family:'Fraunces',serif;font-weight:600;font-size:24px;letter-spacing:.3px}
 .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--gold);
   box-shadow:0 0 16px var(--gold)}
 .brand .ver{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
   color:var(--muted);letter-spacing:0;align-self:flex-end;margin-bottom:4px;
   background:var(--panel);border:1px solid var(--line);padding:1px 7px;border-radius:999px}
 .topbar .spacer{flex:1}
-.iconbtn{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
-  background:var(--panel);border:1px solid var(--line);font-size:18px;transition:.15s}
+.iconbtn{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;
+  background:var(--panel);border:1px solid var(--line);font-size:18px;transition:var(--dur)}
 .iconbtn:active{transform:scale(.93)}
-.iconbtn.gold{background:var(--gold);color:#231603;border-color:transparent;font-weight:700}
+.iconbtn.gold{background:var(--gold);color:var(--accent-ink);border-color:transparent;font-weight:700}
 
 /* ---------- Library ---------- */
 .lib{padding:18px 16px 120px}
@@ -73,7 +91,7 @@ input,textarea,select{font-family:inherit}
 .tagbar::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;padding:7px 14px;border-radius:999px;background:var(--panel);
   border:1px solid var(--line);font-size:13.5px;color:var(--muted);font-weight:500}
-.chip.on{background:var(--gold);color:#231603;border-color:transparent;font-weight:700}
+.chip.on{background:var(--gold);color:var(--accent-ink);border-color:transparent;font-weight:700}
 .count{font-size:12.5px;color:var(--muted);margin:2px 2px 12px;letter-spacing:.3px;text-transform:uppercase}
 .songcard{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:var(--r);
   background:var(--panel);border:1px solid var(--line);margin-bottom:11px;transition:.15s}
@@ -83,13 +101,13 @@ input,textarea,select{font-family:inherit}
   background:linear-gradient(140deg,var(--panel2),var(--bg2));color:var(--gold);
   border:1px solid var(--line)}
 .songcard .meta{flex:1;min-width:0}
-.songcard .ttl{font-family:'Fraunces',serif;font-size:18px;font-weight:600;
+.songcard .ttl{font-size:16.5px;font-weight:700;letter-spacing:-.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .songcard .sub{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;margin-top:2px}
 .songcard .tags{font-size:11.5px;color:var(--section);margin-top:3px}
 .empty{text-align:center;padding:70px 24px;color:var(--muted)}
-.empty .big{font-family:'Fraunces',serif;font-size:21px;color:var(--text);margin-bottom:8px}
+.empty .big{font-size:19px;font-weight:700;letter-spacing:-.2px;color:var(--text);margin-bottom:8px}
 
 /* ---------- Floating actions ---------- */
 .fab{position:fixed;left:0;right:0;bottom:0;z-index:25;
@@ -100,12 +118,13 @@ input,textarea,select{font-family:inherit}
   display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s;
   border:1px solid var(--line);background:var(--panel)}
 .btn:active{transform:scale(.97)}
-.btn.primary{background:var(--gold);color:#231603;border-color:transparent;
-  box-shadow:0 10px 30px -10px rgba(224,168,90,.6)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;
+  box-shadow:0 10px 30px -10px var(--accent-glow)}
 
 /* ---------- Player ---------- */
-.controls{position:sticky;top:0;z-index:20;background:linear-gradient(var(--bg),rgba(23,18,16,.92));
-  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+.controls{position:sticky;top:0;z-index:20;background:var(--glass);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
   padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top))}
 .ctrlrow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;align-items:stretch}
 .ctrlrow::-webkit-scrollbar{display:none}
@@ -113,13 +132,13 @@ input,textarea,select{font-family:inherit}
   border:1px solid var(--line);border-radius:13px;overflow:hidden}
 .ctrl .lbl{font-size:11px;color:var(--muted);padding:0 9px;text-transform:uppercase;
   letter-spacing:.6px;font-weight:600;align-self:center}
-.ctrl button{padding:10px 13px;font-size:17px;font-weight:700;min-width:40px}
+.ctrl button{padding:12px 14px;font-size:17px;font-weight:700;min-width:48px}
 .ctrl button:active{background:var(--panel2)}
 .ctrl .val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;
   color:var(--gold);padding:0 4px;min-width:46px;text-align:center;align-self:center}
-.ctrl.toggle button.on{background:var(--gold);color:#231603}
+.ctrl.toggle button.on{background:var(--gold);color:var(--accent-ink)}
 .songhead{padding:18px 18px 4px}
-.songhead .h{font-family:'Fraunces',serif;font-size:25px;font-weight:600;line-height:1.15}
+.songhead .h{font-size:24px;font-weight:800;letter-spacing:-.4px;line-height:1.15}
 .songhead .s{color:var(--muted);font-size:14px;margin-top:4px}
 .cifra{font-family:'JetBrains Mono',ui-monospace,'Courier New',monospace;
   font-size:15px;line-height:1.85;padding:8px 18px 220px;white-space:pre;
@@ -132,8 +151,8 @@ input,textarea,select{font-family:inherit}
   padding:12px 16px calc(14px + env(safe-area-inset-bottom));
   display:flex;align-items:center;gap:12px;
   background:linear-gradient(transparent,var(--bg) 40%)}
-.scrollbtn{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-size:20px;
-  background:var(--gold);color:#231603;border:none;box-shadow:0 10px 26px -8px rgba(224,168,90,.7);
+.scrollbtn{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:20px;
+  background:var(--accent);color:var(--accent-ink);border:none;box-shadow:0 10px 26px -8px var(--accent-glow);
   flex:0 0 auto}
 .scrollbtn:active{transform:scale(.94)}
 .speed{flex:1;display:flex;align-items:center;gap:10px;background:var(--panel);
@@ -166,20 +185,20 @@ input,textarea,select{font-family:inherit}
 .tabs{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);
   border-radius:14px;padding:5px;margin-bottom:14px}
 .tab{flex:1;padding:11px;border-radius:10px;font-size:14.5px;font-weight:700;color:var(--muted)}
-.tab.on{background:var(--gold);color:#231603}
+.tab.on{background:var(--gold);color:var(--accent-ink)}
 
 /* ---------- Escala cards (lista) ---------- */
 .escard{padding:15px 16px;border-radius:var(--r);background:var(--panel);
   border:1px solid var(--line);margin-bottom:11px;transition:.15s}
 .escard:active{transform:scale(.985);background:var(--panel2)}
-.escard .et{font-family:'Fraunces',serif;font-size:19px;font-weight:600}
+.escard .et{font-size:17px;font-weight:700;letter-spacing:-.2px}
 .escard .ed{font-size:13px;color:var(--muted);margin-top:3px}
 .escard .ex{font-size:12px;color:var(--section);margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
 .estag{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
 
 /* ---------- Escala detail ---------- */
 .escala{padding:18px 16px 130px}
-.es-head .es-title{font-family:'Fraunces',serif;font-size:26px;font-weight:600;line-height:1.12}
+.es-head .es-title{font-size:25px;font-weight:800;letter-spacing:-.4px;line-height:1.12}
 .es-head .es-meta{color:var(--muted);font-size:14px;margin-top:6px}
 .present-btn{width:100%;margin:16px 0 6px}
 .es-team-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;
@@ -189,7 +208,7 @@ input,textarea,select{font-family:inherit}
 .es-team-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
 .tm{display:flex;justify-content:space-between;gap:8px;font-size:14px}
 .tm .role{color:var(--muted)}.tm .who{font-weight:600;text-align:right}
-.es-order-h{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin:18px 2px 10px}
+.es-order-h{font-size:16px;font-weight:700;letter-spacing:-.2px;margin:18px 2px 10px}
 .orow{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;
   background:var(--panel);border:1px solid var(--line);margin-bottom:9px}
 .orow:active{background:var(--panel2)}
@@ -264,7 +283,7 @@ input,textarea,select{font-family:inherit}
 #sheet .grip,#sheet h3{flex:0 0 auto}
 #sheet-body{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .sheet .grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:6px auto 14px}
-.sheet h3{font-family:'Fraunces',serif;margin:0 6px 10px;font-size:19px;font-weight:600}
+.sheet h3{margin:0 6px 10px;font-size:17px;font-weight:700;letter-spacing:-.2px}
 .sheetitem{display:flex;align-items:center;gap:14px;padding:15px 12px;border-radius:13px;font-size:16px}
 .sheetitem:active{background:var(--panel2)}
 .sheetitem .ic{font-size:19px;width:24px;text-align:center}
@@ -500,7 +519,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.9.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.10.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1412,7 +1431,7 @@ function toast(msg){
 function applyTheme(){
   document.body.classList.toggle("light",settings.theme==="light");
   $("#themeBtn").textContent=settings.theme==="light"?"◑":"◐";
-  document.querySelector('meta[name=theme-color]').setAttribute("content",settings.theme==="light"?"#f3ece1":"#171210");
+  document.querySelector('meta[name=theme-color]').setAttribute("content",settings.theme==="light"?"#f6f5f8":"#121212");
 }
 $("#themeBtn").onclick=()=>{settings.theme=settings.theme==="light"?"dark":"light";saveSettings();applyTheme();};
 

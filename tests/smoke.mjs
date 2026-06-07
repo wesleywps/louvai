@@ -41,6 +41,10 @@ await page.waitForTimeout(400);
 // 1) Boot
 ok((await page.locator(".songcard").count()) >= 1, "App carrega com pelo menos a cifra de exemplo");
 
+// 1b) Redesign (Fase 1): tokens novos aplicados — fundo near-black, não o marrom antigo
+ok((await page.evaluate(() => getComputedStyle(document.body).backgroundColor)) === "rgb(18, 18, 18)",
+   "Fundo usa a paleta nova (#121212)");
+
 // 2) Transposição (fonte da verdade) — funções puras
 const t = await page.evaluate(() => ({
   a: transposeChord("C", 2, "sharp"),

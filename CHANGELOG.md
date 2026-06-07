@@ -22,6 +22,23 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.10.0 — Redesign, Fase 1: nova identidade visual (fundação)
+**Recurso novo (visual).** Primeira de 4 fases do redesign (ver `PLANO-redesign-ui.md`).
+- **Paleta nova:** fundo neutro quase-preto em camadas de brilho (estilo
+  Spotify/Deezer) no lugar do marrom/dourado; **acento violeta** (worship) em
+  botões, toggles ativos, acordes e no dot do logo — definido num token único
+  (`--accent`), fácil de trocar.
+- **Fundo com atmosfera:** brilho violeta sutil no topo que se dissolve no
+  escuro (sem o radial dourado antigo).
+- **Tipografia modernizada:** UI em **Inter** (títulos em peso forte);
+  **Fraunces** (serif) agora é exclusiva do logo "Louvai" — o selo da marca;
+  cifra continua em **JetBrains Mono**. Fallbacks offline preservados.
+- **Toque melhor:** botões de ícone e controles do player com alvos ≥48px.
+- Tema claro re-derivado dos mesmos tokens (violeta mais escuro p/ contraste).
+- Zero mudança de comportamento: todos os IDs/fluxos preservados; única linha
+  de JS tocada foi a cor do `<meta theme-color>`.
+- Validado: 28 verificações (nova: fundo usa a paleta `#121212`), zero erro de JS.
+
 ## v0.9.0 — Renomeado: Levita agora é Louvai
 **Mudança de nome (com compatibilidade total).**
 - O app passa a se chamar **Louvai** — "louvai" convida todos a adorar, sem
