@@ -19,6 +19,22 @@ const jsErrors = [];
 page.on("pageerror", e => jsErrors.push(e.message));
 page.on("console", m => { if (m.type() === "error" && !/403|fonts|net::/.test(m.text())) jsErrors.push("console: " + m.text()); });
 
+// Stub do Wake Lock: conta pedidos/liberações sem depender do suporte do headless
+await page.addInitScript(() => {
+  window.__wl = { req: 0, rel: 0 };
+  Object.defineProperty(navigator, "wakeLock", {
+    configurable: true,
+    value: { request: async () => {
+      window.__wl.req++;
+      return {
+        _fn: null,
+        addEventListener(t, fn) { if (t === "release") this._fn = fn; },
+        release() { window.__wl.rel++; this._fn && this._fn(); return Promise.resolve(); },
+      };
+    } },
+  });
+});
+
 await page.goto(APP_URL);
 await page.waitForTimeout(400);
 
@@ -56,8 +72,14 @@ ok((await page.locator("#t-key").textContent()) === "G", "Player abre no tom G")
 await page.locator("#t-up").click(); await page.locator("#t-up").click(); await page.waitForTimeout(120);
 ok((await page.locator("#t-key").textContent()) === "A", "Transpor +2 leva a A");
 
+// 4b) Wake Lock: pede a trava com o player aberto e solta ao sair
+let wl = await page.evaluate(() => window.__wl);
+ok(wl.req >= 1, "Player pede o Wake Lock (tela acesa)");
+
 // 5) Importar colando texto estilo Cifra Club
 await page.locator("#p-back").click(); await page.waitForTimeout(120);
+wl = await page.evaluate(() => window.__wl);
+ok(wl.rel >= 1, "Sair do player solta o Wake Lock");
 await page.locator("#newBtn").click(); await page.waitForTimeout(120);
 await page.locator("#e-paste").click(); await page.waitForTimeout(150);
 await page.fill("#pastebox",

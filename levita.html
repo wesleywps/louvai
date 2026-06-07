@@ -500,7 +500,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.7.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.8.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -703,8 +703,27 @@ function show(v){
   $("#view-editor").classList.toggle("hidden",v!=="editor");
   $("#view-escala").classList.toggle("hidden",v!=="escala");
   $("#view-escala-edit").classList.toggle("hidden",v!=="escala-edit");
+  v==="player"?lockScreen():unlockScreen();
   window.scrollTo(0,0);
 }
+
+/* ---------- Wake Lock: tela acesa enquanto o player está aberto ---------- */
+let wakeLock=null;
+async function lockScreen(){
+  if(!("wakeLock" in navigator)) return;            // sem suporte: segue normal, sem avisar
+  try{
+    wakeLock=await navigator.wakeLock.request("screen");
+    // o sistema solta a trava sozinho (trocar de app, economia de bateria);
+    // zerar a referência permite re-adquirir no visibilitychange
+    wakeLock.addEventListener("release",()=>{ wakeLock=null; });
+  }catch(e){ wakeLock=null; }                       // negado (ex.: bateria fraca) não é erro do app
+}
+function unlockScreen(){
+  if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
+}
+document.addEventListener("visibilitychange",()=>{  // voltou pro app com o player aberto? reacende
+  if(document.visibilityState==="visible" && view==="player") lockScreen();
+});
 
 /* ---------- Biblioteca ---------- */
 function allTags(){

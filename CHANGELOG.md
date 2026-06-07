@@ -20,6 +20,18 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.8.0 — Wake Lock (tela acesa no player)
+**Recurso novo.**
+- Ao abrir uma cifra no player, o app **pede ao sistema para manter a tela
+  acesa** (Wake Lock) — a tela não apaga mais no meio do louvor. Ao sair do
+  player, a trava é liberada e a tela volta a apagar normalmente.
+- Se você trocar de app e voltar, a trava é **readquirida sozinha** (o sistema
+  sempre a solta quando o app sai de primeiro plano).
+- Em navegadores sem suporte (ou com economia de bateria agressiva), o app
+  segue funcionando normalmente — o recurso degrada em silêncio.
+- Validado: stub do Wake Lock na suíte E2E (pede ao abrir, solta ao sair),
+  24 verificações no total, zero erro de JS.
+
 ## v0.7.1 — Correção do menu de estrutura
 **Correção.**
 - **Bug:** em músicas com muitas seções, o menu ☰ Estrutura crescia para cima e
