@@ -45,6 +45,11 @@ ok((await page.locator(".songcard").count()) >= 1, "App carrega com pelo menos a
 ok((await page.evaluate(() => getComputedStyle(document.body).backgroundColor)) === "rgb(18, 18, 18)",
    "Fundo usa a paleta nova (#121212)");
 
+// 1c) Redesign (Fase 2): bottom nav e FAB "+" na biblioteca
+ok(await page.locator(".bottomnav").isVisible(), "Bottom nav (Cifras|Escalas) visível na biblioteca");
+ok(await page.locator("#newBtn").isVisible(), "FAB + (nova cifra) visível");
+ok(await page.locator("#backupBtn").isVisible(), "Backup acessível na topbar");
+
 // 2) Transposição (fonte da verdade) — funções puras
 const t = await page.evaluate(() => ({
   a: transposeChord("C", 2, "sharp"),
@@ -72,6 +77,7 @@ await page.selectOption("#e-key", "G");
 await page.fill("#e-body", "[Intro]\nG  D  Em  C\n\nVerso:\nG            D\nLinha de teste");
 await page.locator("#e-save").click(); await page.waitForTimeout(250);
 ok(await page.locator("#view-player").isVisible(), "Salvar abre o player");
+ok(!(await page.locator(".bottomnav").isVisible()), "Bottom nav some fora da biblioteca");
 ok((await page.locator("#t-key").textContent()) === "G", "Player abre no tom G");
 await page.locator("#t-up").click(); await page.locator("#t-up").click(); await page.waitForTimeout(120);
 ok((await page.locator("#t-key").textContent()) === "A", "Transpor +2 leva a A");

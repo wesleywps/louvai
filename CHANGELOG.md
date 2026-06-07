@@ -22,6 +22,21 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.11.0 — Redesign, Fase 2: navegação repensada
+**Recurso novo (visual/UX).** Segunda fase do redesign (ver `PLANO-redesign-ui.md`).
+- **Bottom nav fixa** estilo Spotify: as abas **Cifras | Escalas** saíram do meio
+  da tela e viraram uma barra de navegação na base, com vidro fosco (blur),
+  ícone + rótulo e área segura (notch/home indicator). Some sozinha nas telas
+  de detalhe.
+- **Botão "+" único e contextual** (FAB circular): cria cifra na aba Cifras e
+  escala na aba Escalas — no lugar dos 2-3 botões largos que ocupavam a base.
+- **Backup subiu para a topbar** (ícone ↥ ao lado de importar): ação rara não
+  precisa de destaque permanente. Única mudança de JS: a linha que
+  escondia/mostrava o botão por aba foi removida.
+- Toast e listas reposicionados para não colidir com a barra nova.
+- Validado: 32 verificações (novas: nav visível na biblioteca e ausente no
+  player, FAB e Backup acessíveis), zero erro de JS.
+
 ## v0.10.0 — Redesign, Fase 1: nova identidade visual (fundação)
 **Recurso novo (visual).** Primeira de 4 fases do redesign (ver `PLANO-redesign-ui.md`).
 - **Paleta nova:** fundo neutro quase-preto em camadas de brilho (estilo

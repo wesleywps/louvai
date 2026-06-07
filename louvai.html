@@ -81,7 +81,7 @@ input,textarea,select{font-family:inherit}
 .iconbtn.gold{background:var(--gold);color:var(--accent-ink);border-color:transparent;font-weight:700}
 
 /* ---------- Library ---------- */
-.lib{padding:18px 16px 120px}
+.lib{padding:18px 16px calc(170px + env(safe-area-inset-bottom))}
 .searchwrap{position:relative;margin-bottom:14px}
 .search{width:100%;padding:14px 16px 14px 44px;border-radius:14px;background:var(--panel);
   border:1px solid var(--line);color:var(--text);font-size:16px;outline:none}
@@ -109,17 +109,31 @@ input,textarea,select{font-family:inherit}
 .empty{text-align:center;padding:70px 24px;color:var(--muted)}
 .empty .big{font-size:19px;font-weight:700;letter-spacing:-.2px;color:var(--text);margin-bottom:8px}
 
-/* ---------- Floating actions ---------- */
-.fab{position:fixed;left:0;right:0;bottom:0;z-index:25;
-  padding:14px 16px calc(16px + env(safe-area-inset-bottom));
-  display:flex;gap:10px;max-width:860px;margin:0 auto;
-  background:linear-gradient(transparent,var(--bg) 38%)}
+/* ---------- Botões / FAB / bottom nav ---------- */
 .btn{flex:1;padding:16px;border-radius:15px;font-size:15.5px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s;
+  display:flex;align-items:center;justify-content:center;gap:8px;transition:var(--dur);
   border:1px solid var(--line);background:var(--panel)}
 .btn:active{transform:scale(.97)}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;
   box-shadow:0 10px 30px -10px var(--accent-glow)}
+/* FAB "+" único, contextual (Cifras → nova cifra; Escalas → nova escala) */
+.fab{position:fixed;right:18px;bottom:calc(82px + env(safe-area-inset-bottom));z-index:27}
+.fabbtn{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;
+  background:var(--accent);color:var(--accent-ink);font-size:30px;font-weight:700;
+  box-shadow:0 14px 32px -8px var(--accent-glow);transition:var(--dur)}
+.fabbtn:active{transform:scale(.92)}
+/* bottom nav fixa (estilo Spotify): some sozinha fora da biblioteca */
+.bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:26;max-width:860px;margin:0 auto;
+  display:flex;background:var(--glass);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  padding:6px 10px calc(8px + env(safe-area-inset-bottom))}
+.bottomnav .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 4px 6px;min-height:52px;border-radius:12px;
+  font-size:11.5px;font-weight:700;letter-spacing:.3px;color:var(--muted);
+  transition:color var(--dur)}
+.bottomnav .tab .nic{font-size:21px;line-height:1}
+.bottomnav .tab.on{color:var(--accent)}
 
 /* ---------- Player ---------- */
 .controls{position:sticky;top:0;z-index:20;background:var(--glass);
@@ -181,11 +195,7 @@ input,textarea,select{font-family:inherit}
 .lint.warn{color:var(--gold-soft);border-color:var(--gold)}
 .lint b{font-family:'JetBrains Mono',monospace;color:var(--danger);font-weight:700}
 
-/* ---------- Tabs (Cifras / Escalas) ---------- */
-.tabs{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);
-  border-radius:14px;padding:5px;margin-bottom:14px}
-.tab{flex:1;padding:11px;border-radius:10px;font-size:14.5px;font-weight:700;color:var(--muted)}
-.tab.on{background:var(--gold);color:var(--accent-ink)}
+/* (abas Cifras/Escalas agora vivem na .bottomnav, acima) */
 
 /* ---------- Escala cards (lista) ---------- */
 .escard{padding:15px 16px;border-radius:var(--r);background:var(--panel);
@@ -267,7 +277,7 @@ input,textarea,select{font-family:inherit}
 #picklist .songcard{margin-bottom:8px}
 
 /* ---------- Toast / sheet ---------- */
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
   background:var(--panel2);border:1px solid var(--line);color:var(--text);
   padding:13px 20px;border-radius:13px;font-size:14px;font-weight:600;z-index:60;
   box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:90%}
@@ -298,14 +308,10 @@ input,textarea,select{font-family:inherit}
       <div class="brand"><span class="dot"></span>Louvai<span class="ver" id="appVer"></span></div>
       <div class="spacer"></div>
       <button class="iconbtn" id="themeBtn" title="Tema">◐</button>
+      <button class="iconbtn" id="backupBtn" title="Backup">↥</button>
       <button class="iconbtn" id="importBtn" title="Importar">↧</button>
     </div>
     <div class="lib">
-      <div class="tabs">
-        <button class="tab on" id="tab-songs">Cifras</button>
-        <button class="tab" id="tab-escalas">Escalas</button>
-      </div>
-
       <!-- aba Cifras -->
       <div id="pane-songs">
         <div class="searchwrap">
@@ -324,10 +330,13 @@ input,textarea,select{font-family:inherit}
       </div>
     </div>
     <div class="fab">
-      <button class="btn primary" id="newBtn">＋ Nova cifra</button>
-      <button class="btn" id="backupBtn">↥ Backup</button>
-      <button class="btn primary hidden" id="newEscBtn">＋ Nova escala</button>
+      <button class="fabbtn" id="newBtn" title="Nova cifra">＋</button>
+      <button class="fabbtn hidden" id="newEscBtn" title="Nova escala">＋</button>
     </div>
+    <nav class="bottomnav">
+      <button class="tab on" id="tab-songs"><span class="nic">♪</span><span>Cifras</span></button>
+      <button class="tab" id="tab-escalas"><span class="nic">▤</span><span>Escalas</span></button>
+    </nav>
   </div>
 
   <!-- ===== PLAYER VIEW ===== -->
@@ -519,7 +528,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.10.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.11.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1397,8 +1406,7 @@ function switchTab(which){
   $("#pane-songs").classList.toggle("hidden",!songsOn);
   $("#pane-escalas").classList.toggle("hidden",songsOn);
   $("#newBtn").classList.toggle("hidden",!songsOn);
-  $("#backupBtn").classList.toggle("hidden",!songsOn);
-  $("#newEscBtn").classList.toggle("hidden",songsOn);
+  $("#newEscBtn").classList.toggle("hidden",songsOn);   // Backup agora vive fixo na topbar
   if(!songsOn) renderEscalas();
 }
 $("#tab-songs").onclick=()=>switchTab("songs");
