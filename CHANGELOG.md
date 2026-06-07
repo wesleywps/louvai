@@ -22,6 +22,20 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.13.0 — Redesign, Fase 4: escalas, editor e polimento (fim do redesign)
+**Recurso novo (visual/UX).** Última fase do redesign (ver `PLANO-redesign-ui.md`).
+- **Formulários com foco violeta:** inputs/selects/textarea ganham borda de
+  acento + anel suave ao focar (editor de cifra e de escala).
+- **Vidro fosco** nos sheets e no toast (blur denso, translúcido) — coerente
+  com a topbar e a bottom nav.
+- **Fluidez entre telas:** cada view entra com fade curto (220ms, só opacidade
+  — não desloca elementos fixos).
+- **Empty states com personalidade:** nota musical violeta com brilho quando a
+  lista está vazia.
+- Microinterações padronizadas no token `--dur` (200ms); cantos dos sheets no
+  raio maior (`--r-lg`).
+- Validado: 38 verificações (nova: sheets com backdrop blur), zero erro de JS.
+
 ## v0.12.0 — Redesign, Fase 3: player focado no palco
 **Recurso novo (visual/UX).** Terceira fase do redesign (ver `PLANO-redesign-ui.md`).
 - **Barra do player enxuta:** ao vivo, só o que importa fica à vista — **Tom**

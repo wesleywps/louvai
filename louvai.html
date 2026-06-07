@@ -20,6 +20,7 @@
   --accent-ink:#190b2e;                 /* tinta sobre o acento (contraste AA) */
   --accent-glow:rgba(139,92,246,.45);   /* sombras/brilhos do acento */
   --glass:rgba(18,18,18,.78);           /* superfícies translúcidas (blur) */
+  --glass2:rgba(24,24,24,.92);          /* sheets/toast: translúcido mais denso */
   --chord:#c4b5fd; --section:#5eead4;
   --danger:#f87171; --shadow:0 18px 50px -20px rgba(0,0,0,.7);
   --r:16px; --r-lg:24px; --dur:.2s;
@@ -33,6 +34,7 @@
   --accent-ink:#ffffff;
   --accent-glow:rgba(124,58,237,.35);
   --glass:rgba(246,245,248,.82);
+  --glass2:rgba(255,255,255,.92);
   --chord:#6d28d9; --section:#0f766e;
   --danger:#dc2626; --shadow:0 18px 50px -24px rgba(40,25,80,.18);
 }
@@ -54,6 +56,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 input,textarea,select{font-family:inherit}
 .app{max-width:860px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
 .hidden{display:none!important}
+/* fluidez: cada tela entra com um fade curto (opacidade só — não desloca os fixos) */
+#view-lib,#view-player,#view-editor,#view-escala,#view-escala-edit{animation:viewin .22s ease}
+@keyframes viewin{from{opacity:0}to{opacity:1}}
 
 /* ---------- Top bar ---------- */
 .topbar{
@@ -94,7 +99,7 @@ input,textarea,select{font-family:inherit}
 .chip.on{background:var(--gold);color:var(--accent-ink);border-color:transparent;font-weight:700}
 .count{font-size:12.5px;color:var(--muted);margin:2px 2px 12px;letter-spacing:.3px;text-transform:uppercase}
 .songcard{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:var(--r);
-  background:var(--panel);border:1px solid var(--line);margin-bottom:11px;transition:.15s}
+  background:var(--panel);border:1px solid var(--line);margin-bottom:11px;transition:var(--dur)}
 .songcard:active{transform:scale(.985);background:var(--panel2)}
 .keytag{flex:0 0 auto;width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
   font-family:'JetBrains Mono',monospace;font-weight:700;font-size:17px;
@@ -106,7 +111,9 @@ input,textarea,select{font-family:inherit}
 .songcard .sub{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;margin-top:2px}
 .songcard .tags{font-size:11.5px;color:var(--section);margin-top:3px}
-.empty{text-align:center;padding:70px 24px;color:var(--muted)}
+.empty{text-align:center;padding:84px 24px;color:var(--muted);line-height:1.6}
+.empty::before{content:"♪";display:block;font-size:34px;color:var(--accent);
+  opacity:.85;margin-bottom:14px;text-shadow:0 0 24px var(--accent-glow)}
 .empty .big{font-size:19px;font-weight:700;letter-spacing:-.2px;color:var(--text);margin-bottom:8px}
 
 /* ---------- Botões / FAB / bottom nav ---------- */
@@ -190,7 +197,8 @@ input,textarea,select{font-family:inherit}
   letter-spacing:.7px;font-weight:600;margin-bottom:7px}
 .field input,.field textarea,.field select{width:100%;padding:13px 15px;border-radius:13px;
   background:var(--panel);border:1px solid var(--line);color:var(--text);font-size:16px;outline:none}
-.field input:focus,.field textarea:focus{border-color:var(--gold)}
+.field input:focus,.field textarea:focus,.field select:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
 .row2{display:flex;gap:12px}.row2>*{flex:1}
 .field textarea{min-height:300px;font-family:'JetBrains Mono',monospace;font-size:14px;
   line-height:1.7;white-space:pre;resize:vertical}
@@ -208,7 +216,7 @@ input,textarea,select{font-family:inherit}
 
 /* ---------- Escala cards (lista) ---------- */
 .escard{padding:15px 16px;border-radius:var(--r);background:var(--panel);
-  border:1px solid var(--line);margin-bottom:11px;transition:.15s}
+  border:1px solid var(--line);margin-bottom:11px;transition:var(--dur)}
 .escard:active{transform:scale(.985);background:var(--panel2)}
 .escard .et{font-size:17px;font-weight:700;letter-spacing:-.2px}
 .escard .ed{font-size:13px;color:var(--muted);margin-top:3px}
@@ -287,14 +295,16 @@ input,textarea,select{font-family:inherit}
 
 /* ---------- Toast / sheet ---------- */
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
-  background:var(--panel2);border:1px solid var(--line);color:var(--text);
+  background:var(--glass2);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--line);color:var(--text);
   padding:13px 20px;border-radius:13px;font-size:14px;font-weight:600;z-index:60;
   box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:90%}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .sheetbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;opacity:0;transition:.2s;pointer-events:none}
 .sheetbg.show{opacity:1;pointer-events:auto}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;max-width:860px;margin:0 auto;
-  background:var(--panel);border-radius:24px 24px 0 0;border:1px solid var(--line);
+  background:var(--glass2);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-radius:var(--r-lg) var(--r-lg) 0 0;border:1px solid var(--line);
   padding:10px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(110%);
   transition:.28s cubic-bezier(.2,.9,.3,1);box-shadow:var(--shadow)}
 .sheet.show{transform:translateY(0)}
@@ -547,7 +557,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.12.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.13.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];

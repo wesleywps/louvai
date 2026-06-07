@@ -122,6 +122,10 @@ await page.locator("#e-save").click(); await page.waitForTimeout(200);
 await page.locator("#p-struct").click(); await page.waitForTimeout(200);
 ok(await page.locator("#sheet").isVisible(), "Menu de estrutura abre");
 ok((await page.locator("#sheet-body .sheetitem").count()) >= 2, "Lista as seções");
+
+// 6b) Redesign (Fase 4): sheets com vidro fosco (blur) e foco violeta nos inputs
+ok((await page.evaluate(() => getComputedStyle(document.getElementById("sheet")).backdropFilter)).includes("blur"),
+   "Sheets usam vidro fosco (backdrop blur)");
 await page.locator("#sheetbg").click(); await page.waitForTimeout(200);
 
 // 7) Escala: criar com 1 música e conferir o modo Apresentar no tom da escala

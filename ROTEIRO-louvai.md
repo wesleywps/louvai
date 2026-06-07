@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.9.0**.
+seguir. Atualizado até a **v0.13.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -59,6 +59,10 @@ instalação complexa.
 | **v0.7.1** | correção | Menu de estrutura com rolagem (músicas longas) e ignorando cabeçalhos `[Tab]`. |
 | **v0.8.0** | recurso | **Wake Lock:** tela acesa enquanto o player está aberto; religa ao voltar pro app. |
 | **v0.9.0** | mudança | **Renomeado para Louvai** (era Levita), com migração de dados e importação retrocompatível. |
+| **v0.10.0** | recurso | **Redesign F1:** paleta near-black + acento violeta, Inter na UI, Fraunces só no logo, alvos ≥48px. |
+| **v0.11.0** | recurso | **Redesign F2:** bottom nav fixa (Cifras\|Escalas), FAB "+" único contextual, Backup na topbar. |
+| **v0.12.0** | recurso | **Redesign F3:** barra do player enxuta (só Tom + auto-scroll) e sheet "⚙ Ajustes". |
+| **v0.13.0** | recurso | **Redesign F4:** foco violeta nos formulários, vidro fosco em sheets/toast, fade entre telas. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -81,10 +85,12 @@ instalação complexa.
 
 Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
-### Tema F — Interface (novo)
-- [ ] **Redesign visual moderno:** repensar a interface com proposta atual e
-  intuitiva (usar o plugin `frontend-design`), mantendo arquivo único, alvos de
-  toque grandes e legibilidade no palco/pouca luz. Modo escuro continua padrão.
+### Tema F — Interface
+- [x] **Redesign visual moderno** *(entregue nas v0.10.0–v0.13.0, 4 fases — ver
+  `PLANO-redesign-ui.md`)*: paleta near-black + acento violeta, Inter na UI,
+  bottom nav + FAB único, player de palco com sheet Ajustes, vidro fosco e
+  microinterações. Falta apenas a **aprovação visual do dono** nas telas reais
+  (celular) antes de distribuir.
 
 ### Tema A — Segurança dos dados
 - [ ] **PWA instalável de verdade** (ícone, 100% offline inclusive fontes;
@@ -123,8 +129,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
 ## 5. Ordem sugerida para a próxima sessão
 
-1. **Redesign da interface** — proposta moderna e intuitiva, antes dos primeiros
-   testes com o ministério (primeira impressão conta).
+1. **Validação visual do redesign** no celular (dark e light) — ajustes finos
+   que só aparecem na tela real.
 2. **Preservar a grafia original** dos acordes — fecha um ponto que já incomodou.
 3. **PWA + backup seguro** — blinda os dados do ministério.
 4. **"Última vez que tocamos"** e **QR Code** — alto valor percebido.
@@ -147,4 +153,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.9.0.*
+*Última atualização deste roteiro: v0.13.0.*
