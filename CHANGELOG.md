@@ -18,6 +18,19 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+---
+
+## v0.7.1 — Correção do menu de estrutura
+**Correção.**
+- **Bug:** em músicas com muitas seções, o menu ☰ Estrutura crescia para cima e
+  ficava sem rolagem — as primeiras seções (Intro, etc.) ficavam fora da tela e
+  inacessíveis.
+- Agora a folha tem altura máxima e o conteúdo **rola**, com a primeira seção
+  sempre acessível.
+- O menu de estrutura também passou a **ignorar os cabeçalhos `[Tab - …]`**
+  (não são seções de navegação).
+- Validado com música de 22 seções: 8 verificações, zero erro de JS.
+
 ## v0.7.0 — Navegação por estrutura da música
 **Recurso novo.**
 - Botão **☰ Estrutura da música** no player: abre a lista das seções da cifra

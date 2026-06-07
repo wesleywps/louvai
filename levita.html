@@ -260,6 +260,9 @@ input,textarea,select{font-family:inherit}
   padding:10px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(110%);
   transition:.28s cubic-bezier(.2,.9,.3,1);box-shadow:var(--shadow)}
 .sheet.show{transform:translateY(0)}
+#sheet{max-height:86dvh;display:flex;flex-direction:column}
+#sheet .grip,#sheet h3{flex:0 0 auto}
+#sheet-body{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .sheet .grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:6px auto 14px}
 .sheet h3{font-family:'Fraunces',serif;margin:0 6px 10px;font-size:19px;font-weight:600}
 .sheetitem{display:flex;align-items:center;gap:14px;padding:15px 12px;border-radius:13px;font-size:16px}
@@ -497,7 +500,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.7.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.7.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -833,7 +836,7 @@ function scrollToSec(el){
   window.scrollTo({top:Math.max(0,y),behavior:"smooth"});
 }
 $("#p-struct").onclick=()=>{
-  const secs=[...document.querySelectorAll("#p-body .sec")];
+  const secs=[...document.querySelectorAll("#p-body .sec")].filter(el=>!/\btab\b/i.test(el.textContent));
   if(!secs.length){ toast("Esta cifra não tem seções marcadas"); return; }
   const labels=secs.map(el=>el.textContent.replace(/^\[|\]$/g,"").trim());
   const total={}; labels.forEach(l=>total[l]=(total[l]||0)+1);
