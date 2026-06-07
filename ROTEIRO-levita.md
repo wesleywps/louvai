@@ -118,11 +118,18 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
 ## 6. Como retomar na próxima sessão
 
-1. Tenha em mãos o **`levita-projeto-vX.Y.Z.zip`** mais recente (contém o código,
-   o `CHANGELOG.md` e o histórico git com as tags `v0.1.0…v0.7.0`).
-2. No começo da conversa, reenvie o zip (ou o `levita.html` atual) e diga de onde
-   quer continuar.
-3. Mantemos o ritual a cada incremento: anotar no CHANGELOG → subir `APP_VERSION`
-   no `levita.html` → commit + tag no git → entregar `levita-vX.Y.Z.html`.
+**No Claude Code (terminal) — recomendado para daqui pra frente:**
+1. Descompacte o `levita-projeto-vX.Y.Z.zip` numa pasta (o git já vem dentro).
+2. `npm install` → `npm run test:install` (baixa o Chromium, uma vez).
+3. Rode `claude` na pasta do projeto. Ele lê o `CLAUDE.md`, o `CHANGELOG.md` e
+   este roteiro automaticamente.
+4. Peça: "vamos continuar do Wake Lock" (ou outro item da seção 4).
+5. A cada incremento: `npm test` → atualizar CHANGELOG → subir `APP_VERSION` →
+   `git commit` + `git tag`.
+
+**No chat (claude.ai):** reenvie o zip mais recente e diga de onde continuar.
+
+O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
+(opcional) `levita-vX.Y.Z.html`.
 
 *Última atualização deste roteiro: v0.7.0.*
