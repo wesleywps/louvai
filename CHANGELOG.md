@@ -1,10 +1,10 @@
-# Histórico de versões — Levita 🎸
+# Histórico de versões — Louvai 🎸
 
 App de cifras offline-first para ministério de música. Versionamento semântico
 (`vMAIOR.MENOR.CORREÇÃO`): CORREÇÃO = conserto, MENOR = recurso novo, MAIOR =
 mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do nome.
 
----
+> O projeto se chamou **Levita** até a v0.8.0 (as notas antigas usam esse nome).
 
 ---
 
@@ -19,6 +19,22 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 ---
 
 ---
+
+---
+
+## v0.9.0 — Renomeado: Levita agora é Louvai
+**Mudança de nome (com compatibilidade total).**
+- O app passa a se chamar **Louvai** — "louvai" convida todos a adorar, sem
+  remeter à tribo levítica. Novo título, cabeçalho e nome de arquivo
+  (`louvai.html`).
+- **Nada se perde:** o boot migra automaticamente os dados gravados pelo nome
+  antigo (`levita.*` → `louvai.*` no localStorage), e a importação aceita tanto
+  arquivos novos (`louvai-song`, `louvai-library`, `louvai-escala`) quanto os
+  antigos (`levita-*`).
+- Exportações novas já saem com os identificadores `louvai-*`.
+- Documentos renomeados/atualizados (README, CLAUDE.md, `ROTEIRO-louvai.md`).
+- Validado: 27 verificações, incluindo importar arquivo antigo `levita-song` e
+  migração do localStorage; zero erro de JS.
 
 ## v0.8.0 — Wake Lock (tela acesa no player)
 **Recurso novo.**

@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#171210">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Levita · Cifras</title>
+<title>Louvai · Cifras</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -276,7 +276,7 @@ input,textarea,select{font-family:inherit}
   <!-- ===== LIBRARY VIEW ===== -->
   <div id="view-lib">
     <div class="topbar">
-      <div class="brand"><span class="dot"></span>Levita<span class="ver" id="appVer"></span></div>
+      <div class="brand"><span class="dot"></span>Louvai<span class="ver" id="appVer"></span></div>
       <div class="spacer"></div>
       <button class="iconbtn" id="themeBtn" title="Tema">◐</button>
       <button class="iconbtn" id="importBtn" title="Importar">↧</button>
@@ -500,7 +500,7 @@ input,textarea,select{font-family:inherit}
    LEVITA · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.8.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.9.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -648,10 +648,21 @@ function renderCifra(body, semis, showChords, acc, hideTabs){
 /* ---------- Armazenamento ---------- */
 const KEYS = ["C","C#","Db","D","D#","Eb","E","F","F#","Gb","G","G#","Ab","A","A#","Bb","B",
               "Cm","C#m","Dm","D#m","Em","Fm","F#m","Gm","G#m","Am","A#m","Bm"];
-const LS_SONGS="levita.songs.v1", LS_SET="levita.settings.v1", LS_ESC="levita.escalas.v1";
+const LS_SONGS="louvai.songs.v1", LS_SET="louvai.settings.v1", LS_ESC="louvai.escalas.v1";
 let songs=[], settings={theme:"dark"}, escalas=[];
 
+function migrateLevita(){
+  // o app se chamava "Levita": copia os dados das chaves antigas na primeira vez
+  try{
+    [["levita.songs.v1",LS_SONGS],["levita.settings.v1",LS_SET],["levita.escalas.v1",LS_ESC]]
+      .forEach(([old,nu])=>{
+        const v=localStorage.getItem(old);
+        if(v!==null && localStorage.getItem(nu)===null) localStorage.setItem(nu,v);
+      });
+  }catch(e){}
+}
 function load(){
+  migrateLevita();
   try{songs=JSON.parse(localStorage.getItem(LS_SONGS))||[];}catch(e){songs=[];}
   try{settings=Object.assign({theme:"dark"},JSON.parse(localStorage.getItem(LS_SET))||{});}catch(e){}
   try{escalas=JSON.parse(localStorage.getItem(LS_ESC))||[];}catch(e){escalas=[];}
@@ -1043,8 +1054,8 @@ const slug=s=>(s||"cifra").normalize("NFD").replace(/[\u0300-\u036f]/g,"").repla
 function shareSheet(song){
   openSheet("Compartilhar “"+song.title+"”",[
     {ic:"↗",label:"Enviar esta cifra (.json)",fn:()=>{
-      shareFile(slug(song.title)+".levita.json",
-        JSON.stringify({type:"levita-song",version:1,app:APP_VERSION,song}),"Cifra: "+song.title);
+      shareFile(slug(song.title)+".louvai.json",
+        JSON.stringify({type:"louvai-song",version:1,app:APP_VERSION,song}),"Cifra: "+song.title);
       closeSheet();
     }},
     {ic:"✎",label:"Editar cifra",fn:()=>{closeSheet();openEditor(song.id);}},
@@ -1059,8 +1070,8 @@ function shareSheet(song){
 $("#backupBtn").onclick=()=>{
   openSheet("Backup e compartilhamento",[
     {ic:"↥",label:"Exportar TODO o repertório (.json)",fn:()=>{
-      shareFile("repertorio-levita.json",
-        JSON.stringify({type:"levita-library",version:1,app:APP_VERSION,songs}),"Repertório Levita");
+      shareFile("repertorio-louvai.json",
+        JSON.stringify({type:"louvai-library",version:1,app:APP_VERSION,songs}),"Repertório Louvai");
       closeSheet();
     }},
     {ic:"↧",label:"Importar arquivo (cifra ou repertório)",fn:()=>{closeSheet();$("#fileInput").click();}},
@@ -1086,8 +1097,10 @@ function mergeSongs(arr){
 }
 function importJSON(text){
   let data; try{data=JSON.parse(text);}catch(e){toast("Arquivo inválido 😕");return;}
+  // arquivos da era "Levita" (nome antigo do app) continuam abrindo normalmente
+  const tp=String(data.type||"").replace(/^levita-/,"louvai-");
   // Escala (traz as cifras junto)
-  if(data.type==="levita-escala"&&data.escala){
+  if(tp==="louvai-escala"&&data.escala){
     const m=mergeSongs(data.songs||[]);
     const e=data.escala; e.id=uid(); e.updatedAt=Date.now();
     escalas.push(e); saveSongs(); saveEscalas();
@@ -1096,8 +1109,8 @@ function importJSON(text){
     return;
   }
   let incoming=[];
-  if(data.type==="levita-song"&&data.song) incoming=[data.song];
-  else if(data.type==="levita-library"&&Array.isArray(data.songs)) incoming=data.songs;
+  if(tp==="louvai-song"&&data.song) incoming=[data.song];
+  else if(tp==="louvai-library"&&Array.isArray(data.songs)) incoming=data.songs;
   else if(Array.isArray(data)) incoming=data;
   else if(data.title&&data.body) incoming=[data];
   else{toast("Não reconheci esse arquivo");return;}
@@ -1348,8 +1361,8 @@ function shareEscalaSheet(id){
     {ic:"↗",label:"Enviar escala + cifras (.json)",fn:()=>{
       const usedIds=[...new Set(songItems(e).map(it=>it.songId))];
       const bundle=songs.filter(s=>usedIds.includes(s.id));
-      shareFile(slug(e.title)+".escala.levita.json",
-        JSON.stringify({type:"levita-escala",version:1,app:APP_VERSION,escala:e,songs:bundle}),"Escala: "+e.title);
+      shareFile(slug(e.title)+".escala.louvai.json",
+        JSON.stringify({type:"louvai-escala",version:1,app:APP_VERSION,escala:e,songs:bundle}),"Escala: "+e.title);
       closeSheet();
     }},
     {ic:"✎",label:"Editar escala",fn:()=>{closeSheet();openEscalaEditor(id);}},

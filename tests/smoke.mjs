@@ -1,12 +1,12 @@
 /* =========================================================================
-   Levita — suíte de validação (smoke/E2E)
-   Abre o levita.html num Chromium headless e valida os pontos críticos.
+   Louvai — suíte de validação (smoke/E2E)
+   Abre o louvai.html num Chromium headless e valida os pontos críticos.
    Uso:  npm install && npm run test:install && npm test
    Sai com código ≠ 0 se algo falhar.
    ========================================================================= */
 import { chromium } from "playwright";
 
-const APP_URL = new URL("../levita.html", import.meta.url).href;
+const APP_URL = new URL("../louvai.html", import.meta.url).href;
 
 let pass = 0, fail = 0;
 const ok = (cond, msg) => { if (cond) { pass++; console.log("✓ " + msg); }
@@ -113,7 +113,29 @@ await page.locator("#es-present").click(); await page.waitForTimeout(200);
 ok(await page.locator("#presentbar").isVisible(), "Modo Apresentar abre com a barra de navegação");
 ok((await page.locator("#t-key").textContent()) === "A", "Apresentar abre a música no tom da escala (A)");
 
-// 8) Sem erros de JS em todo o fluxo
+// 8) Compatibilidade com o nome antigo (Levita)
+ok(/Louvai/.test(await page.locator(".brand").first().textContent()), "Cabeçalho mostra o novo nome (Louvai)");
+const compat = await page.evaluate(() => {
+  importJSON(JSON.stringify({ type: "levita-song", version: 1,
+    song: { title: "Música Era Levita", key: "C", body: "C  G\nLinha antiga" } }));
+  return songs.some(s => s.title === "Música Era Levita");
+});
+ok(compat, "Importa arquivo antigo 'levita-song' (compatibilidade)");
+
+// 8b) Migração do localStorage: dados gravados pelo Levita aparecem no Louvai
+const ctx2 = await browser.newContext({ viewport: { width: 412, height: 915 } });
+const page2 = await ctx2.newPage();
+await page2.addInitScript(() => {
+  localStorage.setItem("levita.songs.v1", JSON.stringify([
+    { id: "old1", title: "Migrada do Levita", key: "D", capo: 0, tags: [], updatedAt: 1, body: "D  A\nTexto" }]));
+});
+await page2.goto(APP_URL);
+await page2.waitForTimeout(300);
+ok((await page2.locator(".songcard", { hasText: "Migrada do Levita" }).count()) === 1,
+   "Migra o repertório das chaves antigas do localStorage");
+await ctx2.close();
+
+// 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 
 await browser.close();

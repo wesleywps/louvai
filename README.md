@@ -1,17 +1,21 @@
-# 🎸 Levita
+# 🎸 Louvai
 
 App de cifras **offline-first** para ministério de música. Um único arquivo
-HTML (`levita.html`), sem build e sem servidor: roda no navegador do
+HTML (`louvai.html`), sem build e sem servidor: roda no navegador do
 celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 
+> Até a v0.8.0 o projeto se chamava **Levita**. Arquivos `.json` exportados
+> pelo nome antigo continuam importando normalmente.
+
 ## Usar
-Abra `levita.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
+Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.7.1)
+## Recursos (v0.9.0)
 - Repertório com busca e tags; criar/editar cifras; **importar colando do Cifra Club**.
 - Player: transposição (♯/♭), capo, fonte, modo escuro/claro, só-letra, ocultar
-  tablaturas, auto-scroll e **navegação por estrutura** (☰).
+  tablaturas, auto-scroll, **navegação por estrutura** (☰) e **tela sempre
+  acesa** (Wake Lock).
 - **Escalas/Setlists**: ordem do culto, tom por escala, equipe, tempo total e
   **modo Apresentar**.
 - Compartilhar e fazer backup por arquivo `.json`. Tudo offline.
@@ -28,8 +32,8 @@ npm test               # roda a suíte de validação
 ## Documentos
 - `CLAUDE.md` — guia para desenvolver com o Claude Code (padrões e ritual).
 - `CHANGELOG.md` — histórico por versão (semver).
-- `ROTEIRO-levita.md` — visão geral e próximos passos.
+- `ROTEIRO-louvai.md` — visão geral e próximos passos.
 
 ## Versionamento
 Semântico (`vMAIOR.MENOR.CORREÇÃO`). A versão atual aparece dentro do app, ao
-lado do nome, e está em `APP_VERSION` no `levita.html`.
+lado do nome, e está em `APP_VERSION` no `louvai.html`.

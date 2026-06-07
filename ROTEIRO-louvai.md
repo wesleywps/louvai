@@ -1,18 +1,22 @@
-# 🎸 Levita — Roteiro do Projeto
+# 🎸 Louvai — Roteiro do Projeto
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.7.0**.
+seguir. Atualizado até a **v0.9.0**.
 
-> **Onde salvar:** coloque este arquivo na pasta `teste-levita`, junto com o
-> `CHANGELOG.md`, o `levita-vX.Y.Z.html` mais recente e o
-> `levita-projeto-vX.Y.Z.zip` (que contém o histórico git completo).
+> **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
+> v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
+> separada de músicos. A compatibilidade com arquivos e dados antigos foi
+> preservada.
+
+> **Onde salvar:** mantenha esta pasta com o `CHANGELOG.md`, o
+> `louvai-vX.Y.Z.html` mais recente e o zip do projeto (com o histórico git).
 
 ---
 
 ## 1. O que é e como foi pensado
 
-Levita é um **arquivo único HTML** que roda no navegador do celular/tablet,
+Louvai é um **arquivo único HTML** que roda no navegador do celular/tablet,
 guarda tudo no próprio aparelho e compartilha por arquivo. Zero servidor, zero
 instalação complexa.
 
@@ -33,8 +37,9 @@ instalação complexa.
 - **Nada é salvo no escuro:** o importador de texto preenche um formulário
   editável para revisão antes de salvar.
 - **Dados locais = responsabilidade de backup do usuário:** por isso existe o
-  Backup; o ambiente "reseta" entre sessões, então o histórico de verdade são os
-  arquivos baixados (e o zip com git).
+  Backup; o histórico de verdade são os arquivos baixados (e o zip com git).
+- **Compatibilidade com o nome antigo:** importação aceita `levita-*` e o boot
+  migra as chaves antigas do `localStorage` (`migrateLevita`).
 
 ---
 
@@ -51,6 +56,9 @@ instalação complexa.
 | **v0.5.1** | correção | Colar: trata `[Seção] + acordes` na mesma linha (corrige `[Intro]` virando título). |
 | **v0.6.0** | recurso+correção | Botão **ocultar tablaturas**; parser ignora linha `Cifra: … Favoritar` do Cifra Club. |
 | **v0.7.0** | recurso | **Navegação por estrutura da música:** menu ☰ com as seções e rolagem até a seção escolhida. |
+| **v0.7.1** | correção | Menu de estrutura com rolagem (músicas longas) e ignorando cabeçalhos `[Tab]`. |
+| **v0.8.0** | recurso | **Wake Lock:** tela acesa enquanto o player está aberto; religa ao voltar pro app. |
+| **v0.9.0** | mudança | **Renomeado para Louvai** (era Levita), com migração de dados e importação retrocompatível. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -61,7 +69,8 @@ instalação complexa.
 - **Repertório:** criar/editar/excluir cifras, busca, tags; importar colando do
   Cifra Club; importar/exportar arquivos; backup do repertório inteiro.
 - **Player:** transposição (♯/♭), capo, tamanho de fonte, modo escuro/claro, só
-  letra, ocultar tabs, auto-scroll, e navegação por estrutura (☰).
+  letra, ocultar tabs, auto-scroll, navegação por estrutura (☰) e tela sempre
+  acesa (Wake Lock).
 - **Escalas:** montar o culto (músicas + itens), tom por escala, equipe, tempo
   total, modo Apresentar (música a música no tom do culto), compartilhar.
 - **Offline:** tudo salvo no aparelho (localStorage); funciona sem internet.
@@ -72,6 +81,11 @@ instalação complexa.
 
 Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
+### Tema F — Interface (novo)
+- [ ] **Redesign visual moderno:** repensar a interface com proposta atual e
+  intuitiva (usar o plugin `frontend-design`), mantendo arquivo único, alvos de
+  toque grandes e legibilidade no palco/pouca luz. Modo escuro continua padrão.
+
 ### Tema A — Segurança dos dados
 - [ ] **PWA instalável de verdade** (ícone, 100% offline inclusive fontes;
   destrava o compartilhar nativo no desktop).
@@ -80,7 +94,7 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 - [ ] **Migrar de localStorage para IndexedDB** (mais espaço e robustez).
 
 ### Tema B — Uso ao vivo / palco
-- [ ] **Wake Lock:** manter a tela acesa durante o player. *(alto impacto, baixo esforço)*
+- [x] **Wake Lock:** manter a tela acesa durante o player. *(entregue na v0.8.0)*
 - [ ] **Auto-scroll mais esperto:** lembrar velocidade por música; pausar ao tocar a tela.
 - [ ] **Modo tela cheia** de apresentação.
 
@@ -109,7 +123,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
 ## 5. Ordem sugerida para a próxima sessão
 
-1. **Wake Lock** — rápido e salva o culto (a tela não apaga no meio).
+1. **Redesign da interface** — proposta moderna e intuitiva, antes dos primeiros
+   testes com o ministério (primeira impressão conta).
 2. **Preservar a grafia original** dos acordes — fecha um ponto que já incomodou.
 3. **PWA + backup seguro** — blinda os dados do ministério.
 4. **"Última vez que tocamos"** e **QR Code** — alto valor percebido.
@@ -118,18 +133,18 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
 ## 6. Como retomar na próxima sessão
 
-**No Claude Code (terminal) — recomendado para daqui pra frente:**
-1. Descompacte o `levita-projeto-vX.Y.Z.zip` numa pasta (o git já vem dentro).
+**No Claude Code (terminal) — recomendado:**
+1. Abra a pasta do projeto (o git já vem dentro).
 2. `npm install` → `npm run test:install` (baixa o Chromium, uma vez).
 3. Rode `claude` na pasta do projeto. Ele lê o `CLAUDE.md`, o `CHANGELOG.md` e
    este roteiro automaticamente.
-4. Peça: "vamos continuar do Wake Lock" (ou outro item da seção 4).
+4. Peça: "vamos continuar do redesign" (ou outro item da seção 4).
 5. A cada incremento: `npm test` → atualizar CHANGELOG → subir `APP_VERSION` →
    `git commit` + `git tag`.
 
 **No chat (claude.ai):** reenvie o zip mais recente e diga de onde continuar.
 
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
-(opcional) `levita-vX.Y.Z.html`.
+(opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.7.0.*
+*Última atualização deste roteiro: v0.9.0.*
