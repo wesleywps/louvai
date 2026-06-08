@@ -102,6 +102,12 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
 ### Tema B — Uso ao vivo / palco
 - [x] **Wake Lock:** manter a tela acesa durante o player. *(entregue na v0.8.0)*
+- [ ] **Modos de leitura no player** *(PLANEJADO — ver `PLANO-modos-leitura.md`)*:
+  - **Modo Página** (paginação horizontal estilo livro: deslizar ou tocar nas
+    laterais), com fatiamento adaptável ao tamanho da tela e sem cortar o par
+    acorde/letra (unidades atômicas). *(Incremento 2 → v0.15.0)*
+  - **Auto-scroll opcional** no modo rolagem (oculto por padrão; liga no ⚙
+    Ajustes). *(Incremento 1 → v0.14.0)*
 - [ ] **Auto-scroll mais esperto:** lembrar velocidade por música; pausar ao tocar a tela.
 - [ ] **Modo tela cheia** de apresentação.
 
@@ -130,11 +136,13 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
 ## 5. Ordem sugerida para a próxima sessão
 
-1. **Validação visual do redesign** no celular (dark e light) — ajustes finos
+1. **Modos de leitura no player** (paginação + auto-scroll opcional) — plano
+   pronto em `PLANO-modos-leitura.md`, 2 incrementos (v0.14.0 e v0.15.0).
+2. **Validação visual do redesign** no celular (dark e light) — ajustes finos
    que só aparecem na tela real.
-2. **Preservar a grafia original** dos acordes — fecha um ponto que já incomodou.
-3. **PWA + backup seguro** — blinda os dados do ministério.
-4. **"Última vez que tocamos"** e **QR Code** — alto valor percebido.
+3. **Preservar a grafia original** dos acordes — fecha um ponto que já incomodou.
+4. **PWA + backup seguro** — blinda os dados do ministério.
+5. **"Última vez que tocamos"** e **QR Code** — alto valor percebido.
 
 ---
 
