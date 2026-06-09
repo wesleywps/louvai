@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.15.0**.
+seguir. Atualizado até a **v0.15.1**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -67,6 +67,7 @@ instalação complexa.
 | **v0.13.2** | correção | **Robustez, segurança e acessibilidade:** `esc()` escapa aspas (fecha XSS por `.json` importado) e tolera não-string; re-importar escala atualiza em vez de duplicar; lint poupa palavras da letra; exemplo não ressuscita; `aria-label`/`aria-pressed`, "Reduzir movimento" e alvos de toque maiores. |
 | **v0.14.0** | recurso | **Auto-scroll opcional** (modos de leitura, parte 1): a barra de auto-scroll fica oculta por padrão e liga num interruptor do ⚙ Ajustes; mais tela pra cifra. |
 | **v0.15.0** | recurso | **Modo Página** (modos de leitura, parte 2): cifra em páginas horizontais (deslizar ou tocar nas laterais), fatiamento medido no DOM com unidades atômicas (acorde nunca se separa da letra). |
+| **v0.15.1** | correção | **Modo Página no celular:** corrige paginação fragmentada (1 linha por página / centenas de páginas) — bug de sub-pixel na medição de overflow. Pego na validação em dispositivo. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -170,4 +171,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.15.0.*
+*Última atualização deste roteiro: v0.15.1.*

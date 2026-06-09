@@ -73,6 +73,7 @@ Menor e isolado; prepara o terreno de settings.
 - Não cortar par acorde/letra: garantido pelas **unidades atômicas** (acorde→letra, seção→conteúdo nunca se separam entre páginas).
 - Medir a altura **depois** do layout aplicado (fonte/largura reais); a página de medição precisa estar com a largura final. Refazer no `resize`/rotação.
 - `scroll-snap`/`behavior:smooth` é assíncrono — nos testes, asserir o índice (`dataset.page`) e dar `waitForTimeout` curto.
+- **Overflow é inteiro, `avail` é fracionário** (corrigido na v0.15.1): `scrollHeight`/`clientHeight` voltam **arredondados**; comparar `scrollHeight > avail` (fracionário, ex.: 560,8px) quebrava a página cedo demais (1 linha/página → centenas de páginas) dependendo da fração de pixels do aparelho — passava no teste de desktop e falhava no celular. Compare **`scrollHeight > clientHeight`** (mesmo elemento, ambos inteiros).
 
 ## Arquivos
 

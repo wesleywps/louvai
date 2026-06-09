@@ -22,6 +22,23 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.15.1 — Correção do Modo Página no celular (paginação fragmentada)
+**Correção (crítica do Modo Página).** Pega na validação em dispositivo real.
+- **Bug:** em vários celulares, uma cifra no Modo Página quebrava em **uma linha por
+  página** — uma música chegou a virar ~148 páginas. Causa: a altura útil da página
+  (`avail`) é fracionária (ex.: 560,8px), mas o `scrollHeight`/`clientHeight` que o
+  navegador devolve são **inteiros**; o arredondamento (561) passava de 560,8 e o app
+  achava que a página tinha estourado **antes de caber qualquer conteúdo**, quebrando
+  a página a cada unidade. Dependia da fração de pixels do aparelho — por isso passava
+  no teste (viewport 412×915) e falhava no celular (390×844 → 560,8125px).
+- **Correção:** o teste de estouro agora compara `scrollHeight` com `clientHeight`
+  (ambos inteiros e do **mesmo** elemento) — o teste canônico de overflow, imune a
+  sub-pixel. As páginas voltam a empacotar ~15-20 linhas, como esperado.
+- **Guarda de regressão:** novo teste num viewport de celular (390×844, o que
+  reproduzia o bug) exige que a paginação empacote várias linhas por página.
+- Validado: **58 verificações** (nova: empacotamento por página no celular), zero
+  erro de JS.
+
 ## v0.15.0 — Modo Página (modos de leitura, parte 2)
 **Recurso novo (UX de palco).** Segundo e último incremento dos modos de leitura
 (ver `PLANO-modos-leitura.md`) — fecha o tema.

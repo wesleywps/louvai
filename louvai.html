@@ -606,7 +606,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.15.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.15.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1122,7 +1122,11 @@ function paginate(html){
   for(const unit of pageUnits(html)){
     if(!hasContent && unit.every(isBlank)) continue;          // não começa página com linha em branco
     const lns=unit.map(mkLn); lns.forEach(l=>page.appendChild(l));
-    if(page.scrollHeight>avail && hasContent){                // estourou: a unidade inteira vai pra próxima página
+    // overflow = conteúdo passou da CAIXA da página. Comparar scrollHeight com
+    // clientHeight (ambos inteiros, do MESMO elemento) — e não com avail, que é
+    // fracionário: o arredondamento de clientHeight passava de avail e quebrava a
+    // página a cada unidade (cifra virava 1 linha por página). Bug de sub-pixel.
+    if(page.scrollHeight>page.clientHeight && hasContent){     // estourou: a unidade inteira vai pra próxima página
       lns.forEach(l=>page.removeChild(l));
       page=newPage(); hasContent=false;
       if(unit.every(isBlank)) continue;

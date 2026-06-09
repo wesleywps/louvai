@@ -291,6 +291,22 @@ ok((await page.evaluate(() => +document.getElementById("p-body").dataset.pages))
   "Instrumental sem linhas em branco fatia em ≥2 páginas (não vira unidade gigante)");
 await page.evaluate(() => { setReadMode("scroll"); });   // devolve ao padrão
 
+// regressão (bug de sub-pixel): num viewport de celular cujo avail é fracionário
+// (390x844 → 560.8125px), a paginação tem que EMPACOTAR várias linhas por página,
+// não 1-2 (o que fazia uma cifra virar centenas de páginas).
+const ctx5 = await browser.newContext({ viewport: { width: 390, height: 844 } });
+const page5 = await ctx5.newPage();
+await page5.goto(APP_URL); await page5.waitForTimeout(300);
+const dense = await page5.evaluate(() => {
+  const body = Array.from({ length: 12 }, (_, i) => `[Parte ${i + 1}]\nC      G      Am     F\nLinha de letra ${i + 1}`).join("\n");
+  songs.push({ id: "densetest", title: "Densa", key: "C", capo: 0, tags: [], updatedAt: Date.now(), body });
+  saveSongs(); settings.readMode = "page"; openPlayer("densetest");
+  const pages = [...document.getElementById("p-body").children];
+  return Math.max(...pages.map(pg => pg.querySelectorAll(".ln").length));
+});
+ok(dense >= 5, "Paginação empacota várias linhas por página no celular (máx " + dense + " linhas/página)");
+await ctx5.close();
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 
