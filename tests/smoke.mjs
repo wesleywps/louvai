@@ -173,6 +173,57 @@ ok((await page2.locator(".songcard", { hasText: "Migrada do Levita" }).count()) 
    "Migra o repertório das chaves antigas do localStorage");
 await ctx2.close();
 
+// ===== v0.13.2 — robustez, segurança e acessibilidade =====
+
+// esc() escapa aspas (fecha XSS por atributo) e tolera valor não-string
+const escq = await page.evaluate(() => ({ dq: esc('a"b'), sq: esc("x'y"), num: esc(123) }));
+ok(escq.dq === "a&quot;b" && escq.sq === "x&#39;y", "esc() escapa aspas (fecha XSS por atributo na escala importada)");
+ok(escq.num === "123", "esc() tolera valor não-string sem derrubar o render");
+
+// lint poupa palavras da letra começadas por nota, mas ainda pega token com forma de acorde inválido
+const lint = await page.evaluate(() => ({
+  deus: lintCifra("C G Deus").length,
+  gloria: lintCifra("D A Glória").length,
+  bad: lintCifra("C G Cg").map(i => i.token).join(","),
+}));
+ok(lint.deus === 0 && lint.gloria === 0, "Lint não acusa palavra da letra (Deus/Glória) em linha com acordes");
+ok(lint.bad === "Cg", "Lint ainda acusa token com forma de acorde inválido (Cg)");
+
+// re-importar a mesma escala atualiza em vez de duplicar (dedup por id)
+const escDup = await page.evaluate(() => {
+  const e = { id: "esc-dup-1", title: "Escala Dup", date: "2026-06-01", type: "Culto", team: [], items: [], updatedAt: 5 };
+  const json = JSON.stringify({ type: "louvai-escala", version: 1, escala: e, songs: [] });
+  importJSON(json); importJSON(json);
+  return escalas.filter(x => x.id === "esc-dup-1").length;
+});
+ok(escDup === 1, "Re-importar a mesma escala não duplica (dedup por id)");
+
+// acessibilidade: botões só-ícone com nome acessível e toggle expondo estado
+ok((await page.locator("#p-back").getAttribute("aria-label")) === "Voltar" &&
+   (await page.locator("#lyr-toggle").getAttribute("aria-pressed")) === "false",
+   "Acessibilidade: botão só-ícone tem nome e toggle expõe aria-pressed");
+
+// repertório esvaziado de propósito não ressuscita o exemplo (flag settings.seeded)
+const ctx3 = await browser.newContext({ viewport: { width: 412, height: 915 } });
+const page3 = await ctx3.newPage();
+await page3.addInitScript(() => {
+  localStorage.setItem("louvai.settings.v1", JSON.stringify({ theme: "dark", seeded: true }));
+  localStorage.setItem("louvai.songs.v1", JSON.stringify([]));
+});
+await page3.goto(APP_URL);
+await page3.waitForTimeout(300);
+ok((await page3.locator(".songcard").count()) === 0, "Repertório esvaziado de propósito não ressuscita o exemplo");
+await ctx3.close();
+
+// "Reduzir movimento" do sistema praticamente desliga o fade entre telas
+const ctx4 = await browser.newContext({ viewport: { width: 412, height: 915 }, reducedMotion: "reduce" });
+const page4 = await ctx4.newPage();
+await page4.goto(APP_URL);
+await page4.waitForTimeout(200);
+const animDur = await page4.evaluate(() => getComputedStyle(document.getElementById("view-lib")).animationDuration);
+ok(parseFloat(animDur) < 0.01, "Reduzir movimento: fade entre telas praticamente desligado");
+await ctx4.close();
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

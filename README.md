@@ -11,7 +11,7 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.13.0)
+## Recursos (v0.13.2)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
 - Repertório com busca e tags; criar/editar cifras; **importar colando do Cifra Club**.
@@ -21,6 +21,8 @@ para ter um ícone e abrir como app.
 - **Escalas/Setlists**: ordem do culto, tom por escala, equipe, tempo total e
   **modo Apresentar**.
 - Compartilhar e fazer backup por arquivo `.json`. Tudo offline.
+- **Robusto e acessível:** importação à prova de arquivo malformado (sem XSS, sem
+  travar a lista), botões com nome em leitor de tela e respeito ao "Reduzir movimento".
 
 ## Desenvolver
 Requer [Node.js](https://nodejs.org) 18+.

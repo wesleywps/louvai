@@ -22,6 +22,41 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.13.2 — Robustez, segurança e acessibilidade
+**Correção (blindagem antes de distribuir).** Faxina de qualidade guiada por uma
+revisão multi-dimensional do código (correção, robustez, qualidade e acessibilidade),
+sem novos recursos — os modos de leitura (v0.14.0+) seguem reservados.
+- **Segurança — XSS por arquivo:** `esc()` passou a escapar também aspas (`"`/`'`).
+  Antes, uma escala recebida do grupo (`.json`) com aspas no nome de alguém da equipe
+  ou nas observações de um item podia fechar o atributo `value="…"` e injetar
+  HTML/script ao abrir o editor daquela escala. Agora `esc()` é a fonte única de
+  escape para texto **e** atributos.
+- **Robustez — arquivo malformado não derruba o app:** `esc()` tolera valores
+  não-string e a importação normaliza os tipos (ex.: título numérico). Um `.json`
+  estranho não trava mais a lista de cifras; a ordenação por título também ficou
+  à prova de dados antigos.
+- **Re-importar escala não duplica:** importar a mesma escala (ou uma versão
+  corrigida) agora **atualiza** a existente por `id` — como já acontecia com as
+  cifras — em vez de empilhar cópias. As cifras que vêm junto aparecem na aba Cifras
+  na hora (antes só depois de buscar/recarregar).
+- **Corretor mais esperto:** o aviso "não reconheci como acorde" parou de acusar
+  palavras da letra começadas por nota (Deus, Glória, Cristo, Amor…). Só alerta o que
+  **tem forma de acorde** e não é um (ex.: `Cg`) — fiel à gramática generosa.
+- **Exemplo não ressuscita:** depois de esvaziar o repertório de propósito, a cifra
+  de exemplo não volta a cada abertura (semeada só numa instalação nunca inicializada).
+- **Importar à prova de erro de leitura:** falha do `FileReader` agora avisa e libera
+  re-selecionar o mesmo arquivo (antes era um erro silencioso).
+- **Acessibilidade:** botões só-ícone ganharam nome acessível (`aria-label`); os
+  toggles (só-letra, tablaturas, ♯/♭) expõem o estado ligado/desligado (`aria-pressed`);
+  o app respeita o "Reduzir movimento" do sistema; e os alvos de toque pequenos da
+  ordem do culto (↑/↓/✕) e o slider de velocidade cresceram para o padrão de palco.
+- **Casa arrumada:** a coreografia de abrir/fechar dos painéis (sheets) foi
+  centralizada num par de funções; o comentário de cabeçalho que ainda dizia "LEVITA"
+  foi corrigido para "Louvai".
+- Validado: **47 verificações** (8 novas: escape de aspas, tolerância a não-string,
+  dedup de escala, lint poupando a letra, exemplo não ressuscita, nome acessível +
+  `aria-pressed`, "Reduzir movimento"), zero erro de JS.
+
 ## v0.13.1 — Contraste da cifra no modo escuro
 **Correção (legibilidade no palco).**
 - **Problema:** no dark, acorde (violeta-claro) e letra (branco) tinham

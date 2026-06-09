@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.13.0**.
+seguir. Atualizado até a **v0.13.2**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -64,6 +64,7 @@ instalação complexa.
 | **v0.12.0** | recurso | **Redesign F3:** barra do player enxuta (só Tom + auto-scroll) e sheet "⚙ Ajustes". |
 | **v0.13.0** | recurso | **Redesign F4:** foco violeta nos formulários, vidro fosco em sheets/toast, fade entre telas. |
 | **v0.13.1** | correção | **Contraste da cifra no dark:** acorde com chip + halo, letra um tom abaixo do branco — leitura clara no palco. |
+| **v0.13.2** | correção | **Robustez, segurança e acessibilidade:** `esc()` escapa aspas (fecha XSS por `.json` importado) e tolera não-string; re-importar escala atualiza em vez de duplicar; lint poupa palavras da letra; exemplo não ressuscita; `aria-label`/`aria-pressed`, "Reduzir movimento" e alvos de toque maiores. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -79,6 +80,9 @@ instalação complexa.
 - **Escalas:** montar o culto (músicas + itens), tom por escala, equipe, tempo
   total, modo Apresentar (música a música no tom do culto), compartilhar.
 - **Offline:** tudo salvo no aparelho (localStorage); funciona sem internet.
+- **Robustez e acessibilidade:** importação à prova de arquivo malformado (sem XSS,
+  sem travar a lista); botões com nome em leitor de tela, toggles com estado, respeito
+  ao "Reduzir movimento" e alvos de toque grandes para o palco.
 
 ---
 
@@ -162,4 +166,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.13.1.*
+*Última atualização deste roteiro: v0.13.2.*
