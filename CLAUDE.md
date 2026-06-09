@@ -41,16 +41,35 @@ arquivo `.json` (cifra, repertório ou escala).
 6. **Compatibilidade com o nome antigo:** `importJSON` aceita `levita-*` e
    `migrateLevita()` copia as chaves antigas do `localStorage`. Não remover.
 
-## Ritual de CADA incremento (obrigatório)
-1. Implementar a mudança em `louvai.html`.
-2. **Testar de verdade** (ver "Como testar"). Não entregar sem validar.
-3. Atualizar o **`CHANGELOG.md`** com uma nova versão. Semver:
-   `vMAIOR.MENOR.CORREÇÃO` (CORREÇÃO = conserto, MENOR = recurso novo, MAIOR =
-   mudança grande/incompatível).
-4. Subir o número em **`APP_VERSION`** (topo do `<script>` em `louvai.html`).
-   Mantenha o `version` do `package.json` igual, se quiser.
-5. `git add -A && git commit -m "vX.Y.Z — descrição"` e `git tag vX.Y.Z`.
+## Ritual de CADA entrega (obrigatório, sem exceção)
+> Vale para **toda** implementação, correção ou alteração entregue — recurso novo,
+> bugfix, refactor, ajuste de doc. **Atualize TODOS os artefatos a cada entrega**:
+> nenhum incremento é "pequeno demais" para pular o ritual. Os artefatos têm que
+> ficar sempre coerentes entre si e com a versão atual.
+
+1. **Implementar** a mudança em `louvai.html`.
+2. **Testar de verdade** (ver "Como testar"). Não entregar sem validar. Quando a
+   entrega for um **bugfix**, adicione um **teste de regressão** que falharia com o
+   bug e passa com a correção (de preferência reproduzindo a condição real).
+3. **Subir a versão** (Semver `vMAIOR.MENOR.CORREÇÃO`: CORREÇÃO = conserto,
+   MENOR = recurso novo, MAIOR = mudança grande/incompatível) em **AMBOS**:
+   - `APP_VERSION` (topo do `<script>` em `louvai.html`);
+   - `version` do `package.json` (mantê-los **sempre iguais**).
+4. **Atualizar todos os artefatos de histórico/documentação afetados:**
+   - `CHANGELOG.md` — nova entrada da versão (o "porquê" do conserto, não só o quê).
+   - `ROTEIRO-louvai.md` — linha do tempo (nova linha), "Atualizado até a vX.Y.Z",
+     rodapé "Última atualização", e marcar/ajustar os itens do backlog (✅/checkbox)
+     e a "ordem sugerida" quando algo for concluído.
+   - `README.md` — referências de versão e a lista de recursos, se mudou.
+   - `PLANO-*.md` relevante — status do plano/incremento quando a entrega o avança
+     ou conclui (e registrar armadilhas aprendidas, p/ não repetir o erro).
+5. **Commitar e taguear:** `git add -A && git commit -m "vX.Y.Z — descrição"` +
+   `git tag vX.Y.Z` (commit de versão direto no branch de trabalho, como o histórico).
 6. (Opcional) salvar uma cópia `louvai-vX.Y.Z.html` para distribuição.
+
+**Checklist rápido antes do commit:** APP_VERSION = package.json · CHANGELOG tem a
+versão · ROTEIRO (linha do tempo + rodapé + backlog) coerente · README na versão ·
+PLANO atualizado se aplicável · `npm test` verde.
 
 ## Como testar
 - **Automático (recomendado):**
