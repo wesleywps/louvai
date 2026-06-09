@@ -3,8 +3,8 @@
 > **Como retomar:** abra o Claude Code nesta pasta e peça
 > *"vamos executar o PLANO-modos-leitura.md, Incremento 1"*.
 > Plano aprovado pelo dono em 2026-06; decisões já tomadas (não reabrir).
-> Status: **Incremento 1 (auto-scroll opcional) entregue na v0.14.0**; falta o
-> Incremento 2 (Modo Página). App está na v0.14.0.
+> Status: **CONCLUÍDO** — Incremento 1 (auto-scroll opcional, v0.14.0) e Incremento 2
+> (Modo Página, v0.15.0) entregues e validados. App está na v0.15.0.
 
 ## Contexto
 
@@ -56,7 +56,7 @@ Menor e isolado; prepara o terreno de settings.
 - Novo interruptor no ⚙ Ajustes (`#playersheet`): "Mostrar barra de auto-scroll" (ex.: `#scrollbar-toggle`), no padrão `.ctrl.toggle` já existente; alterna setting + salva + redesenha.
 - **Atualizar o teste existente** "Tom e auto-scroll visíveis direto na tela": auto-scroll agora **oculto por padrão** → asserir que `.scrollbar-mini` começa oculta e que, após ligar o toggle, aparece. Tom continua visível.
 
-### Incremento 2 — Modo Página (v0.15.0)
+### Incremento 2 — Modo Página (v0.15.0) ✅ ENTREGUE
 - `settings.readMode` (`"scroll"` default | `"page"`), persistido. Seletor segmentado no ⚙ Ajustes ("Rolagem | Página", ex.: `#mode-scroll`/`#mode-page`).
 - `drawPlayer` ramifica por `readMode`: rolagem = como hoje; página = pipeline de fatiamento acima. Em modo página: esconder `.scrollbar-mini` e o toggle de auto-scroll (não fazem sentido), `stopScroll()`.
 - **Navegação:** `goPage(±1)` com `scrollTo({left, behavior:"smooth"})` + clamp; listener de `click` em `#p-body` no modo página (clientX vs meio da tela → avança/volta; guarda p/ não disparar logo após arraste); deslizar é nativo (scroll-snap) e atualiza o índice no `scrollend`.

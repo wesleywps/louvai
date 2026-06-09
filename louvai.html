@@ -208,6 +208,25 @@ input,textarea,select{font-family:inherit}
 .speed input::-moz-range-track{height:6px;border-radius:3px;background:var(--panel2)}
 .speed input::-moz-range-thumb{width:26px;height:26px;border:none;border-radius:50%;background:var(--accent);box-shadow:0 2px 8px var(--accent-glow)}
 
+/* ---------- Modo Página (leitura por páginas) ---------- */
+/* #p-body vira um trilho horizontal com scroll-snap; cada filho .page é um slide
+   de largura cheia e altura medida (var --page-h). A medição/.ln existem só aqui;
+   no modo rolagem o #p-body continua o bloco <pre> de sempre. */
+.cifra.paged{display:flex;overflow-x:auto;overflow-y:hidden;padding:0;
+  scroll-snap-type:x mandatory;scrollbar-width:none}
+.cifra.paged::-webkit-scrollbar{display:none}
+.cifra.paged .page{flex:0 0 100%;scroll-snap-align:start;box-sizing:border-box;
+  height:var(--page-h);overflow:hidden;padding:8px 18px 0}
+.cifra.paged .ln{display:block;white-space:pre;min-height:1em}
+/* indicador discreto "p / N" — só no modo página */
+.pageind{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);z-index:24;pointer-events:none;
+  background:var(--glass2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.5px;
+  padding:5px 13px;border-radius:999px;font-family:'JetBrains Mono',monospace}
+/* seletor segmentado Rolagem|Página no ⚙ Ajustes */
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+
 /* ---------- Editor ---------- */
 .editor{padding:18px 16px 140px}
 .field{margin-bottom:14px}
@@ -415,6 +434,7 @@ input,textarea,select{font-family:inherit}
         <input type="range" id="scroll-speed" min="1" max="10" value="4" aria-label="Velocidade da rolagem">
       </div>
     </div>
+    <div class="pageind hidden" id="p-pageind" aria-hidden="true"></div>
   </div>
 
   <!-- ===== EDITOR VIEW ===== -->
@@ -555,6 +575,9 @@ input,textarea,select{font-family:inherit}
   <div class="grip"></div>
   <h3>Ajustes da cifra</h3>
   <div class="sheetctrls">
+    <div class="ctrl"><span class="lbl">Modo de leitura</span>
+      <span class="grp seg"><button id="mode-scroll" class="on">Rolagem</button><button id="mode-page">Página</button></span>
+    </div>
     <div class="ctrl"><span class="lbl">Capo</span>
       <span class="grp"><button id="c-down" aria-label="Diminuir capotraste">−</button><span class="val" id="c-val">0</span><button id="c-up" aria-label="Aumentar capotraste">＋</button></span>
     </div>
@@ -570,7 +593,7 @@ input,textarea,select{font-family:inherit}
     <div class="ctrl toggle"><span class="lbl">Sustenido / bemol</span>
       <span class="grp"><button id="acc-toggle" aria-label="Alternar sustenido/bemol" aria-pressed="false">♯</button></span>
     </div>
-    <div class="ctrl toggle"><span class="lbl">Mostrar barra de auto-scroll</span>
+    <div class="ctrl toggle" id="scrollbar-ctrl"><span class="lbl">Mostrar barra de auto-scroll</span>
       <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false">▶</button></span>
     </div>
   </div>
@@ -583,7 +606,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.14.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.15.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -894,7 +917,8 @@ function openPlayer(id, ctx){
   $("#lyr-toggle").classList.remove("on"); $("#lyr-toggle").setAttribute("aria-pressed","false");
   $("#tabs-toggle").classList.toggle("on",!!settings.hideTabs); $("#tabs-toggle").setAttribute("aria-pressed",String(!!settings.hideTabs));
   $("#scrollbar-toggle").classList.toggle("on",!!settings.showScrollbar); $("#scrollbar-toggle").setAttribute("aria-pressed",String(!!settings.showScrollbar));
-  applyScrollbar();
+  $("#p-body").dataset.page=0;   // sempre abre na 1ª página (vale também p/ o modo Apresentar)
+  applyReadMode();               // ajusta modo (rolagem/página) e a visibilidade da barra
   if(escalaCtx){
     const it=escalaCtx.list[escalaCtx.idx];
     if(it.key) transp = offsetToKey(current.key, it.key);  // já abre no tom do culto
@@ -938,7 +962,13 @@ function drawPlayer(){
   $("#c-val").textContent=capo;
   const b=$("#p-body");
   b.style.fontSize=fontSize+"px";
-  b.innerHTML=renderCifra(current.body, shapeShift(), showChords, acc(), !!settings.hideTabs);
+  const html=renderCifra(current.body, shapeShift(), showChords, acc(), !!settings.hideTabs);
+  if(isPageMode()){ paginate(html); }      // modo página: fatia a saída em páginas medidas
+  else{                                     // modo rolagem: bloco <pre> de sempre (intocado)
+    b.classList.remove("paged"); b.style.removeProperty("--page-h");
+    delete b.dataset.page; delete b.dataset.pages;
+    b.innerHTML=html;
+  }
 }
 
 /* controles do player */
@@ -953,7 +983,13 @@ $("#acc-toggle").onclick=()=>{const b=$("#acc-toggle");b.classList.toggle("on");
 $("#lyr-toggle").onclick=()=>{const b=$("#lyr-toggle");showChords=!showChords;b.classList.toggle("on",!showChords);b.setAttribute("aria-pressed",String(!showChords));drawPlayer();};
 $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings();const b=$("#tabs-toggle");b.classList.toggle("on",!!settings.hideTabs);b.setAttribute("aria-pressed",String(!!settings.hideTabs));drawPlayer();};
 $("#scrollbar-toggle").onclick=()=>{settings.showScrollbar=!settings.showScrollbar;saveSettings();const b=$("#scrollbar-toggle");b.classList.toggle("on",!!settings.showScrollbar);b.setAttribute("aria-pressed",String(!!settings.showScrollbar));applyScrollbar();};
-$("#p-back").onclick=()=>{stopScroll(); if(escalaCtx){const id=escalaCtx.id;escalaCtx=null;openEscala(id);} else {show("lib");renderLibrary();}};
+$("#p-back").onclick=()=>{
+  stopScroll();
+  const b=$("#p-body");   // ao sair, limpa o estado de página (não deixa DOM paginado órfão na view escondida)
+  b.classList.remove("paged"); b.style.removeProperty("--page-h"); b.innerHTML=""; delete b.dataset.page; delete b.dataset.pages;
+  $("#p-pageind").classList.add("hidden");
+  if(escalaCtx){const id=escalaCtx.id;escalaCtx=null;openEscala(id);} else {show("lib");renderLibrary();}
+};
 $("#p-edit").onclick=()=>openEditor(current.id);
 $("#p-share").onclick=()=>shareSheet(current);
 
@@ -965,6 +1001,11 @@ $("#playerbg").onclick=closePlayerSheet;
 
 /* navegação por estrutura da música (☰) */
 function scrollToSec(el){
+  if(isPageMode()){                       // no modo página, salta para a página da seção
+    const pg=el.closest(".page");
+    if(pg) gotoPage([...$("#p-body").children].indexOf(pg), true);
+    return;
+  }
   const ctrl=document.querySelector("#view-player .controls");
   const off=(ctrl?ctrl.offsetHeight:110)+14;
   const y=el.getBoundingClientRect().top+window.scrollY-off;
@@ -1007,6 +1048,137 @@ function startScroll(){
 }
 function stopScroll(){ if(scrollRAF){cancelAnimationFrame(scrollRAF);scrollRAF=null;} $("#scroll-toggle").textContent="▶"; $("#scroll-toggle").setAttribute("aria-label","Rolar a tela"); }
 $("#scroll-toggle").onclick=()=>{ scrollRAF?stopScroll():startScroll(); };
+
+/* ========================================================================
+   MODO DE LEITURA — Rolagem | Página
+   Página: fatia a SAÍDA do renderCifra (fonte única) em páginas horizontais
+   com scroll-snap nativo. As "unidades atômicas" garantem que um acorde nunca
+   se separa da sua letra e que um cabeçalho de seção nunca termina uma página
+   sozinho (órfão). A altura de cada página é MEDIDA no DOM (lida com qualquer
+   fonte/tela). No modo rolagem, nada disso existe — o #p-body é o <pre> de sempre.
+   ======================================================================== */
+function isPageMode(){ return settings.readMode==="page"; }
+function applyReadMode(){
+  const paged=isPageMode();
+  $("#mode-scroll").classList.toggle("on",!paged);
+  $("#mode-page").classList.toggle("on",paged);
+  $("#scrollbar-ctrl").classList.toggle("hidden",paged);   // auto-scroll só faz sentido na rolagem
+  $("#p-pageind").classList.toggle("hidden",!paged);
+  if(paged){ stopScroll(); $("#scrollbar-mini").classList.add("hidden"); }
+  else applyScrollbar();
+}
+function setReadMode(m){
+  settings.readMode=m; saveSettings();
+  $("#p-body").dataset.page=0;        // recomeça na 1ª página ao trocar de modo
+  applyReadMode(); drawPlayer();
+}
+$("#mode-scroll").onclick=()=>setReadMode("scroll");
+$("#mode-page").onclick=()=>setReadMode("page");
+
+/* agrupa as linhas visuais do renderCifra em unidades que NÃO se quebram entre
+   páginas: seção e linha-só-de-acordes "colam" para frente; letra ou linha em
+   branco fecham a unidade. Assim acorde→letra e seção→conteúdo ficam sempre juntos. */
+function pageUnits(html){
+  const lines=html.split("\n");
+  const kind=l=>{
+    if(l.replace(/<[^>]*>/g,"").trim()==="") return "blank";
+    if(l.includes('class="sec"')) return "sec";
+    if(l.includes('class="chord"') && !l.includes('class="lyr"')) return "chord";
+    return "lyric";
+  };
+  const k=lines.map(kind);
+  const units=[]; let cur=[];
+  for(let i=0;i<lines.length;i++){
+    cur.push(lines[i]);
+    // pode quebrar a página DEPOIS desta linha, EXCETO: cabeçalho de seção (não pode
+    // ficar órfão no fim da página) e linha de acordes seguida da SUA letra (par atômico).
+    // Acordes instrumentais (sem letra logo abaixo) NÃO grudam — assim seções
+    // instrumentais sem linha em branco não viram uma unidade gigante que clipa.
+    const glue = k[i]==="sec" || (k[i]==="chord" && k[i+1]==="lyric");
+    if(!glue){ units.push(cur); cur=[]; }
+  }
+  if(cur.length) units.push(cur);
+  return units;
+}
+/* monta as páginas medindo a altura REAL no DOM */
+function paginate(html){
+  const b=$("#p-body");
+  window.scrollTo(0,0);               // no modo página a janela não rola; mede a posição real
+  b.classList.add("paged");
+  b.innerHTML="";
+  const top=b.getBoundingClientRect().top;
+  // a página não pode passar por baixo do indicador fixo "p / N" (que já desconta a
+  // safe-area via env() no CSS): mede a posição REAL dele — assim nada some abaixo da
+  // dobra mesmo em paisagem/Apresentar (telas baixas), sem inventar altura com um piso.
+  const pill=$("#p-pageind"); pill.textContent="·";          // dá altura estável p/ medir
+  const pr=pill.getBoundingClientRect();
+  const bottom=pr.height ? pr.top-8 : window.innerHeight-24;  // fallback: janela − folga
+  const avail=Math.max(60, bottom-top);                      // piso pequeno só p/ evitar página 0px
+  b.style.setProperty("--page-h", avail+"px");
+  const isBlank=l=>l.replace(/<[^>]*>/g,"").trim()==="";
+  const mkLn=l=>{ const d=document.createElement("div"); d.className="ln"; d.innerHTML=l; return d; };
+  const newPage=()=>{ const p=document.createElement("div"); p.className="page"; b.appendChild(p); return p; };
+  let page=newPage(), hasContent=false;
+  for(const unit of pageUnits(html)){
+    if(!hasContent && unit.every(isBlank)) continue;          // não começa página com linha em branco
+    const lns=unit.map(mkLn); lns.forEach(l=>page.appendChild(l));
+    if(page.scrollHeight>avail && hasContent){                // estourou: a unidade inteira vai pra próxima página
+      lns.forEach(l=>page.removeChild(l));
+      page=newPage(); hasContent=false;
+      if(unit.every(isBlank)) continue;
+      lns.forEach(l=>page.appendChild(l));
+    }
+    hasContent=true;
+  }
+  if(b.children.length>1 && b.lastChild.childElementCount===0) b.removeChild(b.lastChild);
+  b.dataset.pages=b.children.length;
+  const cur=Math.max(0,Math.min(b.children.length-1, +(b.dataset.page||0)));   // clampa a página atual
+  b.dataset.page=cur;
+  b.scrollLeft=cur*b.clientWidth;     // posiciona sem animar (reconstrução)
+  updatePageInd();
+}
+function curPage(){ return +($("#p-body").dataset.page||0); }
+function pageCount(){ return +($("#p-body").dataset.pages||1); }
+function updatePageInd(){ $("#p-pageind").textContent=(curPage()+1)+" / "+pageCount(); }
+let pgProg=false, pgProgT=null;
+function gotoPage(i,smooth){
+  const b=$("#p-body");
+  i=Math.max(0,Math.min(pageCount()-1,i));
+  b.dataset.page=i;
+  pgProg=true;                        // evita o handler de scroll brigar com o salto programático
+  b.scrollTo({left:i*b.clientWidth, behavior:smooth?"smooth":"auto"});
+  clearTimeout(pgProgT); pgProgT=setTimeout(()=>{ pgProg=false; }, smooth?500:60);
+  updatePageInd();
+}
+function goPage(d){ gotoPage(curPage()+d,true); }
+/* virar página por TOQUE: metade direita avança, esquerda volta (só no modo página);
+   ignora arrastos para não conflitar com o deslizar nativo do scroll-snap. */
+let pgDownX=0,pgDownY=0,pgDownT=0;
+$("#p-body").addEventListener("pointerdown",e=>{ pgDownX=e.clientX; pgDownY=e.clientY; pgDownT=Date.now(); });
+$("#p-body").addEventListener("pointerup",e=>{
+  if(!isPageMode()) return;
+  // só ignora se foi ARRASTE (mexeu) — um toque parado, mesmo demorado, ainda vira página;
+  // limiar de 16px acomoda o tremor natural do dedo no palco.
+  if(Math.abs(e.clientX-pgDownX)>16 || Math.abs(e.clientY-pgDownY)>16 || Date.now()-pgDownT>900) return;
+  goPage(e.clientX < window.innerWidth/2 ? -1 : 1);
+});
+/* DESLIZAR nativo (scroll-snap) atualiza o índice quando a rolagem assenta */
+let pgScrollT=null;
+$("#p-body").addEventListener("scroll",()=>{
+  if(!isPageMode() || pgProg) return;
+  clearTimeout(pgScrollT);
+  pgScrollT=setTimeout(()=>{
+    const b=$("#p-body"); if(!b.clientWidth) return;
+    b.dataset.page=Math.max(0,Math.min(pageCount()-1,Math.round(b.scrollLeft/b.clientWidth)));
+    updatePageInd();
+  },120);
+});
+/* recalcula a paginação ao girar o aparelho / mudar o tamanho da tela */
+let pgResizeT=null;
+window.addEventListener("resize",()=>{
+  if(view!=="player" || !isPageMode()) return;
+  clearTimeout(pgResizeT); pgResizeT=setTimeout(drawPlayer,200);
+});
 
 /* ---------- Editor ---------- */
 let editingId=null;

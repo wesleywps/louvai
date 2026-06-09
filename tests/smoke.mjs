@@ -228,6 +228,69 @@ const animDur = await page4.evaluate(() => getComputedStyle(document.getElementB
 ok(parseFloat(animDur) < 0.01, "Reduzir movimento: fade entre telas praticamente desligado");
 await ctx4.close();
 
+// ===== v0.15.0 — Modo Página =====
+// cifra longa o bastante p/ render ≥2 páginas no viewport de teste (412x915)
+const longBody = Array.from({ length: 16 }, (_, i) =>
+  `[Parte ${i + 1}]\nC      G      Am     F\nLinha de letra numero ${i + 1} cantando ao vivo\n`).join("\n");
+await page.evaluate((body) => {
+  const ex = songs.find(s => s.id === "pagetest");
+  if (ex) ex.body = body; else songs.push({ id: "pagetest", title: "Cifra Longa", artist: "", key: "C", capo: 0, tags: [], updatedAt: Date.now(), body });
+  saveSongs(); openPlayer("pagetest");
+}, longBody);
+await page.waitForTimeout(200);
+await page.locator("#p-settings").click(); await page.waitForTimeout(250);
+await page.locator("#mode-page").click(); await page.waitForTimeout(300);
+const pg = await page.evaluate(() => ({
+  paged: document.getElementById("p-body").classList.contains("paged"),
+  pages: +document.getElementById("p-body").dataset.pages,
+  ind: !document.getElementById("p-pageind").classList.contains("hidden"),
+  barHidden: document.getElementById("scrollbar-mini").classList.contains("hidden"),
+}));
+ok(pg.paged && pg.pages >= 2, "Modo Página fatia a cifra longa em ≥2 páginas (" + pg.pages + ")");
+ok(pg.ind, "Indicador de página visível no modo página");
+ok(pg.barHidden, "Barra de auto-scroll some no modo página");
+// fonte recalcula a paginação: fonte maior → mais páginas
+const pagesSmall = pg.pages;
+for (let i = 0; i < 10; i++) await page.locator("#f-up").click();
+await page.waitForTimeout(300);
+const pagesBig = await page.evaluate(() => +document.getElementById("p-body").dataset.pages);
+ok(pagesBig > pagesSmall, "Aumentar a fonte recalcula e gera mais páginas (" + pagesSmall + "→" + pagesBig + ")");
+for (let i = 0; i < 10; i++) await page.locator("#f-down").click();   // restaura a fonte
+await page.waitForTimeout(300);
+// fecha o sheet e vira página por toque (direita avança, esquerda volta)
+await page.locator("#playerbg").click({ position: { x: 10, y: 10 } }); await page.waitForTimeout(300);
+await page.locator("#p-body").click({ position: { x: 350, y: 280 } }); await page.waitForTimeout(300);
+ok((await page.evaluate(() => +document.getElementById("p-body").dataset.page)) === 1, "Toque na metade direita avança a página");
+await page.locator("#p-body").click({ position: { x: 50, y: 280 } }); await page.waitForTimeout(300);
+ok((await page.evaluate(() => +document.getElementById("p-body").dataset.page)) === 0, "Toque na metade esquerda volta a página");
+// anti-órfã: nenhuma página (exceto a última) termina numa linha só de acordes
+const noOrphan = await page.evaluate(() => {
+  const pages = [...document.getElementById("p-body").children];
+  for (let i = 0; i < pages.length - 1; i++) {
+    const lns = [...pages[i].querySelectorAll(".ln")];
+    const last = lns[lns.length - 1];
+    if (last && last.querySelector(".chord") && !last.querySelector(".lyr")) return false;
+  }
+  return true;
+});
+ok(noOrphan, "Nenhuma página (exceto a última) termina em linha só de acordes");
+// voltar pra Rolagem desfaz a paginação
+await page.locator("#p-settings").click(); await page.waitForTimeout(250);
+await page.locator("#mode-scroll").click(); await page.waitForTimeout(200);
+ok(!(await page.evaluate(() => document.getElementById("p-body").classList.contains("paged"))), "Voltar pra Rolagem desfaz a paginação (.paged sai)");
+await page.locator("#playerbg").click({ position: { x: 10, y: 10 } }); await page.waitForTimeout(200);
+// instrumental SEM linhas em branco não pode colapsar numa unidade gigante (1 página que clipa)
+await page.evaluate(() => {
+  const body = Array.from({ length: 20 }, (_, i) => `[Trecho ${i + 1}]\nC  G  Am  F  Dm  E`).join("\n");
+  const ex = songs.find(s => s.id === "instrtest");
+  if (ex) ex.body = body; else songs.push({ id: "instrtest", title: "Instrumental", key: "C", capo: 0, tags: [], updatedAt: Date.now(), body });
+  saveSongs(); settings.readMode = "page"; openPlayer("instrtest");
+});
+await page.waitForTimeout(300);
+ok((await page.evaluate(() => +document.getElementById("p-body").dataset.pages)) >= 2,
+  "Instrumental sem linhas em branco fatia em ≥2 páginas (não vira unidade gigante)");
+await page.evaluate(() => { setReadMode("scroll"); });   // devolve ao padrão
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

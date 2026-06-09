@@ -22,6 +22,29 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.15.0 — Modo Página (modos de leitura, parte 2)
+**Recurso novo (UX de palco).** Segundo e último incremento dos modos de leitura
+(ver `PLANO-modos-leitura.md`) — fecha o tema.
+- **Novo modo "Página":** em vez de rolar, a cifra vira **páginas horizontais**
+  estilo livro. Vira a página **deslizando** (scroll-snap nativo) ou **tocando** na
+  metade direita (avança) / esquerda (volta). Indicador discreto "p / N".
+- **Seletor "Rolagem | Página"** no sheet ⚙ Ajustes (preferência salva em
+  `settings.readMode`). No modo página, a barra de auto-scroll some (não faz sentido).
+- **Fatiamento inteligente:** as páginas são montadas medindo a altura **real** no
+  DOM (lida com qualquer fonte/tela) a partir da saída do `renderCifra` (fonte única,
+  não reimplementada). **Unidades atômicas** garantem que um acorde nunca se separa
+  da sua letra e que um cabeçalho de seção nunca termina a página sozinho.
+- A navegação por **estrutura (☰)** salta para a página da seção; mudar a fonte e os
+  toggles **recalculam** a paginação; girar o aparelho re-fatia.
+- **Robustez (revisão adversarial):** seções instrumentais sem linha em branco não
+  colapsam mais numa página única; o fatiamento respeita o indicador e a safe-area
+  (nada some abaixo da dobra em paisagem); um toque parado mais demorado ainda vira a
+  página; ao sair do player o estado de página é limpo.
+- *Limitações conhecidas (v1):* uma unidade isolada mais alta que a tela pode cortar;
+  linhas muito longas são cortadas na horizontal (sem rolagem dentro do slide).
+- Validado: **57 verificações** (novas: paginação ≥2, toque avança/volta, anti-órfã,
+  voltar pra rolagem, fonte recalcula, instrumental não colapsa), zero erro de JS.
+
 ## v0.14.0 — Auto-scroll opcional (modos de leitura, parte 1)
 **Recurso novo (UX de palco).** Primeiro dos dois incrementos dos modos de leitura
 (ver `PLANO-modos-leitura.md`).
