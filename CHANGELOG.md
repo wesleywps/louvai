@@ -22,6 +22,21 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.14.0 — Auto-scroll opcional (modos de leitura, parte 1)
+**Recurso novo (UX de palco).** Primeiro dos dois incrementos dos modos de leitura
+(ver `PLANO-modos-leitura.md`).
+- A **barra de auto-scroll** (▶ + velocidade) deixou de ficar sempre na tela: agora
+  é **opcional e oculta por padrão**. Quem rola a cifra na mão ganha mais tela; quem
+  gosta do auto-scroll liga num toque.
+- Novo interruptor **"Mostrar barra de auto-scroll"** no sheet ⚙ Ajustes (mesmo
+  padrão dos outros toggles). A preferência fica salva no aparelho
+  (`settings.showScrollbar`).
+- Ao desligar a barra, a rolagem em curso **para sozinha** e o respiro inferior da
+  cifra encolhe — sem mexer no alinhamento monoespaçado acorde/letra.
+- Próximo incremento (v0.15.0): **Modo Página** (virar páginas em vez de rolar).
+- Validado: **48 verificações** (novas: barra oculta por padrão; ligar no ⚙ Ajustes
+  faz a barra aparecer), zero erro de JS.
+
 ## v0.13.2 — Robustez, segurança e acessibilidade
 **Correção (blindagem antes de distribuir).** Faxina de qualidade guiada por uma
 revisão multi-dimensional do código (correção, robustez, qualidade e acessibilidade),

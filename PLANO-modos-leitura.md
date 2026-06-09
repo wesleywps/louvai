@@ -3,7 +3,8 @@
 > **Como retomar:** abra o Claude Code nesta pasta e peça
 > *"vamos executar o PLANO-modos-leitura.md, Incremento 1"*.
 > Plano aprovado pelo dono em 2026-06; decisões já tomadas (não reabrir).
-> Status: **planejado, ainda não implementado** (app está na v0.13.1).
+> Status: **Incremento 1 (auto-scroll opcional) entregue na v0.14.0**; falta o
+> Incremento 2 (Modo Página). App está na v0.14.0.
 
 ## Contexto
 
@@ -49,7 +50,7 @@ Regra: **a quebra de página nunca ocorre logo após uma linha de acordes ou um 
 
 ## Plano em 2 incrementos (cada um: implementar → `npm test` → CHANGELOG → APP_VERSION/package.json → commit + tag)
 
-### Incremento 1 — Auto-scroll opcional no modo rolagem (v0.14.0)
+### Incremento 1 — Auto-scroll opcional no modo rolagem (v0.14.0) ✅ ENTREGUE
 Menor e isolado; prepara o terreno de settings.
 - `settings.showScrollbar` (bool, **default false**), persistido em `saveSettings`. `openPlayer`/`drawPlayer` aplicam: `.scrollbar-mini` só aparece quando `showScrollbar` for true. Ao ocultar, `stopScroll()`.
 - Novo interruptor no ⚙ Ajustes (`#playersheet`): "Mostrar barra de auto-scroll" (ex.: `#scrollbar-toggle`), no padrão `.ctrl.toggle` já existente; alterna setting + salva + redesenha.

@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.13.2**.
+seguir. Atualizado até a **v0.14.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -65,6 +65,7 @@ instalação complexa.
 | **v0.13.0** | recurso | **Redesign F4:** foco violeta nos formulários, vidro fosco em sheets/toast, fade entre telas. |
 | **v0.13.1** | correção | **Contraste da cifra no dark:** acorde com chip + halo, letra um tom abaixo do branco — leitura clara no palco. |
 | **v0.13.2** | correção | **Robustez, segurança e acessibilidade:** `esc()` escapa aspas (fecha XSS por `.json` importado) e tolera não-string; re-importar escala atualiza em vez de duplicar; lint poupa palavras da letra; exemplo não ressuscita; `aria-label`/`aria-pressed`, "Reduzir movimento" e alvos de toque maiores. |
+| **v0.14.0** | recurso | **Auto-scroll opcional** (modos de leitura, parte 1): a barra de auto-scroll fica oculta por padrão e liga num interruptor do ⚙ Ajustes; mais tela pra cifra. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -106,12 +107,12 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
 ### Tema B — Uso ao vivo / palco
 - [x] **Wake Lock:** manter a tela acesa durante o player. *(entregue na v0.8.0)*
-- [ ] **Modos de leitura no player** *(PLANEJADO — ver `PLANO-modos-leitura.md`)*:
-  - **Modo Página** (paginação horizontal estilo livro: deslizar ou tocar nas
+- **Modos de leitura no player** *(em andamento — ver `PLANO-modos-leitura.md`)*:
+  - [x] **Auto-scroll opcional** no modo rolagem (oculto por padrão; liga no ⚙
+    Ajustes). *(Incremento 1 — entregue na v0.14.0)*
+  - [ ] **Modo Página** (paginação horizontal estilo livro: deslizar ou tocar nas
     laterais), com fatiamento adaptável ao tamanho da tela e sem cortar o par
     acorde/letra (unidades atômicas). *(Incremento 2 → v0.15.0)*
-  - **Auto-scroll opcional** no modo rolagem (oculto por padrão; liga no ⚙
-    Ajustes). *(Incremento 1 → v0.14.0)*
 - [ ] **Auto-scroll mais esperto:** lembrar velocidade por música; pausar ao tocar a tela.
 - [ ] **Modo tela cheia** de apresentação.
 
@@ -140,8 +141,9 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
 ## 5. Ordem sugerida para a próxima sessão
 
-1. **Modos de leitura no player** (paginação + auto-scroll opcional) — plano
-   pronto em `PLANO-modos-leitura.md`, 2 incrementos (v0.14.0 e v0.15.0).
+1. **Modos de leitura no player** — Incremento 1 (auto-scroll opcional) **entregue
+   na v0.14.0**; falta o **Incremento 2 · Modo Página** (v0.15.0), plano pronto em
+   `PLANO-modos-leitura.md`.
 2. **Validação visual do redesign** no celular (dark e light) — ajustes finos
    que só aparecem na tela real.
 3. **Preservar a grafia original** dos acordes — fecha um ponto que já incomodou.
@@ -166,4 +168,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.13.2.*
+*Última atualização deste roteiro: v0.14.0.*

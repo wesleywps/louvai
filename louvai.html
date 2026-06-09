@@ -181,6 +181,8 @@ input,textarea,select{font-family:inherit}
 .cifra{font-family:'JetBrains Mono',ui-monospace,'Courier New',monospace;
   font-size:15px;line-height:1.85;padding:8px 18px 220px;white-space:pre;
   overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* sem a barra de auto-scroll (padrão): encolhe o respiro inferior — não afeta o alinhamento mono */
+.cifra.nobar{padding-bottom:calc(48px + env(safe-area-inset-bottom))}
 .cifra .chord{color:var(--chord);font-weight:700;
   background:var(--chord-bg);border-radius:4px;          /* sem padding lateral: não desloca o alinhamento */
   text-shadow:0 0 14px var(--chord-halo)}
@@ -407,7 +409,7 @@ input,textarea,select{font-family:inherit}
       <div class="s" id="p-sub"></div>
     </div>
     <div class="cifra" id="p-body"></div>
-    <div class="scrollbar-mini">
+    <div class="scrollbar-mini" id="scrollbar-mini">
       <button class="scrollbtn" id="scroll-toggle" aria-label="Rolar a tela">▶</button>
       <div class="speed"><span>Velocidade</span>
         <input type="range" id="scroll-speed" min="1" max="10" value="4" aria-label="Velocidade da rolagem">
@@ -568,6 +570,9 @@ input,textarea,select{font-family:inherit}
     <div class="ctrl toggle"><span class="lbl">Sustenido / bemol</span>
       <span class="grp"><button id="acc-toggle" aria-label="Alternar sustenido/bemol" aria-pressed="false">♯</button></span>
     </div>
+    <div class="ctrl toggle"><span class="lbl">Mostrar barra de auto-scroll</span>
+      <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false">▶</button></span>
+    </div>
   </div>
 </div>
 <input type="file" id="fileInput" accept=".json,application/json" class="hidden">
@@ -578,7 +583,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.13.2";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.14.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -888,6 +893,8 @@ function openPlayer(id, ctx){
   $("#acc-toggle").classList.remove("on"); $("#acc-toggle").textContent="♯"; $("#acc-toggle").setAttribute("aria-pressed","false");
   $("#lyr-toggle").classList.remove("on"); $("#lyr-toggle").setAttribute("aria-pressed","false");
   $("#tabs-toggle").classList.toggle("on",!!settings.hideTabs); $("#tabs-toggle").setAttribute("aria-pressed",String(!!settings.hideTabs));
+  $("#scrollbar-toggle").classList.toggle("on",!!settings.showScrollbar); $("#scrollbar-toggle").setAttribute("aria-pressed",String(!!settings.showScrollbar));
+  applyScrollbar();
   if(escalaCtx){
     const it=escalaCtx.list[escalaCtx.idx];
     if(it.key) transp = offsetToKey(current.key, it.key);  // já abre no tom do culto
@@ -945,6 +952,7 @@ $("#f-down").onclick=()=>{fontSize=Math.max(10,fontSize-1);drawPlayer();};
 $("#acc-toggle").onclick=()=>{const b=$("#acc-toggle");b.classList.toggle("on");b.setAttribute("aria-pressed",String(b.classList.contains("on")));b.textContent=b.classList.contains("on")?"♭":"♯";drawPlayer();};
 $("#lyr-toggle").onclick=()=>{const b=$("#lyr-toggle");showChords=!showChords;b.classList.toggle("on",!showChords);b.setAttribute("aria-pressed",String(!showChords));drawPlayer();};
 $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings();const b=$("#tabs-toggle");b.classList.toggle("on",!!settings.hideTabs);b.setAttribute("aria-pressed",String(!!settings.hideTabs));drawPlayer();};
+$("#scrollbar-toggle").onclick=()=>{settings.showScrollbar=!settings.showScrollbar;saveSettings();const b=$("#scrollbar-toggle");b.classList.toggle("on",!!settings.showScrollbar);b.setAttribute("aria-pressed",String(!!settings.showScrollbar));applyScrollbar();};
 $("#p-back").onclick=()=>{stopScroll(); if(escalaCtx){const id=escalaCtx.id;escalaCtx=null;openEscala(id);} else {show("lib");renderLibrary();}};
 $("#p-edit").onclick=()=>openEditor(current.id);
 $("#p-share").onclick=()=>shareSheet(current);
@@ -977,6 +985,14 @@ $("#p-struct").onclick=()=>{
 
 /* auto-scroll */
 let scrollRAF=null;
+/* a barra de auto-scroll é OPCIONAL (oculta por padrão): liga/desliga no ⚙ Ajustes.
+   ao ocultar, encolhe o respiro inferior da cifra e para qualquer rolagem em curso. */
+function applyScrollbar(){
+  const on=!!settings.showScrollbar;
+  $("#scrollbar-mini").classList.toggle("hidden",!on);
+  $("#p-body").classList.toggle("nobar",!on);
+  if(!on) stopScroll();
+}
 function startScroll(){
   $("#scroll-toggle").textContent="❚❚"; $("#scroll-toggle").setAttribute("aria-label","Pausar rolagem");
   let last=performance.now(),acc2=0;

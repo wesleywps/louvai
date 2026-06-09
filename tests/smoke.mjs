@@ -95,14 +95,18 @@ const cifraColors = await page.evaluate(() => {
 ok(cifraColors.chord !== cifraColors.lyr && cifraColors.chordBg !== "rgba(0, 0, 0, 0)",
    "Acorde se destaca da letra no dark (cor própria + chip de fundo)");
 
-// 4c) Redesign (Fase 3): barra enxuta (Tom + auto-scroll à vista) e sheet Ajustes
-ok((await page.locator("#t-key").isVisible()) && (await page.locator("#scroll-toggle").isVisible()),
-   "Tom e auto-scroll visíveis direto na tela");
+// 4c) v0.14.0: auto-scroll é OPCIONAL (oculto por padrão); Tom continua à vista
+ok((await page.locator("#t-key").isVisible()) && !(await page.locator("#scroll-toggle").isVisible()),
+   "Tom à vista e barra de auto-scroll oculta por padrão");
 ok(await page.evaluate(() => document.getElementById("c-val").getBoundingClientRect().top >= window.innerHeight),
    "Capo fora da barra (guardado no sheet Ajustes)");
 await page.locator("#p-settings").click(); await page.waitForTimeout(300);
 ok(await page.evaluate(() => document.getElementById("playersheet").classList.contains("show")),
    "Sheet Ajustes abre");
+// v0.14.0: ligar o interruptor no Ajustes faz a barra de auto-scroll aparecer
+await page.locator("#scrollbar-toggle").click(); await page.waitForTimeout(120);
+ok(await page.locator("#scroll-toggle").isVisible(), "Ligar o interruptor mostra a barra de auto-scroll");
+await page.locator("#scrollbar-toggle").click(); await page.waitForTimeout(80);   // volta ao padrão (oculta)
 await page.locator("#c-up").click(); await page.waitForTimeout(120);
 ok((await page.locator("#c-val").textContent()) === "1", "Capo funciona dentro do sheet Ajustes");
 await page.locator("#c-down").click(); await page.waitForTimeout(80);   // devolve capo 0
