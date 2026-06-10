@@ -1,8 +1,10 @@
 # Redesign visual do Louvai — moderno, fluido e usável (estilo Spotify/Deezer)
 
-> **Como retomar:** abra o Claude Code nesta pasta e peça
-> *"vamos executar o PLANO-redesign-ui.md, Fase 1"*.
 > Plano aprovado pelo dono em 2026-06; decisões já tomadas (não perguntar de novo).
+> **Status: CONCLUÍDO** — as 4 fases foram entregues nas v0.10.0–v0.13.0 (mais os
+> ajustes v0.13.1/v0.13.2 de contraste e robustez). Registro histórico; a anatomia
+> atual do `louvai.html` está no `CLAUDE.md`. Falta só a **aprovação visual do dono**
+> nas telas reais (celular) antes da distribuição — ver `ROTEIRO-louvai.md`, Tema F.
 
 ## Contexto
 

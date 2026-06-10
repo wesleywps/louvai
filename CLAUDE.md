@@ -81,10 +81,11 @@ PLANO atualizado se aplicável · `npm test` verde.
   - `npm install`            (uma vez)
   - `npm run test:install`   (baixa o Chromium do Playwright, uma vez)
   - `npm test`               (roda `tests/smoke.mjs`)
-  - O teste abre `louvai.html` num Chromium headless e valida transposição,
-    parser de acordes, importação por colagem, escalas/modo Apresentar, menu
-    de estrutura, Wake Lock e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou.
+  - O teste abre `louvai.html` num Chromium headless e valida transposição com
+    **grafia fiel ao tom**, parser de acordes, importação por colagem, escalas e
+    **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
+    Modo Página, menu de estrutura, Wake Lock e a compatibilidade com o nome antigo.
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~84 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -93,8 +94,14 @@ PLANO atualizado se aplicável · `npm test` verde.
 - `louvai.html` — o app inteiro (a única coisa que o usuário usa/distribui).
 - `CHANGELOG.md` — histórico técnico por versão.
 - `ROTEIRO-louvai.md` — visão geral do projeto + próximos passos.
+- `README.md` — apresentação do projeto e lista de recursos (na versão atual).
 - `tests/smoke.mjs` — suíte de validação (Playwright).
-- `package.json` — scripts de teste.
+- `package.json` / `package-lock.json` — metadados e scripts de teste (nome/versão
+  espelham o app; mantê-los coerentes no ritual).
+- `PLANO-redesign-ui.md`, `PLANO-modos-leitura.md` — planos de execução já
+  **concluídos** (registro histórico; status no topo de cada um).
+- `.gitignore` — ignora `node_modules/`, as cópias `louvai-v*.html` e o
+  `COMMIT_MSG_tmp.txt`.
 - `CLAUDE.md` — este guia.
 
 ## Anatomia do `louvai.html` (onde mexer)
@@ -136,8 +143,12 @@ PLANO atualizado se aplicável · `npm test` verde.
 - Acessibilidade de toque: alvos grandes; o app é usado no palco, com pouca luz.
 
 ## Próximos passos
-Ver `ROTEIRO-louvai.md` (seções 4 e 5). Ordem sugerida:
-1. **Interface moderna** (redesign visual — usar o plugin `frontend-design`).
-2. **Preservar a grafia original** dos acordes (Bb continua Bb até transpor).
-3. **PWA instalável + backup seguro**.
-4. **"Última vez que tocamos"** e **transferência por QR Code**.
+Já entregues: redesign visual (v0.10.0–v0.13.x), grafia dos acordes (v0.16.0–v0.17.0),
+modos de leitura (v0.14.0–v0.15.x) e Apresentação enxuta + "livro" (v0.18.0–v0.19.0).
+Ver `ROTEIRO-louvai.md` (seções 4 e 5). Ordem sugerida agora:
+1. **Validação visual no celular** (dark/light) — redesign, Modo Página e a barra
+   compacta da Apresentação só se confirmam de verdade na tela do palco.
+2. **PWA instalável + backup seguro** (ícone, 100% offline; data do último backup,
+   tela de restaurar).
+3. **"Última vez que tocamos"** (derivado das escalas) e **transferência por QR Code**.
+4. **Diagramas de acorde** (pegada ao tocar no acorde) — fecha o Tema C.

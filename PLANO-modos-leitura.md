@@ -1,10 +1,10 @@
 # Modos de leitura no player: paginação + auto-scroll opcional
 
-> **Como retomar:** abra o Claude Code nesta pasta e peça
-> *"vamos executar o PLANO-modos-leitura.md, Incremento 1"*.
 > Plano aprovado pelo dono em 2026-06; decisões já tomadas (não reabrir).
 > Status: **CONCLUÍDO** — Incremento 1 (auto-scroll opcional, v0.14.0) e Incremento 2
-> (Modo Página, v0.15.0) entregues e validados. App está na v0.15.0.
+> (Modo Página, v0.15.0; correção de paginação no celular na v0.15.1) entregues e
+> validados. Registro histórico — o app evoluiu desde então (ver `CHANGELOG.md`); a
+> Apresentação ganhou barra compacta e "livro" entre músicas nas v0.18.0–v0.19.0.
 
 ## Contexto
 

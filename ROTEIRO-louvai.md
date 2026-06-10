@@ -84,11 +84,13 @@ instalação complexa.
   Cifra Club; importar/exportar arquivos; backup do repertório inteiro.
 - **Player:** transposição (subir/abaixar) com **grafia fiel ao tom** — preserva o
   que foi escrito e, ao transpor, escolhe ♯/♭ sozinho pelo tom (Bb nunca vira A#),
-  capo, tamanho de fonte, modo escuro/claro, só letra, ocultar tabs, auto-scroll,
-  navegação por estrutura (☰) e tela sempre acesa (Wake Lock).
+  capo, tamanho de fonte, modo escuro/claro, só letra, ocultar tabs, **modos de
+  leitura** (rolagem com auto-scroll opcional **ou** página), navegação por
+  estrutura (☰) e tela sempre acesa (Wake Lock).
 - **Escalas:** montar o culto (músicas + itens), tom por escala, equipe, tempo
   total, modo Apresentar (música a música no tom do culto, com **barra compacta**
-  que dá mais cifra na tela ao vivo), compartilhar.
+  que dá mais cifra na tela e **virar página como um livro** entre as músicas),
+  compartilhar.
 - **Offline:** tudo salvo no aparelho (localStorage); funciona sem internet.
 - **Robustez e acessibilidade:** importação à prova de arquivo malformado (sem XSS,
   sem travar a lista); botões com nome em leitor de tela, toggles com estado, respeito
