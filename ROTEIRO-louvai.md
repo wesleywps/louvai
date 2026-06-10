@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.18.0**.
+seguir. Atualizado até a **v0.18.1**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -70,7 +70,8 @@ instalação complexa.
 | **v0.15.1** | correção | **Modo Página no celular:** corrige paginação fragmentada (1 linha por página / centenas de páginas) — bug de sub-pixel na medição de overflow. Pego na validação em dispositivo. |
 | **v0.16.0** | recurso | **Preservar a grafia original** dos acordes: `Bb` continua `Bb` (não vira `A#`) enquanto não há transposição; a preferência ♯/♭ só re-soletra ao transpor de verdade. Vale para cifra, cabeçalho "Tom:" e forma do capo. |
 | **v0.17.0** | recurso | **Grafia fiel ao tom ao transpor:** a grafia vem do tom (não de um botão), via transposição que **preserva o intervalo** — `Bb` sobe pra `C`, vai pra `Eb` no tom de Fá, **nunca `A#`**, até em acordes emprestados. Tom de destino com nome legível; escala pode fixar a grafia. Botão ♯/♭ **removido** — só sobe/abaixa o tom. |
-| **v0.18.0** | recurso | **Barra compacta no Modo Apresentação:** só na Apresentação, controles + título grande dão lugar a uma barra fina de 2 fileiras (← ‹ título·2/5 › ⚙ + Tom) — cromo cai de ~245px para ~100px, mais cifra no palco. Player de cifra avulsa não muda. |
+| **v0.18.0** | recurso | **Barra compacta no Modo Apresentação:** só na Apresentação, controles + título grande dão lugar a uma barra fina (← ‹ título·2/5 › ⚙) — mais cifra no palco. Player de cifra avulsa não muda. |
+| **v0.18.1** | correção | **Apresentação enxuta de verdade:** o Tom saiu da barra e foi pro ⚙ Ajustes — barra de uma linha só, topo cai de ~100px para ~66px. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -183,4 +184,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.18.0.*
+*Última atualização deste roteiro: v0.18.1.*

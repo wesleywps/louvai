@@ -230,13 +230,18 @@ ok(!(await page.locator("#view-player .controls").isVisible()) && !(await page.l
    "Compacto esconde os blocos grandes (.controls e .songhead)");
 ok((await page.locator("#pv-title").textContent()).length > 0 && (await page.locator("#pv-pos").textContent()) === "1 de 2",
    "Barra compacta mostra título e posição (1 de 2)");
-ok((await page.locator("#pv-tkey").textContent()) === "A", "Barra compacta mostra o tom (A)");
-// a cifra começa bem mais alto que o cromo antigo (~245px): prova objetiva do ganho
-ok(await page.evaluate(() => document.getElementById("p-body").getBoundingClientRect().top < 180),
-   "Compacto: a cifra começa no topo (cromo enxuto)");
-// Tom transpõe pela barra compacta
-await page.locator("#pv-tup").click(); await page.waitForTimeout(120);
-ok((await page.locator("#pv-tkey").textContent()) !== "A", "Transpor pela barra compacta muda o tom");
+// v0.18.1: o Tom saiu da barra (libera espaço) e foi pro ⚙ Ajustes
+ok((await page.locator("#pv-tkey").count()) === 0, "Tom não fica mais na barra compacta (foi pro ⚙ Ajustes)");
+// a cifra começa bem mais alto que o cromo antigo (~245px): prova objetiva do ganho (barra de 1 linha)
+ok(await page.evaluate(() => document.getElementById("p-body").getBoundingClientRect().top < 140),
+   "Compacto: a cifra começa no topo (barra de uma linha só)");
+// Tom agora transpõe pelo ⚙ Ajustes (aberto pelo ⚙ da barra compacta)
+await page.locator("#pv-settings").click(); await page.waitForTimeout(250);
+ok(await page.evaluate(() => document.getElementById("playersheet").classList.contains("show")), "⚙ da barra compacta abre o Ajustes");
+ok((await page.locator("#s-tkey").textContent()) === "A", "Tom (A) aparece no ⚙ Ajustes");
+await page.locator("#s-tup").click(); await page.waitForTimeout(120);
+ok((await page.locator("#s-tkey").textContent()) !== "A", "Transpor pelo ⚙ Ajustes muda o tom");
+await page.locator("#playerbg").click({ position: { x: 10, y: 10 } }); await page.waitForTimeout(250);   // fecha o sheet
 // navegação ‹ › pela barra compacta
 await page.locator("#pv-next").click(); await page.waitForTimeout(200);
 ok((await page.locator("#pv-pos").textContent()) === "2 de 2", "‹ › avança a música na escala (2 de 2)");

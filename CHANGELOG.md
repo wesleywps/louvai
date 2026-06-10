@@ -22,6 +22,23 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.18.1 — Apresentação: Tom vai pro ⚙ Ajustes (barra de uma linha só)
+**Correção/ajuste (uso ao vivo).** Refina a v0.18.0.
+- **O incômodo:** na v0.18.0 a barra compacta tinha **duas fileiras** — a 2ª só
+  pro Tom. Misturar a mudança de tom com o título e as setas ocupava espaço à toa:
+  transpor ao vivo é eventual, não precisa estar à vista o tempo todo.
+- **A mudança:** a fileira do Tom **saiu da barra**. A barra compacta agora é **uma
+  linha só** (← ‹ título·2/5 › ⚙) e o controle de **Tom passou pro ⚙ Ajustes** (que
+  o próprio ⚙ da barra já abre). Mais cifra na tela: o topo cai de ~100px para ~66px.
+- **Bônus:** o Tom no ⚙ Ajustes vale também pro player normal (um segundo caminho,
+  ao lado do Tom da barra de cima). Reusa `transposeBy` — sem duplicar lógica.
+- **Guarda de regressão:** testes atualizados — o Tom **não** está mais na barra
+  (`#pv-tkey` removido); o ⚙ abre o Ajustes; o Tom (A) aparece e transpõe lá dentro;
+  a cifra começa ainda mais alto (`#p-body` acima de 140px).
+- Validado: **81 verificações**, zero erro de JS.
+
+---
+
 ## v0.18.0 — Barra compacta no Modo Apresentação (mais cifra no palco)
 **Recurso (uso ao vivo).**
 - **O incômodo:** no modo Apresentar de uma escala, o topo empilhava **três blocos**

@@ -336,11 +336,6 @@ input,textarea,select{font-family:inherit}
 .presentbar #pv-title{display:block;font-size:14px;color:var(--text);font-weight:700;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .presentbar #pv-pos{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-top:1px}
-.pb-tom button{padding:7px 18px;font-size:17px;font-weight:700;min-width:48px;
-  background:var(--panel);border:1px solid var(--line);border-radius:11px;color:var(--text)}
-.pb-tom button:active{background:var(--panel2)}
-.pb-tom .val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;
-  color:var(--gold);min-width:56px;text-align:center}
 /* modo Apresentar: esconde os blocos grandes (a barra compacta cobre tudo) e sobe a cifra */
 #view-player.present .controls{display:none}
 #view-player.present .songhead{display:none}
@@ -437,7 +432,7 @@ input,textarea,select{font-family:inherit}
         <button class="settingsbtn" id="p-settings">⚙ Ajustes</button>
       </div>
     </div>
-    <!-- Apresentação: barra compacta (vale só no modo Apresentar; o player normal usa .controls/.songhead acima) -->
+    <!-- Apresentação: barra compacta de uma linha (o Tom mora no ⚙ Ajustes; o player normal usa .controls/.songhead acima) -->
     <div class="presentbar hidden" id="presentbar">
       <div class="pb-nav">
         <button class="pbtn-sm" id="pv-back" aria-label="Voltar para a escala">←</button>
@@ -445,11 +440,6 @@ input,textarea,select{font-family:inherit}
         <div class="pinfo"><span id="pv-title"></span><span id="pv-pos"></span></div>
         <button class="pbtn" id="pv-next" aria-label="Próxima música">›</button>
         <button class="pbtn-sm" id="pv-settings" aria-label="Ajustes">⚙</button>
-      </div>
-      <div class="pb-tom">
-        <button id="pv-tdown" aria-label="Descer meio tom">♭</button>
-        <span class="val" id="pv-tkey">C</span>
-        <button id="pv-tup" aria-label="Subir meio tom">♯</button>
       </div>
     </div>
     <div class="songhead">
@@ -604,6 +594,9 @@ input,textarea,select{font-family:inherit}
   <div class="grip"></div>
   <h3>Ajustes da cifra</h3>
   <div class="sheetctrls">
+    <div class="ctrl"><span class="lbl">Tom</span>
+      <span class="grp"><button id="s-tdown" aria-label="Descer meio tom">♭</button><span class="val" id="s-tkey">C</span><button id="s-tup" aria-label="Subir meio tom">♯</button></span>
+    </div>
     <div class="ctrl"><span class="lbl">Modo de leitura</span>
       <span class="grp seg"><button id="mode-scroll" class="on">Rolagem</button><button id="mode-page">Página</button></span>
     </div>
@@ -632,7 +625,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.18.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.18.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1040,7 +1033,7 @@ function drawPlayer(){
   if(capo>0) bits.push("Capo "+capo+" (forma em "+(transposeNote(origRoot,shapeShift(),ctxShape)+(minor?"m":""))+")");
   $("#p-sub").textContent=bits.join("  ·  ");
   $("#t-key").textContent=sounding;
-  $("#pv-tkey").textContent=sounding;   // Tom também na barra compacta da Apresentação
+  $("#s-tkey").textContent=sounding;   // Tom no ⚙ Ajustes (único acesso ao Tom na Apresentação)
   $("#c-val").textContent=capo;
   const b=$("#p-body");
   b.style.fontSize=fontSize+"px";
@@ -1054,11 +1047,11 @@ function drawPlayer(){
 }
 
 /* controles do player */
-function transposeBy(d){ transp+=d; drawPlayer(); }   // usado pelos controles normais E pela barra compacta
+function transposeBy(d){ transp+=d; drawPlayer(); }   // usado pela barra de cima E pelo Tom do ⚙ Ajustes
 $("#t-up").onclick=()=>transposeBy(1);
 $("#t-down").onclick=()=>transposeBy(-1);
-$("#pv-tup").onclick=()=>transposeBy(1);     // Tom na barra compacta da Apresentação
-$("#pv-tdown").onclick=()=>transposeBy(-1);
+$("#s-tup").onclick=()=>transposeBy(1);      // Tom dentro do ⚙ Ajustes
+$("#s-tdown").onclick=()=>transposeBy(-1);
 $("#pv-settings").onclick=()=>openPlayerSheet();
 $("#c-up").onclick=()=>{if(capo<11){capo++;drawPlayer();}};
 $("#c-down").onclick=()=>{if(capo>0){capo--;drawPlayer();}};
