@@ -22,6 +22,36 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.17.0 — Grafia fiel ao tom ao transpor (fim do botão ♯/♭ manual)
+**Recurso (qualidade da cifra).** Continuação da v0.16.0.
+- **O incômodo:** ao transpor, a grafia saía de um **botão manual ♯/♭** que valia
+  pra tudo, ignorando o tom de destino. Resultado: transpor pro tom de Fá podia
+  mostrar `A#` onde o certo é `Bb`. O dono pediu que o app **represente fielmente o
+  tom** e propôs tirar o botão, deixando só **subir/abaixar**.
+- **A correção:** a grafia agora vem do **tom**, não de um botão. A transposição
+  **preserva o intervalo** (a letra do acorde anda junto com o tom), então uma
+  cifra escrita certo continua certa — `Bb` sobe pra `C`, vai pra `Eb` no tom de
+  Fá, e **nunca vira `A#`**. Isso vale até pra **acordes emprestados** (o clássico
+  `Bb` no tom de Dó), que uma regra simples de "tom usa ♯ ou ♭" erraria.
+  - Novas peças na fonte da verdade: `noteParts`, `transposeKeyName` (escolhe o
+    nome de tom legível, ex.: Dó#+2 → **Mib**), `spellCtx` (deriva `letterStep` do
+    par tom-origem→tom-destino) e `transposeNote` reescrito (anda a letra, ajusta o
+    acidente; se o resultado ficar ilegível — dobrado, `Cb`/`Fb`/`B#`/`E#` — cai no
+    enarmônico simples do lado do tom).
+  - Cabeçalho "Tom:" e corpo da cifra podem usar grafias diferentes com **capo**
+    (tom que soa × tom da forma) — cada um deriva seu contexto.
+  - **A escala manda na grafia:** se o culto fixa o tom em `Bb`, aparece em bemol;
+    a escolha do usuário vence a tabela automática.
+- **Removido:** o toggle "Sustenido / bemol" do ⚙ Ajustes (e `acc()`/`soundingKey()`).
+- **Mantido (v0.16.0):** sem transposição, a cifra aparece **como foi escrita**.
+- **Guarda de regressão:** novos testes puros — emprestado `Bb`→`C`; tom de Fá
+  `F`→`Eb`; tom de Rém `C`→`Bb` (o A# some); menor bemol `F`→`Ab`/`G`→`Bb`;
+  origem bemol e `C#` resgatadas; escala com grafia explícita; e a preservação em
+  zero/oitava da v0.16.0 continuando válida.
+- Validado: **70 verificações**, zero erro de JS.
+
+---
+
 ## v0.16.0 — Preservar a grafia original dos acordes (Bb continua Bb até transpor)
 **Recurso (qualidade da cifra).**
 - **O incômodo:** uma cifra escrita com bemóis (`Bb`, `Eb`, `Gb`…) aparecia com

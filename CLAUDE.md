@@ -97,14 +97,20 @@ PLANO atualizado se aplicável · `npm test` verde.
 ## Anatomia do `louvai.html` (onde mexer)
 - **Música/teoria:** `SHARP`/`FLAT`, `QUAL_RX`, `parseChord`, `transposeChord`,
   `transposeNote`, `isChord`, `isChordLine`, `isSectionLine`.
-- **Render:** `renderCifra(body, semis, showChords, acc, hideTabs)` — trata
-  seção sozinha, `[Seção] + acordes` na mesma linha, linha de acordes, letra com
-  `[C]` inline, e ocultação de tablatura.
+- **Grafia ao transpor (v0.17.0):** a grafia vem do TOM, não de um botão. A
+  transposição preserva o intervalo: `noteParts`, `transposeKeyName` (nome de tom
+  legível), `spellCtx(tomOrigem, semis[, tomExplícito])` → `{letterStep, destFlat}`,
+  e `transposeNote(note, semis, ctx)`. Sem transpor (`semis%12===0`) preserva o
+  original (v0.16.0). Acorde emprestado (`Bb` no tom de Dó) continua certo.
+- **Render:** `renderCifra(body, semis, showChords, ctx, hideTabs)` — `ctx` é o
+  contexto de grafia (`spellCtx`); trata seção sozinha, `[Seção] + acordes` na mesma
+  linha, linha de acordes, letra com `[C]` inline, e ocultação de tablatura.
 - **Corretor do editor:** `lintCifra` + `runLint`.
 - **Importar texto colado:** `parseImport` e `isMeta` (regras de limpeza do
   Cifra Club: remove `Tom:`, `Capotraste`, `Cifra:`, `Favoritar`, URLs…).
-- **Player:** `openPlayer`, `drawPlayer`, `offsetToKey`, controles (tom, capo,
-  fonte, só-letra, tabs, ♯/♭, auto-scroll), navegação por estrutura (`#p-struct`)
+- **Player:** `openPlayer`, `drawPlayer` (calcula `ctxSound`/`ctxShape`),
+  `offsetToKey`, controles (tom, capo, fonte, só-letra, tabs, auto-scroll),
+  navegação por estrutura (`#p-struct`)
   e Wake Lock (`lockScreen`/`unlockScreen`, religado no `visibilitychange`).
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar

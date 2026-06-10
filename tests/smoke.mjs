@@ -50,37 +50,87 @@ ok(await page.locator(".bottomnav").isVisible(), "Bottom nav (Cifras|Escalas) vi
 ok(await page.locator("#newBtn").isVisible(), "FAB + (nova cifra) visível");
 ok(await page.locator("#backupBtn").isVisible(), "Backup acessível na topbar");
 
-// 2) Transposição (fonte da verdade) — funções puras
-const t = await page.evaluate(() => ({
-  a: transposeChord("C", 2, "sharp"),
-  b: transposeChord("C7M", 2, "sharp"),
-  c: transposeChord("Cm7b5", 2, "sharp"),
-  d: transposeChord("C/E", 2, "sharp"),
-  e: transposeChord("C6/9", 2, "sharp"),
-  f: transposeChord("Bb", 1, "flat"),
-}));
-ok(t.a === "D", "C +2 = D");
+// 2) Transposição (fonte da verdade) — funções puras, agora com grafia derivada do TOM
+//    (v0.17.0): o contexto vem de spellCtx(tomOrigem, semis[, tomExplícito]).
+const t = await page.evaluate(() => {
+  const cD = spellCtx("C", 2);                 // Dó +2 → tom de Ré (lado ♯)
+  return {
+    a: transposeChord("C",    2, cD),
+    b: transposeChord("C7M",  2, cD),
+    c: transposeChord("Cm7b5",2, cD),
+    d: transposeChord("C/E",  2, cD),
+    e: transposeChord("C6/9", 2, cD),
+  };
+});
+ok(t.a === "D", "C +2 = D (tom de Ré)");
 ok(t.b === "D7M", "C7M +2 = D7M");
 ok(t.c === "Dm7b5", "Cm7b5 +2 = Dm7b5");
-ok(t.d === "D/F#", "C/E +2 = D/F#");
+ok(t.d === "D/F#", "C/E +2 = D/F# (baixo transpõe junto)");
 ok(t.e === "D6/9", "C6/9 +2 = D6/9");
-ok(t.f === "B", "Bb +1 (bemol) = B");
 
-// 2b) v0.16.0: preservar a grafia original ATÉ transpor (Bb continua Bb, não vira A#)
-const sp = await page.evaluate(() => ({
-  bbFlat: transposeChord("Bb", 0, "sharp"),     // sem transpor + preferência ♯ → mantém Bb
-  fsSharp: transposeChord("F#", 0, "flat"),     // sem transpor + preferência ♭ → mantém F#
-  bass: transposeChord("D/Bb", 0, "sharp"),     // baixo invertido também preserva (Bb, não A#)
-  octave: transposeChord("Gb", 12, "sharp"),    // oitava (múltiplo de 12) = sem re-soletrar
-  realT: transposeChord("Bb", 2, "sharp"),      // ao transpor de verdade, a preferência volta a valer
-  noteFlat: transposeNote("Eb", 0, "sharp"),    // direto na fonte da verdade
-}));
-ok(sp.bbFlat === "Bb", "Sem transpor: Bb continua Bb mesmo com preferência ♯ (não vira A#)");
-ok(sp.fsSharp === "F#", "Sem transpor: F# continua F# mesmo com preferência ♭ (não vira Gb)");
-ok(sp.bass === "D/Bb", "Sem transpor: o baixo invertido também preserva a grafia (D/Bb)");
-ok(sp.octave === "Gb", "Transpor por oitava (12) preserva a grafia (Gb continua Gb)");
-ok(sp.realT === "C", "Ao transpor de verdade (+2), a preferência ♯/♭ volta a re-soletrar (Bb→C)");
-ok(sp.noteFlat === "Eb", "transposeNote preserva a nota original quando semis=0 (Eb)");
+// 2b) v0.17.0: grafia FIEL ao tom de destino — o pedido do dono ("se no tom o
+//     correto é Bb não deve aparecer A#"), inclusive em acordes emprestados.
+const sm = await page.evaluate(() => {
+  const cD  = spellCtx("C", 2);      // tom de Ré (♯)
+  const cBb = spellCtx("C", -2);     // tom de Sib (♭)
+  const cDm = spellCtx("Em", -2);    // Mim −2 → Rém (♭)
+  const cCm = spellCtx("Am", 3);     // Lám +3 → Dóm (♭)
+  return {
+    borrowedUp:  transposeChord("Bb", 2, cD),    // bVII emprestado sobe pra C, NÃO B#
+    fToEb:       transposeChord("F", -2, cBb),   // tom de Sib: F→Eb, nunca D#
+    cToBb:       transposeChord("C", -2, cDm),   // <- "se o correto é Bb não aparece A#"
+    minF:        transposeChord("F",  3, cCm),   // tom menor bemol: F→Ab, não G#
+    minG:        transposeChord("G",  3, cCm),   // G→Bb, não A#
+  };
+});
+ok(sm.borrowedUp === "C", "Bb (bVII no tom de Dó) +2 = C, não B#/A#");
+ok(sm.fToEb === "Eb", "Tom de Sib: F −2 = Eb (nunca D#)");
+ok(sm.cToBb === "Bb", "Tom de Rém: C −2 = Bb — o A# nunca aparece (pedido do dono)");
+ok(sm.minF === "Ab" && sm.minG === "Bb", "Tom menor bemol (Dóm): F→Ab e G→Bb, não G#/A#");
+
+// 2c) v0.17.0: legibilidade — origem bemol e origem "esquisita" são resgatadas
+const lg = await page.evaluate(() => {
+  const cDfromDb = spellCtx("Db", 1);   // Réb +1 → tom de Ré (legível)
+  const cEbfromCs= spellCtx("C#", 2);   // Dó# +2 → tom de Mib (resgata o Dó#)
+  return {
+    db1:  transposeChord("Db", 1, cDfromDb),
+    gb1:  transposeChord("Gb", 1, cDfromDb),
+    cs2:  transposeChord("C#", 2, cEbfromCs),
+    fs2:  transposeChord("F#", 2, cEbfromCs),
+    keyDb: transposeKeyName("Db", 1),
+    keyCs: transposeKeyName("C#", 2),
+    keyAm: transposeKeyName("Am", 3),
+  };
+});
+ok(lg.db1 === "D" && lg.gb1 === "G", "Origem bemol legível: Db+1→D, Gb+1→G");
+ok(lg.cs2 === "Eb" && lg.fs2 === "Ab", "Origem esquisita resgatada: C#+2→Eb, F#+2→Ab (sem dobrados)");
+ok(lg.keyDb === "D" && lg.keyCs === "Eb" && lg.keyAm === "Cm", "transposeKeyName escolhe tom legível (Db+1=D, C#+2=Eb, Am+3=Cm)");
+
+// 2d) escala pode FIXAR a grafia (escolha do usuário vence a tabela automática)
+const ex = await page.evaluate(() => {
+  const cSharp = spellCtx("C", 10, "A#");   // usuário pediu A# explicitamente
+  const cFlat  = spellCtx("C", 10, "Bb");   // usuário pediu Bb
+  return { sharp: transposeChord("C", 10, cSharp), flat: transposeChord("C", 10, cFlat),
+           flatF: transposeChord("F", 10, cFlat) };
+});
+ok(ex.sharp === "A#", "Escala com tom explícito A#: C+10 = A# (escolha do usuário vence)");
+ok(ex.flat === "Bb" && ex.flatF === "Eb", "Escala com tom explícito Bb: C+10=Bb, F+10=Eb");
+
+// 2e) regressão v0.16.0: sem transposição (e oitavas) preserva a grafia ESCRITA
+const sp = await page.evaluate(() => {
+  const z = spellCtx("C", 0);
+  return {
+    bb:    transposeChord("Bb", 0, z),     // Bb continua Bb (não vira A#)
+    fs:    transposeChord("F#", 0, z),     // F# continua F#
+    bass:  transposeChord("D/Bb", 0, z),   // baixo invertido preserva
+    octave:transposeChord("Gb", 12, spellCtx("Gb", 12)),  // oitava não re-soletra
+    note:  transposeNote("Eb", 0, z),      // direto na fonte da verdade
+  };
+});
+ok(sp.bb === "Bb" && sp.fs === "F#", "Sem transpor: Bb continua Bb e F# continua F# (grafia escrita)");
+ok(sp.bass === "D/Bb", "Sem transpor: baixo invertido preserva a grafia (D/Bb)");
+ok(sp.octave === "Gb", "Transpor por oitava (12) preserva a grafia (Gb)");
+ok(sp.note === "Eb", "transposeNote preserva a nota original quando semis=0 (Eb)");
 
 // 3) parseChord aceita acorde e rejeita palavra de letra
 const p = await page.evaluate(() => ({ chord: isChord("F#m7/C#"), word: isChord("Senhor") }));

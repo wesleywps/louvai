@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.16.0**.
+seguir. Atualizado até a **v0.17.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -69,6 +69,7 @@ instalação complexa.
 | **v0.15.0** | recurso | **Modo Página** (modos de leitura, parte 2): cifra em páginas horizontais (deslizar ou tocar nas laterais), fatiamento medido no DOM com unidades atômicas (acorde nunca se separa da letra). |
 | **v0.15.1** | correção | **Modo Página no celular:** corrige paginação fragmentada (1 linha por página / centenas de páginas) — bug de sub-pixel na medição de overflow. Pego na validação em dispositivo. |
 | **v0.16.0** | recurso | **Preservar a grafia original** dos acordes: `Bb` continua `Bb` (não vira `A#`) enquanto não há transposição; a preferência ♯/♭ só re-soletra ao transpor de verdade. Vale para cifra, cabeçalho "Tom:" e forma do capo. |
+| **v0.17.0** | recurso | **Grafia fiel ao tom ao transpor:** a grafia vem do tom (não de um botão), via transposição que **preserva o intervalo** — `Bb` sobe pra `C`, vai pra `Eb` no tom de Fá, **nunca `A#`**, até em acordes emprestados. Tom de destino com nome legível; escala pode fixar a grafia. Botão ♯/♭ **removido** — só sobe/abaixa o tom. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -78,9 +79,10 @@ instalação complexa.
 
 - **Repertório:** criar/editar/excluir cifras, busca, tags; importar colando do
   Cifra Club; importar/exportar arquivos; backup do repertório inteiro.
-- **Player:** transposição (♯/♭) que preserva a grafia original até transpor (Bb
-  continua Bb), capo, tamanho de fonte, modo escuro/claro, só letra, ocultar tabs,
-  auto-scroll, navegação por estrutura (☰) e tela sempre acesa (Wake Lock).
+- **Player:** transposição (subir/abaixar) com **grafia fiel ao tom** — preserva o
+  que foi escrito e, ao transpor, escolhe ♯/♭ sozinho pelo tom (Bb nunca vira A#),
+  capo, tamanho de fonte, modo escuro/claro, só letra, ocultar tabs, auto-scroll,
+  navegação por estrutura (☰) e tela sempre acesa (Wake Lock).
 - **Escalas:** montar o culto (músicas + itens), tom por escala, equipe, tempo
   total, modo Apresentar (música a música no tom do culto), compartilhar.
 - **Offline:** tudo salvo no aparelho (localStorage); funciona sem internet.
@@ -122,7 +124,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 ### Tema C — Qualidade da cifra
 - [x] **Preservar a grafia original** dos acordes (Bb continua Bb até transpor).
   *(entregue na v0.16.0 — correção na fonte da verdade `transposeNote`)*
-- [ ] **Grafia inteligente ao transpor** (sustenido/bemol conforme o tom de destino).
+- [x] **Grafia inteligente ao transpor** (sustenido/bemol conforme o tom de destino).
+  *(entregue na v0.17.0 — transposição que preserva o intervalo; botão ♯/♭ removido)*
 - [ ] **Diagramas de acorde** (pegada) ao tocar no acorde.
 - [ ] **Resolver o modelo de capotraste** (cifra do Cifra Club já vem nas formas com capo).
 
@@ -150,12 +153,12 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
    toque) só se confirmam de verdade na tela real.
 2. **PWA + backup seguro** — blinda os dados do ministério.
 3. **"Última vez que tocamos"** e **QR Code** — alto valor percebido.
-4. **Grafia inteligente ao transpor** (♯/♭ conforme o tom de destino) — continuação
-   natural da grafia original.
+4. **Diagramas de acorde** (pegada ao tocar no acorde) — fecha o Tema C de qualidade.
 
 > ✅ **Modos de leitura no player** (auto-scroll opcional + Modo Página) concluídos
 > nas v0.14.0–v0.15.0 — ver `PLANO-modos-leitura.md`.
-> ✅ **Preservar a grafia original** dos acordes concluído na v0.16.0.
+> ✅ **Grafia dos acordes** (preservar original + grafia fiel ao tom ao transpor)
+> concluída nas v0.16.0–v0.17.0.
 
 ---
 
@@ -175,4 +178,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.16.0.*
+*Última atualização deste roteiro: v0.17.0.*

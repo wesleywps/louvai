@@ -590,9 +590,6 @@ input,textarea,select{font-family:inherit}
     <div class="ctrl toggle"><span class="lbl">Tablaturas</span>
       <span class="grp"><button id="tabs-toggle" aria-label="Mostrar/ocultar tablaturas" aria-pressed="false">≣</button></span>
     </div>
-    <div class="ctrl toggle"><span class="lbl">Sustenido / bemol</span>
-      <span class="grp"><button id="acc-toggle" aria-label="Alternar sustenido/bemol" aria-pressed="false">♯</button></span>
-    </div>
     <div class="ctrl toggle" id="scrollbar-ctrl"><span class="lbl">Mostrar barra de auto-scroll</span>
       <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false">▶</button></span>
     </div>
@@ -606,7 +603,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.16.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.17.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -614,6 +611,44 @@ const FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
 const NOTE_IDX = {};
 SHARP.forEach((n,i)=>NOTE_IDX[n]=i);
 FLAT.forEach((n,i)=>NOTE_IDX[n]=i);
+
+/* ===== Grafia inteligente ao transpor =====
+   A grafia NÃO sai de um botão ♯/♭: ela vem do TOM. Transpomos preservando o
+   intervalo (a letra do acorde anda junto com o tom), então um acorde escrito
+   certo continua certo — Bb sobe pra C, vai pra Eb no tom de Fá, nunca vira A#.
+   Mesmo um acorde emprestado (Bb no tom de Dó) é respeitado. */
+const NAT = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};       // altura natural de cada letra
+const LETTERS = ["C","D","E","F","G","A","B"];
+const letterIdx = L => LETTERS.indexOf(L);
+// Tons que re-soletram pro lado BEMOL quando precisamos do enarmônico simples.
+// Inclui a qualidade menor (Am→Cm é tom bemol: F vira Ab, não G#).
+const FLAT_KEYS = new Set(["F","Bb","Eb","Ab","Db","Gb",
+                           "Dm","Gm","Cm","Fm","Bbm","Ebm"]);
+// Nome legível do tom (≤6 acidentes) por classe de altura 0..11.
+const PREF_MAJ = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+const PREF_MIN = ["Cm","C#m","Dm","Ebm","Em","Fm","F#m","Gm","G#m","Am","Bbm","Bm"];
+// Decompõe "Bb"→{L:"B", a:-1, pc:10}; aceita dobrados (bb/##) por robustez.
+function noteParts(n){
+  const m = String(n).match(/^([A-G])(#{1,2}|b{1,2})?/);
+  if(!m) return {L:"C",a:0,pc:0};
+  const L = m[1], a = m[2] ? (m[2][0]==="#"?1:-1)*m[2].length : 0;
+  return { L, a, pc:(NAT[L]+a+1200)%12 };
+}
+// Nome do tom de destino ao mover origKey por `semis`.
+function transposeKeyName(origKey, semis){
+  const min = /m$/.test(origKey), root = String(origKey).replace(/m$/,"");
+  const pc = (noteParts(root).pc + (semis%12) + 12) % 12;
+  return (min ? PREF_MIN : PREF_MAJ)[pc];
+}
+/* Contexto de grafia, derivado UMA vez do par (tom origem → tom destino).
+   destKeyExplicit: quando a escala fixa um tom (ex.: "Bb"), a escolha do usuário
+   vence a tabela automática. Retorna {letterStep, destFlat}. */
+function spellCtx(origKey, semis, destKeyExplicit){
+  const destKey = destKeyExplicit || transposeKeyName(origKey, semis);
+  const oRoot = String(origKey).replace(/m$/,""), dRoot = String(destKey).replace(/m$/,"");
+  const letterStep = (letterIdx(noteParts(dRoot).L) - letterIdx(noteParts(oRoot).L) + 7) % 7;
+  return { letterStep, destFlat: FLAT_KEYS.has(destKey) };
+}
 
 /* ===== FONTE DA VERDADE: o que é um acorde válido =====
    Acorde = fundamental + alteração + qualidade/extensões + baixo opcional /X.
@@ -646,21 +681,32 @@ function parseChord(raw){
   return { root, suffix, bass };
 }
 
-function transposeNote(note, semis, acc){
+/* Transpõe uma nota preservando o intervalo. `ctx` = {letterStep, destFlat}.
+   Anda a LETRA por letterStep e ajusta o acidente pela altura — assim a grafia
+   acompanha o tom de destino. Se o resultado for ilegível (acidente dobrado ou
+   Cb/Fb/B#/E#), cai no enarmônico simples do lado do tom (SHARP/FLAT). */
+function transposeNote(note, semis, ctx){
   if(!(note in NOTE_IDX)) return note;
-  // Preserva a grafia original ATÉ transpor: sem transposição (inclui múltiplos de
-  // 12, ex.: oitava), devolve a nota como o usuário escreveu — Bb continua Bb, não
-  // vira A# só por causa da preferência ♯/♭. A preferência só re-soletra ao transpor.
+  // Sem transposição (inclui oitavas, múltiplos de 12): preserva o original.
   if(semis % 12 === 0) return note;
-  const idx = (NOTE_IDX[note] + semis % 12 + 12) % 12;
-  return (acc === "flat" ? FLAT : SHARP)[idx];
+  const p = noteParts(note);
+  const newL  = LETTERS[(letterIdx(p.L) + ctx.letterStep) % 7];
+  const newPc = (p.pc + (semis%12) + 1200) % 12;
+  let acc = (((newPc - NAT[newL]) % 12) + 12) % 12;   // 0..11
+  if(acc > 6) acc -= 12;                              // → [-5..6]: diferença mínima assinada
+  const unreadable =
+    Math.abs(acc) >= 2 ||
+    (newL==="C" && acc<0) || (newL==="F" && acc<0) ||   // Cb / Fb
+    (newL==="B" && acc>0) || (newL==="E" && acc>0);     // B# / E#
+  if(unreadable) return (ctx.destFlat ? FLAT : SHARP)[newPc];
+  return newL + (acc>0 ? "#".repeat(acc) : acc<0 ? "b".repeat(-acc) : "");
 }
 function isChord(tok){ return parseChord(tok)!==null; }
-function transposeChord(tok, semis, acc){
+function transposeChord(tok, semis, ctx){
   const p = parseChord(tok);
   if(!p) return tok;
-  let out = transposeNote(p.root, semis, acc) + p.suffix;
-  if(p.bass) out += "/" + transposeNote(p.bass, semis, acc);
+  let out = transposeNote(p.root, semis, ctx) + p.suffix;
+  if(p.bass) out += "/" + transposeNote(p.bass, semis, ctx);
   return out;
 }
 /* Corretor não-bloqueante: aponta tokens que parecem acorde mas não são válidos.
@@ -712,7 +758,7 @@ function isSectionLine(line){
 // não-string vindos de JSON malformado (ex.: title numérico) — evita derrubar o render.
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 
-function renderCifra(body, semis, showChords, acc, hideTabs){
+function renderCifra(body, semis, showChords, ctx, hideTabs){
   const lines = (body||"").replace(/\r/g,"").split("\n");
   const isTabLine = l => /^\s*[A-Ga-g][#b]?\s*\|/.test(l) && (l.match(/-/g)||[]).length>=4;
   const out = [];
@@ -735,7 +781,7 @@ function renderCifra(body, semis, showChords, acc, hideTabs){
       const label = sc[2];
       if(!showChords){ out.push('<span class="sec">'+esc(label.replace(/^\[|\]$/g,""))+'</span>'); continue; }
       const rest = isChordLine(sc[4])
-        ? sc[4].replace(/(\S+)/g, t => isChord(t) ? '<span class="chord">'+esc(transposeChord(t,semis,acc))+'</span>' : esc(t))
+        ? sc[4].replace(/(\S+)/g, t => isChord(t) ? '<span class="chord">'+esc(transposeChord(t,semis,ctx))+'</span>' : esc(t))
         : esc(sc[4]);
       out.push(sc[1]+'<span class="sec">'+esc(label)+'</span>'+sc[3]+rest);
       continue;
@@ -744,7 +790,7 @@ function renderCifra(body, semis, showChords, acc, hideTabs){
     if(isChordLine(line)){
       if(!showChords) continue; // modo "só letra" esconde
       const html = line.replace(/(\S+)/g, t =>
-        isChord(t) ? '<span class="chord">'+esc(transposeChord(t,semis,acc))+'</span>' : esc(t));
+        isChord(t) ? '<span class="chord">'+esc(transposeChord(t,semis,ctx))+'</span>' : esc(t));
       out.push(html);
       continue;
     }
@@ -752,7 +798,7 @@ function renderCifra(body, semis, showChords, acc, hideTabs){
     let html = esc(line).replace(/\[([^\]]+)\]/g, (full,inner)=>{
       if(isChord(inner)){
         return showChords
-          ? '<span class="chord">['+esc(transposeChord(inner,semis,acc))+']</span>'
+          ? '<span class="chord">['+esc(transposeChord(inner,semis,ctx))+']</span>'
           : '';
       }
       return showChords ? esc(full) : '';
@@ -917,7 +963,6 @@ function openPlayer(id, ctx){
   current=songs.find(s=>s.id===id); if(!current)return;
   escalaCtx = ctx || null;
   transp=0; capo=0; showChords=true; stopScroll();
-  $("#acc-toggle").classList.remove("on"); $("#acc-toggle").textContent="♯"; $("#acc-toggle").setAttribute("aria-pressed","false");
   $("#lyr-toggle").classList.remove("on"); $("#lyr-toggle").setAttribute("aria-pressed","false");
   $("#tabs-toggle").classList.toggle("on",!!settings.hideTabs); $("#tabs-toggle").setAttribute("aria-pressed",String(!!settings.hideTabs));
   $("#scrollbar-toggle").classList.toggle("on",!!settings.showScrollbar); $("#scrollbar-toggle").setAttribute("aria-pressed",String(!!settings.showScrollbar));
@@ -949,24 +994,26 @@ function presentGo(delta){
 }
 $("#pv-prev").onclick=()=>presentGo(-1);
 $("#pv-next").onclick=()=>presentGo(1);
-function acc(){ return $("#acc-toggle").classList.contains("on")?"flat":"sharp"; }
-function soundingKey(){
-  const root=transposeNote(keyRoot(current.key),transp,acc());
-  return root+(keyIsMinor(current.key)?"m":"");
-}
 function shapeShift(){ return transp - capo; }   // forma tocada = som − capo
 function drawPlayer(){
   $("#p-title").textContent=current.title;
+  const minor=keyIsMinor(current.key), origRoot=keyRoot(current.key);
+  // Tom SOANTE (cabeçalho): se a escala fixou um tom, a grafia escolhida vence a
+  // tabela automática. Tom da FORMA (corpo): sempre automático. Com capo 0 coincidem.
+  const soundDest = (escalaCtx && escalaCtx.list[escalaCtx.idx].key) ? escalaCtx.list[escalaCtx.idx].key : null;
+  const ctxSound = spellCtx(current.key, transp, soundDest);
+  const ctxShape = spellCtx(current.key, shapeShift());
+  const sounding = transposeNote(origRoot, transp, ctxSound)+(minor?"m":"");
   const bits=[];
   if(current.artist) bits.push(current.artist);
-  bits.push("Tom: "+soundingKey());
-  if(capo>0) bits.push("Capo "+capo+" (forma em "+(transposeNote(keyRoot(current.key),shapeShift(),acc())+(keyIsMinor(current.key)?"m":""))+")");
+  bits.push("Tom: "+sounding);
+  if(capo>0) bits.push("Capo "+capo+" (forma em "+(transposeNote(origRoot,shapeShift(),ctxShape)+(minor?"m":""))+")");
   $("#p-sub").textContent=bits.join("  ·  ");
-  $("#t-key").textContent=soundingKey();
+  $("#t-key").textContent=sounding;
   $("#c-val").textContent=capo;
   const b=$("#p-body");
   b.style.fontSize=fontSize+"px";
-  const html=renderCifra(current.body, shapeShift(), showChords, acc(), !!settings.hideTabs);
+  const html=renderCifra(current.body, shapeShift(), showChords, ctxShape, !!settings.hideTabs);
   if(isPageMode()){ paginate(html); }      // modo página: fatia a saída em páginas medidas
   else{                                     // modo rolagem: bloco <pre> de sempre (intocado)
     b.classList.remove("paged"); b.style.removeProperty("--page-h");
@@ -983,7 +1030,6 @@ $("#c-down").onclick=()=>{if(capo>0){capo--;drawPlayer();}};
 $("#f-up").onclick=()=>{fontSize=Math.min(28,fontSize+1);drawPlayer();};
 $("#f-down").onclick=()=>{fontSize=Math.max(10,fontSize-1);drawPlayer();};
 // nos toggles, espelhamos o estado no aria-pressed (leitor de tela no palco precisa saber ligado/desligado)
-$("#acc-toggle").onclick=()=>{const b=$("#acc-toggle");b.classList.toggle("on");b.setAttribute("aria-pressed",String(b.classList.contains("on")));b.textContent=b.classList.contains("on")?"♭":"♯";drawPlayer();};
 $("#lyr-toggle").onclick=()=>{const b=$("#lyr-toggle");showChords=!showChords;b.classList.toggle("on",!showChords);b.setAttribute("aria-pressed",String(!showChords));drawPlayer();};
 $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings();const b=$("#tabs-toggle");b.classList.toggle("on",!!settings.hideTabs);b.setAttribute("aria-pressed",String(!!settings.hideTabs));drawPlayer();};
 $("#scrollbar-toggle").onclick=()=>{settings.showScrollbar=!settings.showScrollbar;saveSettings();const b=$("#scrollbar-toggle");b.classList.toggle("on",!!settings.showScrollbar);b.setAttribute("aria-pressed",String(!!settings.showScrollbar));applyScrollbar();};
