@@ -144,9 +144,9 @@ await page.fill("#e-body", "[Intro]\nG  D  Em  C\n\nVerso:\nG            D\nLinh
 await page.locator("#e-save").click(); await page.waitForTimeout(250);
 ok(await page.locator("#view-player").isVisible(), "Salvar abre o player");
 ok(!(await page.locator(".bottomnav").isVisible()), "Bottom nav some fora da biblioteca");
-ok((await page.locator("#t-key").textContent()) === "G", "Player abre no tom G");
-await page.locator("#t-up").click(); await page.locator("#t-up").click(); await page.waitForTimeout(120);
-ok((await page.locator("#t-key").textContent()) === "A", "Transpor +2 leva a A");
+// v0.20.0: player normal em barra de UMA linha — título na barra, Tom na linha fininha
+ok((await page.locator("#p-title").textContent()) === "Teste Automático", "Título aparece na barra de uma linha");
+ok(/Tom:\s*G/.test(await page.locator("#p-sub").textContent()), "Tom atual (G) aparece na linha fininha");
 
 // 4b) Wake Lock: pede a trava com o player aberto e solta ao sair
 let wl = await page.evaluate(() => window.__wl);
@@ -161,14 +161,19 @@ const cifraColors = await page.evaluate(() => {
 ok(cifraColors.chord !== cifraColors.lyr && cifraColors.chordBg !== "rgba(0, 0, 0, 0)",
    "Acorde se destaca da letra no dark (cor própria + chip de fundo)");
 
-// 4c) v0.14.0: auto-scroll é OPCIONAL (oculto por padrão); Tom continua à vista
-ok((await page.locator("#t-key").isVisible()) && !(await page.locator("#scroll-toggle").isVisible()),
-   "Tom à vista e barra de auto-scroll oculta por padrão");
+// 4c) v0.20.0: barra de UMA linha — Tom/Editar/Compartilhar foram pro ⚙ Ajustes; auto-scroll oculto
+ok((await page.locator("#t-up").count()) === 0 && !(await page.locator("#scroll-toggle").isVisible()),
+   "Barra enxuta: sem Tom nem auto-scroll à vista (foram pro ⚙)");
 ok(await page.evaluate(() => document.getElementById("c-val").getBoundingClientRect().top >= window.innerHeight),
    "Capo fora da barra (guardado no sheet Ajustes)");
 await page.locator("#p-settings").click(); await page.waitForTimeout(300);
 ok(await page.evaluate(() => document.getElementById("playersheet").classList.contains("show")),
    "Sheet Ajustes abre");
+// v0.20.0: Tom transpõe pelo ⚙ Ajustes (+2 = A); Editar/Compartilhar moram aqui
+await page.locator("#s-tup").click(); await page.locator("#s-tup").click(); await page.waitForTimeout(120);
+ok((await page.locator("#s-tkey").textContent()) === "A", "Transpor pelo ⚙ Ajustes leva +2 a A");
+ok(await page.locator("#p-edit").isVisible() && await page.locator("#p-share").isVisible(),
+   "Editar e Compartilhar moram no ⚙ Ajustes");
 // v0.14.0: ligar o interruptor no Ajustes faz a barra de auto-scroll aparecer
 await page.locator("#scrollbar-toggle").click(); await page.waitForTimeout(120);
 ok(await page.locator("#scroll-toggle").isVisible(), "Ligar o interruptor mostra a barra de auto-scroll");
@@ -221,7 +226,7 @@ await page.locator("#ee-save").click(); await page.waitForTimeout(200);
 ok(await page.locator("#view-escala").isVisible(), "Escala salva e detalhe aberto");
 await page.locator("#es-present").click(); await page.waitForTimeout(200);
 ok(await page.locator("#presentbar").isVisible(), "Modo Apresentar abre com a barra de navegação");
-ok((await page.locator("#t-key").textContent()) === "A", "Apresentar abre a música no tom da escala (A)");
+ok((await page.locator("#s-tkey").textContent()) === "A", "Apresentar abre a música no tom da escala (A)");
 
 // 7b) v0.18.0: barra COMPACTA no modo Apresentar (mais cifra na tela)
 ok(await page.evaluate(() => document.getElementById("view-player").classList.contains("present")),

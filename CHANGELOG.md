@@ -22,6 +22,27 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.20.0 — Player normal em barra de uma linha (cifra em primeiro lugar)
+**Recurso (interface / leitura).** Leva a compactação da Apresentação para o
+player comum (visualizar uma cifra).
+- **A ideia:** o player de cifra avulsa empilhava duas linhas de controle
+  (← ☰ ✎ ↗ / Tom ⚙) + um título grande de 24px — muito cromo pra quem só quer ler.
+  Agora é **uma linha só**: `← · Título · ☰ · ⚙`, priorizando a cifra.
+- **O que mudou:**
+  - **Título** vira uma linha pequena na própria barra (era um bloco grande).
+  - **Editar (✎), Compartilhar (↗) e o Tom** saíram da barra e foram pro **⚙ Ajustes**
+    (o Tom já morava lá desde a v0.18.1).
+  - **Estrutura (☰)** continua na barra (ajuda a navegar a música).
+  - Abaixo da barra, uma **linha fininha** mantém *artista · Tom atual · capo* à vista
+    (vê o tom de relance sem abrir o ⚙).
+- **Reuso:** sem duplicar lógica — Editar/Compartilhar mantêm os IDs `#p-edit`/`#p-share`
+  (só mudaram de lugar) e o Tom usa o `transposeBy` já existente.
+- **Guarda de regressão:** testes atualizados — título na barra; Tom/auto-scroll fora
+  dela; transpor e Editar/Compartilhar pelo ⚙ Ajustes; tom visível na linha fininha.
+- Validado: **86 verificações**, zero erro de JS.
+
+---
+
 ## v0.19.0 — "Livro": virar a página troca de música na Apresentação
 **Recurso (uso ao vivo).**
 - **A ideia:** no modo Apresentar + Página, ao chegar na **última página** da música

@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.19.0**.
+seguir. Atualizado até a **v0.20.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -73,6 +73,7 @@ instalação complexa.
 | **v0.18.0** | recurso | **Barra compacta no Modo Apresentação:** só na Apresentação, controles + título grande dão lugar a uma barra fina (← ‹ título·2/5 › ⚙) — mais cifra no palco. Player de cifra avulsa não muda. |
 | **v0.18.1** | correção | **Apresentação enxuta de verdade:** o Tom saiu da barra e foi pro ⚙ Ajustes — barra de uma linha só, topo cai de ~100px para ~66px. |
 | **v0.19.0** | recurso | **"Livro" na Apresentação:** no modo Página, virar a última página passa pra próxima música; voltar da 1ª página retoma a última página da anterior. As setas ‹ › de música seguem iguais. |
+| **v0.20.0** | recurso | **Player normal em uma linha:** a tela de visualizar cifra vira `← · Título · ☰ · ⚙` (Tom, Editar e Compartilhar no ⚙ Ajustes; linha fininha com artista · Tom · capo). Mais cifra, menos cromo. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -82,7 +83,8 @@ instalação complexa.
 
 - **Repertório:** criar/editar/excluir cifras, busca, tags; importar colando do
   Cifra Club; importar/exportar arquivos; backup do repertório inteiro.
-- **Player:** transposição (subir/abaixar) com **grafia fiel ao tom** — preserva o
+- **Player:** **barra de uma linha** (`← · Título · ☰ · ⚙`) que prioriza a cifra;
+  transposição (subir/abaixar, no ⚙ Ajustes) com **grafia fiel ao tom** — preserva o
   que foi escrito e, ao transpor, escolhe ♯/♭ sozinho pelo tom (Bb nunca vira A#),
   capo, tamanho de fonte, modo escuro/claro, só letra, ocultar tabs, **modos de
   leitura** (rolagem com auto-scroll opcional **ou** página), navegação por
@@ -190,4 +192,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.19.0.*
+*Última atualização deste roteiro: v0.20.0.*

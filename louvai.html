@@ -175,9 +175,12 @@ input,textarea,select{font-family:inherit}
 .sheetctrls .ctrl{justify-content:space-between;padding-left:6px}
 .sheetctrls .ctrl .lbl{font-size:12.5px;letter-spacing:.4px}
 .sheetctrls .grp{display:flex;align-items:center;flex:0 0 auto}
-.songhead{padding:18px 18px 4px}
-.songhead .h{font-size:24px;font-weight:800;letter-spacing:-.4px;line-height:1.15}
-.songhead .s{color:var(--muted);font-size:14px;margin-top:4px}
+/* título da música na barra de UMA linha (player normal); some no modo Apresentar */
+.p-titlebar{flex:1;min-width:0;font-size:16px;font-weight:700;letter-spacing:-.2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+/* linha fininha de info (artista · Tom atual · capo) logo abaixo da barra */
+.songhead{padding:6px 18px 2px}
+.songhead .s{color:var(--muted);font-size:13px}
 .cifra{font-family:'JetBrains Mono',ui-monospace,'Courier New',monospace;
   font-size:15px;line-height:1.85;padding:8px 18px 220px;white-space:pre;
   overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -416,20 +419,13 @@ input,textarea,select{font-family:inherit}
 
   <!-- ===== PLAYER VIEW ===== -->
   <div id="view-player" class="hidden">
+    <!-- Player normal: barra de UMA linha, prioriza a cifra (Tom/Editar/Compartilhar moram no ⚙ Ajustes) -->
     <div class="controls">
-      <div class="topbar" style="position:static;background:none;border:none;backdrop-filter:none;padding:6px 0 10px">
+      <div class="topbar" style="position:static;background:none;border:none;backdrop-filter:none;padding:6px 0 8px">
         <button class="iconbtn" id="p-back" aria-label="Voltar">←</button>
-        <div class="spacer"></div>
+        <div class="p-titlebar" id="p-title"></div>
         <button class="iconbtn" id="p-struct" title="Estrutura da música" aria-label="Estrutura da música">☰</button>
-        <button class="iconbtn" id="p-edit" title="Editar" aria-label="Editar cifra">✎</button>
-        <button class="iconbtn gold" id="p-share" title="Compartilhar" aria-label="Compartilhar cifra">↗</button>
-      </div>
-      <!-- ao vivo só importa o Tom; o resto mora no sheet ⚙ Ajustes -->
-      <div class="ctrlrow">
-        <div class="ctrl"><span class="lbl">Tom</span>
-          <button id="t-down" aria-label="Descer meio tom">♭</button><span class="val" id="t-key">C</span><button id="t-up" aria-label="Subir meio tom">♯</button>
-        </div>
-        <button class="settingsbtn" id="p-settings">⚙ Ajustes</button>
+        <button class="iconbtn" id="p-settings" aria-label="Ajustes">⚙</button>
       </div>
     </div>
     <!-- Apresentação: barra compacta de uma linha (o Tom mora no ⚙ Ajustes; o player normal usa .controls/.songhead acima) -->
@@ -443,7 +439,6 @@ input,textarea,select{font-family:inherit}
       </div>
     </div>
     <div class="songhead">
-      <div class="h" id="p-title"></div>
       <div class="s" id="p-sub"></div>
     </div>
     <div class="cifra" id="p-body"></div>
@@ -615,6 +610,9 @@ input,textarea,select{font-family:inherit}
     <div class="ctrl toggle" id="scrollbar-ctrl"><span class="lbl">Mostrar barra de auto-scroll</span>
       <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false">▶</button></span>
     </div>
+    <div class="ctrl"><span class="lbl">Música</span>
+      <span class="grp"><button id="p-edit" aria-label="Editar cifra">✎ Editar</button><button id="p-share" aria-label="Compartilhar cifra">↗ Enviar</button></span>
+    </div>
   </div>
 </div>
 <input type="file" id="fileInput" accept=".json,application/json" class="hidden">
@@ -625,7 +623,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.19.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.20.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1034,9 +1032,8 @@ function drawPlayer(){
   if(current.artist) bits.push(current.artist);
   bits.push("Tom: "+sounding);
   if(capo>0) bits.push("Capo "+capo+" (forma em "+(transposeNote(origRoot,shapeShift(),ctxShape)+(minor?"m":""))+")");
-  $("#p-sub").textContent=bits.join("  ·  ");
-  $("#t-key").textContent=sounding;
-  $("#s-tkey").textContent=sounding;   // Tom no ⚙ Ajustes (único acesso ao Tom na Apresentação)
+  $("#p-sub").textContent=bits.join("  ·  ");   // linha fininha: artista · Tom atual · capo
+  $("#s-tkey").textContent=sounding;            // valor do Tom no ⚙ Ajustes (controle e indicador)
   $("#c-val").textContent=capo;
   const b=$("#p-body");
   b.style.fontSize=fontSize+"px";
@@ -1050,10 +1047,8 @@ function drawPlayer(){
 }
 
 /* controles do player */
-function transposeBy(d){ transp+=d; drawPlayer(); }   // usado pela barra de cima E pelo Tom do ⚙ Ajustes
-$("#t-up").onclick=()=>transposeBy(1);
-$("#t-down").onclick=()=>transposeBy(-1);
-$("#s-tup").onclick=()=>transposeBy(1);      // Tom dentro do ⚙ Ajustes
+function transposeBy(d){ transp+=d; drawPlayer(); }   // o Tom mora no ⚙ Ajustes (player normal e Apresentação)
+$("#s-tup").onclick=()=>transposeBy(1);
 $("#s-tdown").onclick=()=>transposeBy(-1);
 $("#pv-settings").onclick=()=>openPlayerSheet();
 $("#c-up").onclick=()=>{if(capo<11){capo++;drawPlayer();}};

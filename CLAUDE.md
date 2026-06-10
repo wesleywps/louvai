@@ -118,10 +118,13 @@ PLANO atualizado se aplicável · `npm test` verde.
 - **Corretor do editor:** `lintCifra` + `runLint`.
 - **Importar texto colado:** `parseImport` e `isMeta` (regras de limpeza do
   Cifra Club: remove `Tom:`, `Capotraste`, `Cifra:`, `Favoritar`, URLs…).
-- **Player:** `openPlayer`, `drawPlayer` (calcula `ctxSound`/`ctxShape`),
-  `offsetToKey`, controles (tom, capo, fonte, só-letra, tabs, auto-scroll),
-  navegação por estrutura (`#p-struct`)
-  e Wake Lock (`lockScreen`/`unlockScreen`, religado no `visibilitychange`).
+- **Player (barra de uma linha, v0.20.0):** `.controls` é uma linha só
+  `← · #p-title · ☰ · ⚙` priorizando a cifra; **Tom, Editar (`#p-edit`),
+  Compartilhar (`#p-share`), capo, fonte, só-letra, tabs e auto-scroll moram no
+  ⚙ Ajustes** (`#playersheet`). Abaixo, `.songhead` é só a linha fininha (`#p-sub`:
+  artista · Tom · capo). `openPlayer`, `drawPlayer` (calcula `ctxSound`/`ctxShape`),
+  `offsetToKey`, navegação por estrutura (`#p-struct`) e Wake Lock
+  (`lockScreen`/`unlockScreen`, religado no `visibilitychange`).
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`).
