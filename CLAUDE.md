@@ -65,6 +65,8 @@ arquivo `.json` (cifra, repertório ou escala).
      ou conclui (e registrar armadilhas aprendidas, p/ não repetir o erro).
 5. **Commitar e taguear:** `git add -A && git commit -m "vX.Y.Z — descrição"` +
    `git tag vX.Y.Z` (commit de versão direto no branch de trabalho, como o histórico).
+   **Nunca** inclua rodapé `Co-Authored-By` (nem outras assinaturas de ferramenta)
+   na mensagem de commit — o histórico é em pt-BR e sem co-autoria de assistente.
 6. (Opcional) salvar uma cópia `louvai-vX.Y.Z.html` para distribuição.
 
 **Checklist rápido antes do commit:** APP_VERSION = package.json · CHANGELOG tem a

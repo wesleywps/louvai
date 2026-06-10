@@ -606,7 +606,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.15.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.16.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -648,6 +648,10 @@ function parseChord(raw){
 
 function transposeNote(note, semis, acc){
   if(!(note in NOTE_IDX)) return note;
+  // Preserva a grafia original ATÉ transpor: sem transposição (inclui múltiplos de
+  // 12, ex.: oitava), devolve a nota como o usuário escreveu — Bb continua Bb, não
+  // vira A# só por causa da preferência ♯/♭. A preferência só re-soletra ao transpor.
+  if(semis % 12 === 0) return note;
   const idx = (NOTE_IDX[note] + semis % 12 + 12) % 12;
   return (acc === "flat" ? FLAT : SHARP)[idx];
 }

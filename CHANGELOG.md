@@ -22,6 +22,30 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.16.0 — Preservar a grafia original dos acordes (Bb continua Bb até transpor)
+**Recurso (qualidade da cifra).**
+- **O incômodo:** uma cifra escrita com bemóis (`Bb`, `Eb`, `Gb`…) aparecia com
+  sustenidos (`A#`, `D#`, `F#`) **sem ter transposto nada** — só porque a
+  preferência padrão de exibição é ♯. O contrário também: quem ligava ♭ via os
+  sustenidos do autor virarem bemóis. A grafia que o ministério escreveu/importou
+  se perdia na tela, no cabeçalho "Tom:" e na linha "forma em" do capo.
+- **A correção:** `transposeNote` — a função única por onde passam exibição,
+  cabeçalho e capo — agora **devolve a nota como foi escrita quando não há
+  transposição** (`semis % 12 === 0`, o que inclui mover por oitavas). A
+  preferência ♯/♭ só re-soletra os acordes **ao transpor de verdade**. Bate com a
+  intenção: *"Bb continua Bb até transpor"*. Voltar ao tom original (ex.: +2 e −2)
+  restaura a grafia do autor de graça.
+- **Por que na fonte da verdade:** a mudança vive numa só função; `transposeChord`,
+  `soundingKey` e a forma do capo herdam o comportamento sem duplicar regra.
+- **Guarda de regressão:** novos testes puros — `Bb`/`F#`/`D/Bb` preservados sem
+  transpor (com preferência oposta), oitava (12) não re-soletra, e ao transpor +2
+  a preferência volta a valer (`Bb`→`C`).
+- Validado: **64 verificações** (6 novas), zero erro de JS.
+- *Próximo da mesma família (backlog):* grafia inteligente **ao** transpor
+  (sustenido/bemol conforme o tom de destino).
+
+---
+
 ## v0.15.1 — Correção do Modo Página no celular (paginação fragmentada)
 **Correção (crítica do Modo Página).** Pega na validação em dispositivo real.
 - **Bug:** em vários celulares, uma cifra no Modo Página quebrava em **uma linha por

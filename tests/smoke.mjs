@@ -66,6 +66,22 @@ ok(t.d === "D/F#", "C/E +2 = D/F#");
 ok(t.e === "D6/9", "C6/9 +2 = D6/9");
 ok(t.f === "B", "Bb +1 (bemol) = B");
 
+// 2b) v0.16.0: preservar a grafia original ATÉ transpor (Bb continua Bb, não vira A#)
+const sp = await page.evaluate(() => ({
+  bbFlat: transposeChord("Bb", 0, "sharp"),     // sem transpor + preferência ♯ → mantém Bb
+  fsSharp: transposeChord("F#", 0, "flat"),     // sem transpor + preferência ♭ → mantém F#
+  bass: transposeChord("D/Bb", 0, "sharp"),     // baixo invertido também preserva (Bb, não A#)
+  octave: transposeChord("Gb", 12, "sharp"),    // oitava (múltiplo de 12) = sem re-soletrar
+  realT: transposeChord("Bb", 2, "sharp"),      // ao transpor de verdade, a preferência volta a valer
+  noteFlat: transposeNote("Eb", 0, "sharp"),    // direto na fonte da verdade
+}));
+ok(sp.bbFlat === "Bb", "Sem transpor: Bb continua Bb mesmo com preferência ♯ (não vira A#)");
+ok(sp.fsSharp === "F#", "Sem transpor: F# continua F# mesmo com preferência ♭ (não vira Gb)");
+ok(sp.bass === "D/Bb", "Sem transpor: o baixo invertido também preserva a grafia (D/Bb)");
+ok(sp.octave === "Gb", "Transpor por oitava (12) preserva a grafia (Gb continua Gb)");
+ok(sp.realT === "C", "Ao transpor de verdade (+2), a preferência ♯/♭ volta a re-soletrar (Bb→C)");
+ok(sp.noteFlat === "Eb", "transposeNote preserva a nota original quando semis=0 (Eb)");
+
 // 3) parseChord aceita acorde e rejeita palavra de letra
 const p = await page.evaluate(() => ({ chord: isChord("F#m7/C#"), word: isChord("Senhor") }));
 ok(p.chord === true && p.word === false, "parseChord aceita acorde e rejeita palavra ('Senhor')");
