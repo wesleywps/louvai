@@ -22,6 +22,25 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.19.0 — "Livro": virar a página troca de música na Apresentação
+**Recurso (uso ao vivo).**
+- **A ideia:** no modo Apresentar + Página, ao chegar na **última página** da música
+  e virar pra frente, o app já **passa pra próxima música** (na 1ª página) — sem
+  precisar tocar no botão de música. Virar pra trás na **1ª página** volta pra música
+  anterior e **retoma a última página dela** (comportamento de livro contínuo).
+- **Mantido:** as setas ‹ › de música continuam funcionando como antes (vão pro
+  começo da música anterior/seguinte). O "livro" é só o virar-página nos extremos.
+- **Como:** `goPage` (o virar-página por toque) detecta o limite e, em
+  `escalaCtx` + modo Página, chama `presentGo(±1)`; voltar passa `atLast` para o
+  `openPlayer` abrir a música anterior na última página. Fora da Apresentação ou do
+  modo Página, nada muda (vira a página clampado, como sempre).
+- **Guarda de regressão:** novo teste — música longa (várias páginas) numa escala:
+  virar além da última avança de música (1ª pág); voltar da 1ª retoma a última pág
+  da anterior.
+- Validado: **84 verificações**, zero erro de JS.
+
+---
+
 ## v0.18.1 — Apresentação: Tom vai pro ⚙ Ajustes (barra de uma linha só)
 **Correção/ajuste (uso ao vivo).** Refina a v0.18.0.
 - **O incômodo:** na v0.18.0 a barra compacta tinha **duas fileiras** — a 2ª só

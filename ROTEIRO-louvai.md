@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.18.1**.
+seguir. Atualizado até a **v0.19.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -72,6 +72,7 @@ instalação complexa.
 | **v0.17.0** | recurso | **Grafia fiel ao tom ao transpor:** a grafia vem do tom (não de um botão), via transposição que **preserva o intervalo** — `Bb` sobe pra `C`, vai pra `Eb` no tom de Fá, **nunca `A#`**, até em acordes emprestados. Tom de destino com nome legível; escala pode fixar a grafia. Botão ♯/♭ **removido** — só sobe/abaixa o tom. |
 | **v0.18.0** | recurso | **Barra compacta no Modo Apresentação:** só na Apresentação, controles + título grande dão lugar a uma barra fina (← ‹ título·2/5 › ⚙) — mais cifra no palco. Player de cifra avulsa não muda. |
 | **v0.18.1** | correção | **Apresentação enxuta de verdade:** o Tom saiu da barra e foi pro ⚙ Ajustes — barra de uma linha só, topo cai de ~100px para ~66px. |
+| **v0.19.0** | recurso | **"Livro" na Apresentação:** no modo Página, virar a última página passa pra próxima música; voltar da 1ª página retoma a última página da anterior. As setas ‹ › de música seguem iguais. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -122,7 +123,9 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
     fatiamento medido no DOM, unidades atômicas (acorde+letra). *(Incremento 2 —
     entregue na v0.15.0)*
 - [x] **Apresentação enxuta:** barra compacta (controles + título num topo fino),
-  mais cifra na tela ao vivo. *(entregue na v0.18.0)*
+  mais cifra na tela ao vivo. *(entregue nas v0.18.0–v0.18.1; Tom no ⚙ Ajustes)*
+- [x] **"Livro" entre músicas:** virar a última página passa pra próxima música;
+  voltar retoma a última página da anterior. *(entregue na v0.19.0)*
 - [ ] **Auto-scroll mais esperto:** lembrar velocidade por música; pausar ao tocar a tela.
 - [ ] **Modo tela cheia** de apresentação (incluir ☰ estrutura na barra compacta).
 
@@ -164,7 +167,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > nas v0.14.0–v0.15.0 — ver `PLANO-modos-leitura.md`.
 > ✅ **Grafia dos acordes** (preservar original + grafia fiel ao tom ao transpor)
 > concluída nas v0.16.0–v0.17.0.
-> ✅ **Apresentação enxuta** (barra compacta) concluída na v0.18.0.
+> ✅ **Apresentação enxuta** (barra compacta + Tom no Ajustes) concluída nas
+> v0.18.0–v0.18.1; **"livro"** (virar página troca de música) na v0.19.0.
 
 ---
 
@@ -184,4 +188,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.18.1.*
+*Última atualização deste roteiro: v0.19.0.*

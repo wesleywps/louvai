@@ -625,7 +625,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.18.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.19.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -981,7 +981,7 @@ function offsetToKey(origKey, targetKey){           // semitons p/ levar do tom 
   let d=(b-a+12)%12; if(d>6) d-=12; return d;       // prefere o caminho mais curto
 }
 let escalaCtx=null;   // { id, idx, list:[{songId,key,capo}] } quando em modo Apresentar
-function openPlayer(id, ctx){
+function openPlayer(id, ctx, atLast){   // atLast: abrir na ÚLTIMA página (ao voltar de música no "livro")
   current=songs.find(s=>s.id===id); if(!current)return;
   escalaCtx = ctx || null;
   transp=0; capo=0; showChords=true; stopScroll();
@@ -997,6 +997,8 @@ function openPlayer(id, ctx){
   }
   updatePresentBar();
   show("player"); drawPlayer();
+  // "livro": ao voltar pra música anterior virando a página, retoma a última página dela
+  if(atLast && isPageMode()) gotoPage(pageCount()-1, false);
 }
 function updatePresentBar(){
   const bar=$("#presentbar");
@@ -1009,13 +1011,14 @@ function updatePresentBar(){
   $("#pv-prev").disabled = escalaCtx.idx<=0;
   $("#pv-next").disabled = escalaCtx.idx>=escalaCtx.list.length-1;
 }
-function presentGo(delta){
-  if(!escalaCtx) return;
+function presentGo(delta, atLast){     // retorna true se trocou de música (p/ o "livro" saber se virou)
+  if(!escalaCtx) return false;
   const ni=escalaCtx.idx+delta;
-  if(ni<0||ni>=escalaCtx.list.length) return;
-  openPlayer(escalaCtx.list[ni].songId, {id:escalaCtx.id, idx:ni, list:escalaCtx.list});
+  if(ni<0||ni>=escalaCtx.list.length) return false;
+  openPlayer(escalaCtx.list[ni].songId, {id:escalaCtx.id, idx:ni, list:escalaCtx.list}, atLast);
+  return true;
 }
-$("#pv-prev").onclick=()=>presentGo(-1);
+$("#pv-prev").onclick=()=>presentGo(-1);   // botão volta pra música anterior (1ª página, como sempre)
 $("#pv-next").onclick=()=>presentGo(1);
 function shapeShift(){ return transp - capo; }   // forma tocada = som − capo
 function drawPlayer(){
@@ -1235,7 +1238,16 @@ function gotoPage(i,smooth){
   clearTimeout(pgProgT); pgProgT=setTimeout(()=>{ pgProg=false; }, smooth?500:60);
   updatePageInd();
 }
-function goPage(d){ gotoPage(curPage()+d,true); }
+function goPage(d){
+  const next=curPage()+d;
+  // "Livro" no modo Apresentar + Página: virar além da última/antes da 1ª troca de música,
+  // mantendo as setas de música intactas. Avançar → próxima (1ª pág); voltar → anterior (última pág).
+  if(escalaCtx && isPageMode()){
+    if(next>pageCount()-1 && presentGo(1)) return;
+    if(next<0 && presentGo(-1,true)) return;
+  }
+  gotoPage(next,true);   // dentro da música (ou sem escala): vira a página normalmente (clampado)
+}
 /* virar página por TOQUE: metade direita avança, esquerda volta (só no modo página);
    ignora arrastos para não conflitar com o deslizar nativo do scroll-snap. */
 let pgDownX=0,pgDownY=0,pgDownT=0;

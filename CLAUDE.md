@@ -123,6 +123,9 @@ PLANO atualizado se aplicável · `npm test` verde.
   e usa o `#presentbar` como barra fina de **uma linha** (`.pb-nav`: ← ‹ título·2/5 › ⚙).
   O **Tom mora no ⚙ Ajustes** (`#s-tdown`/`#s-tkey`/`#s-tup`), não na barra. Botões
   `pv-*`/`s-t*` reusam `transposeBy`/`exitPlayer`/`openPlayerSheet` — não duplicar lógica.
+  **"Livro" (v0.19.0):** no modo Página, `goPage` nos extremos chama `presentGo(±1)`
+  (virar a última página → próxima música; voltar da 1ª → anterior na última página,
+  via `openPlayer(...,atLast)`). As setas ‹ › de música seguem indo pro início.
 - **Armazenamento:** chaves `LS_SONGS`, `LS_ESC`, `LS_SET` (`louvai.*.v1`);
   funções `load`, `migrateLevita`, `saveSongs`, `saveEscalas`, `saveSettings`.
 

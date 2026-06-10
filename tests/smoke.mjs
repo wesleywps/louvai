@@ -253,6 +253,29 @@ ok(await page.locator("#view-escala").isVisible() &&
    !(await page.evaluate(() => document.getElementById("view-player").classList.contains("present"))),
    "← da barra compacta volta pra escala e desliga o .present");
 
+// 7d) v0.19.0: "livro" — virar a última página avança de música; voltar retoma a última página da anterior
+const book = await page.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const longBody = Array.from({ length: 30 }, (_, i) => `[P${i + 1}]\nC  G  Am  F\nLinha ${i + 1}`).join("\n");
+  songs.push({ id: "bookA", title: "Livro A", key: "C", capo: 0, tags: [], updatedAt: 1, body: longBody });
+  songs.push({ id: "bookB", title: "Livro B", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C  G\nso uma linha" });
+  saveSongs(); settings.readMode = "page";
+  const ctx = { id: "bookEsc", idx: 0, list: [{ songId: "bookA", key: "", capo: 0 }, { songId: "bookB", key: "", capo: 0 }] };
+  openPlayer("bookA", ctx); await sleep(250);
+  const pagesA = pageCount();
+  gotoPage(pagesA - 1, false); await sleep(80);          // vai pra última página da A
+  goPage(1); await sleep(250);                            // virar além da última → próxima música
+  const fwd = { idx: escalaCtx.idx, page: curPage() };
+  goPage(-1); await sleep(250);                           // voltar da 1ª página da B → última página da A
+  const back = { idx: escalaCtx.idx, page: curPage(), pages: pageCount() };
+  setReadMode("scroll");                                  // restaura o padrão p/ os próximos testes
+  return { pagesA, fwd, back };
+});
+ok(book.pagesA >= 2, "Setup: música A da escala tem várias páginas (" + book.pagesA + ")");
+ok(book.fwd.idx === 1 && book.fwd.page === 0, "Virar a última página avança pra próxima música (na 1ª página)");
+ok(book.back.idx === 0 && book.back.page === book.back.pages - 1,
+   "Voltar da 1ª página retoma a ÚLTIMA página da música anterior (livro)");
+
 // 8) Compatibilidade com o nome antigo (Levita)
 ok(/Louvai/.test(await page.locator(".brand").first().textContent()), "Cabeçalho mostra o novo nome (Louvai)");
 const compat = await page.evaluate(() => {
