@@ -67,7 +67,10 @@ arquivo `.json` (cifra, repertório ou escala).
    `git tag vX.Y.Z` (commit de versão direto no branch de trabalho, como o histórico).
    **Nunca** inclua rodapé `Co-Authored-By` (nem outras assinaturas de ferramenta)
    na mensagem de commit — o histórico é em pt-BR e sem co-autoria de assistente.
-6. (Opcional) salvar uma cópia `louvai-vX.Y.Z.html` para distribuição.
+6. (Opcional) salvar uma cópia `louvai-vX.Y.Z.html` para distribuição. **Ao gerar
+   uma nova cópia, apague as cópias `louvai-v*.html` antigas da pasta** — manter só
+   **o original (`louvai.html`) e a cópia de distribuição mais recente**. As cópias
+   ficam fora do git (ver `.gitignore`) e são regeneráveis via `git checkout vX.Y.Z`.
 
 **Checklist rápido antes do commit:** APP_VERSION = package.json · CHANGELOG tem a
 versão · ROTEIRO (linha do tempo + rodapé + backlog) coerente · README na versão ·
