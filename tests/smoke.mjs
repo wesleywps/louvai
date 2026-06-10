@@ -231,8 +231,11 @@ ok((await page.locator("#s-tkey").textContent()) === "A", "Apresentar abre a mú
 // 7b) v0.18.0: barra COMPACTA no modo Apresentar (mais cifra na tela)
 ok(await page.evaluate(() => document.getElementById("view-player").classList.contains("present")),
    "Apresentar liga o layout compacto (.present)");
-ok(!(await page.locator("#view-player .controls").isVisible()) && !(await page.locator(".songhead").isVisible()),
-   "Compacto esconde os blocos grandes (.controls e .songhead)");
+ok(!(await page.locator("#view-player .controls").isVisible()),
+   "Compacto esconde a barra grande (.controls)");
+// v0.20.1: a Apresentação também mostra o tom na linha fininha do topo (como no player normal)
+ok(await page.locator(".songhead").isVisible() && /Tom:\s*A/.test(await page.locator("#p-sub").textContent()),
+   "Apresentação mostra o tom (A) na linha fininha do topo");
 ok((await page.locator("#pv-title").textContent()).length > 0 && (await page.locator("#pv-pos").textContent()) === "1 de 2",
    "Barra compacta mostra título e posição (1 de 2)");
 // v0.18.1: o Tom saiu da barra (libera espaço) e foi pro ⚙ Ajustes

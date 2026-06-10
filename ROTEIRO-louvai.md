@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.20.0**.
+seguir. Atualizado até a **v0.20.1**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -74,6 +74,7 @@ instalação complexa.
 | **v0.18.1** | correção | **Apresentação enxuta de verdade:** o Tom saiu da barra e foi pro ⚙ Ajustes — barra de uma linha só, topo cai de ~100px para ~66px. |
 | **v0.19.0** | recurso | **"Livro" na Apresentação:** no modo Página, virar a última página passa pra próxima música; voltar da 1ª página retoma a última página da anterior. As setas ‹ › de música seguem iguais. |
 | **v0.20.0** | recurso | **Player normal em uma linha:** a tela de visualizar cifra vira `← · Título · ☰ · ⚙` (Tom, Editar e Compartilhar no ⚙ Ajustes; linha fininha com artista · Tom · capo). Mais cifra, menos cromo. |
+| **v0.20.1** | correção | **Tom no topo da Apresentação:** mostra a mesma linha fininha (artista · Tom · capo) da visualização normal, em vez de esconder. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -192,4 +193,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.20.0.*
+*Última atualização deste roteiro: v0.20.1.*

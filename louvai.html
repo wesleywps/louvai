@@ -339,9 +339,9 @@ input,textarea,select{font-family:inherit}
 .presentbar #pv-title{display:block;font-size:14px;color:var(--text);font-weight:700;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .presentbar #pv-pos{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-top:1px}
-/* modo Apresentar: esconde os blocos grandes (a barra compacta cobre tudo) e sobe a cifra */
+/* modo Apresentar: esconde a barra grande (a compacta cobre tudo), mas mantém a linha
+   fininha do tom (.songhead = artista · Tom · capo) à vista, como no player normal */
 #view-player.present .controls{display:none}
-#view-player.present .songhead{display:none}
 #view-player.present .cifra{padding-top:6px}
 
 /* ---------- Song picker ---------- */
@@ -623,7 +623,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.20.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.20.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];

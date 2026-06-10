@@ -22,6 +22,20 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.20.1 — Apresentação mostra o tom no topo (consistência com a visualização)
+**Ajuste (uso ao vivo).**
+- **O incômodo:** no player normal, a linha fininha (artista · Tom atual · capo)
+  mostra o tom logo abaixo da barra; na Apresentação essa linha estava **escondida**,
+  então o tom só aparecia abrindo o ⚙ Ajustes.
+- **A mudança:** a Apresentação agora **mostra a mesma linha fininha** do tom no topo,
+  igual à visualização normal — só deixei a `.songhead` (que o `drawPlayer` já
+  preenche) visível no modo `.present`. A barra grande (`.controls`) segue oculta.
+- **Guarda de regressão:** teste atualizado — em Apresentação, a `.songhead` fica
+  visível e o `#p-sub` traz "Tom: A" (tom da escala).
+- Validado: **87 verificações**, zero erro de JS.
+
+---
+
 ## v0.20.0 — Player normal em barra de uma linha (cifra em primeiro lugar)
 **Recurso (interface / leitura).** Leva a compactação da Apresentação para o
 player comum (visualizar uma cifra).

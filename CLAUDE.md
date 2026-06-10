@@ -129,8 +129,10 @@ PLANO atualizado se aplicável · `npm test` verde.
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`).
 - **Apresentação compacta (v0.18.0/0.18.1):** classe `.present` em `#view-player`
-  (ligada por `updatePresentBar` quando há `escalaCtx`) esconde `.controls`/`.songhead`
+  (ligada por `updatePresentBar` quando há `escalaCtx`) esconde a `.controls` grande
   e usa o `#presentbar` como barra fina de **uma linha** (`.pb-nav`: ← ‹ título·2/5 › ⚙).
+  A `.songhead` (linha fininha `#p-sub`: artista · Tom · capo) **fica visível** também
+  na Apresentação (v0.20.1), como no player normal.
   O **Tom mora no ⚙ Ajustes** (`#s-tdown`/`#s-tkey`/`#s-tup`), não na barra. Botões
   `pv-*`/`s-t*` reusam `transposeBy`/`exitPlayer`/`openPlayerSheet` — não duplicar lógica.
   **"Livro" (v0.19.0):** no modo Página, `goPage` nos extremos chama `presentGo(±1)`
