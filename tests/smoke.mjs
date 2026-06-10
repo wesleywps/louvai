@@ -215,11 +215,38 @@ await page.fill("#ee-title", "Culto Teste");
 await page.locator("#ee-add-song").click(); await page.waitForTimeout(200);
 await page.locator("#picklist .songcard").first().click(); await page.waitForTimeout(150);
 await page.locator("#ee-items .irow").first().locator(".f-key").selectOption("A");
+await page.locator("#ee-add-song").click(); await page.waitForTimeout(200);   // 2ª música (p/ testar navegação)
+await page.locator("#picklist .songcard").nth(1).click(); await page.waitForTimeout(150);
 await page.locator("#ee-save").click(); await page.waitForTimeout(200);
 ok(await page.locator("#view-escala").isVisible(), "Escala salva e detalhe aberto");
 await page.locator("#es-present").click(); await page.waitForTimeout(200);
 ok(await page.locator("#presentbar").isVisible(), "Modo Apresentar abre com a barra de navegação");
 ok((await page.locator("#t-key").textContent()) === "A", "Apresentar abre a música no tom da escala (A)");
+
+// 7b) v0.18.0: barra COMPACTA no modo Apresentar (mais cifra na tela)
+ok(await page.evaluate(() => document.getElementById("view-player").classList.contains("present")),
+   "Apresentar liga o layout compacto (.present)");
+ok(!(await page.locator("#view-player .controls").isVisible()) && !(await page.locator(".songhead").isVisible()),
+   "Compacto esconde os blocos grandes (.controls e .songhead)");
+ok((await page.locator("#pv-title").textContent()).length > 0 && (await page.locator("#pv-pos").textContent()) === "1 de 2",
+   "Barra compacta mostra título e posição (1 de 2)");
+ok((await page.locator("#pv-tkey").textContent()) === "A", "Barra compacta mostra o tom (A)");
+// a cifra começa bem mais alto que o cromo antigo (~245px): prova objetiva do ganho
+ok(await page.evaluate(() => document.getElementById("p-body").getBoundingClientRect().top < 180),
+   "Compacto: a cifra começa no topo (cromo enxuto)");
+// Tom transpõe pela barra compacta
+await page.locator("#pv-tup").click(); await page.waitForTimeout(120);
+ok((await page.locator("#pv-tkey").textContent()) !== "A", "Transpor pela barra compacta muda o tom");
+// navegação ‹ › pela barra compacta
+await page.locator("#pv-next").click(); await page.waitForTimeout(200);
+ok((await page.locator("#pv-pos").textContent()) === "2 de 2", "‹ › avança a música na escala (2 de 2)");
+await page.locator("#pv-prev").click(); await page.waitForTimeout(200);
+ok((await page.locator("#pv-pos").textContent()) === "1 de 2", "‹ › volta a música na escala (1 de 2)");
+// sair pela barra compacta volta pra escala e tira o .present
+await page.locator("#pv-back").click(); await page.waitForTimeout(200);
+ok(await page.locator("#view-escala").isVisible() &&
+   !(await page.evaluate(() => document.getElementById("view-player").classList.contains("present"))),
+   "← da barra compacta volta pra escala e desliga o .present");
 
 // 8) Compatibilidade com o nome antigo (Levita)
 ok(/Louvai/.test(await page.locator(".brand").first().textContent()), "Cabeçalho mostra o novo nome (Louvai)");

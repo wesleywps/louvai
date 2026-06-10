@@ -115,6 +115,10 @@ PLANO atualizado se aplicável · `npm test` verde.
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`).
+- **Apresentação compacta (v0.18.0):** classe `.present` em `#view-player` (ligada
+  por `updatePresentBar` quando há `escalaCtx`) esconde `.controls`/`.songhead` e usa
+  o `#presentbar` como barra fina de 2 fileiras (`.pb-nav` + `.pb-tom`). Botões `pv-*`
+  reusam `transposeBy`/`exitPlayer`/`openPlayerSheet` — não duplicar lógica.
 - **Armazenamento:** chaves `LS_SONGS`, `LS_ESC`, `LS_SET` (`louvai.*.v1`);
   funções `load`, `migrateLevita`, `saveSongs`, `saveEscalas`, `saveSettings`.
 

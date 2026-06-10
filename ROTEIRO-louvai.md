@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.17.0**.
+seguir. Atualizado até a **v0.18.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -70,6 +70,7 @@ instalação complexa.
 | **v0.15.1** | correção | **Modo Página no celular:** corrige paginação fragmentada (1 linha por página / centenas de páginas) — bug de sub-pixel na medição de overflow. Pego na validação em dispositivo. |
 | **v0.16.0** | recurso | **Preservar a grafia original** dos acordes: `Bb` continua `Bb` (não vira `A#`) enquanto não há transposição; a preferência ♯/♭ só re-soletra ao transpor de verdade. Vale para cifra, cabeçalho "Tom:" e forma do capo. |
 | **v0.17.0** | recurso | **Grafia fiel ao tom ao transpor:** a grafia vem do tom (não de um botão), via transposição que **preserva o intervalo** — `Bb` sobe pra `C`, vai pra `Eb` no tom de Fá, **nunca `A#`**, até em acordes emprestados. Tom de destino com nome legível; escala pode fixar a grafia. Botão ♯/♭ **removido** — só sobe/abaixa o tom. |
+| **v0.18.0** | recurso | **Barra compacta no Modo Apresentação:** só na Apresentação, controles + título grande dão lugar a uma barra fina de 2 fileiras (← ‹ título·2/5 › ⚙ + Tom) — cromo cai de ~245px para ~100px, mais cifra no palco. Player de cifra avulsa não muda. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -84,7 +85,8 @@ instalação complexa.
   capo, tamanho de fonte, modo escuro/claro, só letra, ocultar tabs, auto-scroll,
   navegação por estrutura (☰) e tela sempre acesa (Wake Lock).
 - **Escalas:** montar o culto (músicas + itens), tom por escala, equipe, tempo
-  total, modo Apresentar (música a música no tom do culto), compartilhar.
+  total, modo Apresentar (música a música no tom do culto, com **barra compacta**
+  que dá mais cifra na tela ao vivo), compartilhar.
 - **Offline:** tudo salvo no aparelho (localStorage); funciona sem internet.
 - **Robustez e acessibilidade:** importação à prova de arquivo malformado (sem XSS,
   sem travar a lista); botões com nome em leitor de tela, toggles com estado, respeito
@@ -118,8 +120,10 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   - [x] **Modo Página** (paginação horizontal: deslizar ou tocar nas laterais),
     fatiamento medido no DOM, unidades atômicas (acorde+letra). *(Incremento 2 —
     entregue na v0.15.0)*
+- [x] **Apresentação enxuta:** barra compacta (controles + título num topo fino),
+  mais cifra na tela ao vivo. *(entregue na v0.18.0)*
 - [ ] **Auto-scroll mais esperto:** lembrar velocidade por música; pausar ao tocar a tela.
-- [ ] **Modo tela cheia** de apresentação.
+- [ ] **Modo tela cheia** de apresentação (incluir ☰ estrutura na barra compacta).
 
 ### Tema C — Qualidade da cifra
 - [x] **Preservar a grafia original** dos acordes (Bb continua Bb até transpor).
@@ -149,8 +153,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 ## 5. Ordem sugerida para a próxima sessão
 
 1. **Validação visual no celular** (dark e light) — agora com **prioridade**: o
-   redesign, o auto-scroll opcional e principalmente o **Modo Página** (paginação +
-   toque) só se confirmam de verdade na tela real.
+   redesign, o **Modo Página** e a nova **barra compacta da Apresentação** só se
+   confirmam de verdade na tela real do palco.
 2. **PWA + backup seguro** — blinda os dados do ministério.
 3. **"Última vez que tocamos"** e **QR Code** — alto valor percebido.
 4. **Diagramas de acorde** (pegada ao tocar no acorde) — fecha o Tema C de qualidade.
@@ -159,6 +163,7 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > nas v0.14.0–v0.15.0 — ver `PLANO-modos-leitura.md`.
 > ✅ **Grafia dos acordes** (preservar original + grafia fiel ao tom ao transpor)
 > concluída nas v0.16.0–v0.17.0.
+> ✅ **Apresentação enxuta** (barra compacta) concluída na v0.18.0.
 
 ---
 
@@ -178,4 +183,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.17.0.*
+*Última atualização deste roteiro: v0.18.0.*

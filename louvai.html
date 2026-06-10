@@ -317,15 +317,34 @@ input,textarea,select{font-family:inherit}
   border:1px solid var(--line);color:var(--text);font-size:14px;outline:none}
 
 /* ---------- Present bar (no player) ---------- */
-.presentbar{display:flex;align-items:center;gap:10px;padding:8px 14px;margin:0;
-  background:var(--panel);border-bottom:1px solid var(--line)}
+/* Apresentação: barra compacta de 2 fileiras finas (nav + tom). Aparece só no modo
+   Apresentar e substitui .controls + .songhead — mais cifra na tela ao vivo. */
+.presentbar{display:flex;flex-direction:column;gap:6px;margin:0;
+  position:sticky;top:0;z-index:20;
+  background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+  padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top))}
+.pb-nav{display:flex;align-items:center;gap:8px}
+.pb-tom{display:flex;align-items:center;justify-content:center;gap:8px}
 .presentbar .pbtn{width:44px;height:44px;border-radius:11px;background:var(--panel2);
-  border:1px solid var(--line);font-size:22px;font-weight:700;color:var(--gold)}
-.presentbar .pbtn:active{background:var(--line)}
+  border:1px solid var(--line);font-size:22px;font-weight:700;color:var(--gold);flex:0 0 auto}
+.presentbar .pbtn-sm{width:40px;height:40px;border-radius:10px;background:var(--panel2);
+  border:1px solid var(--line);font-size:17px;font-weight:700;color:var(--text);flex:0 0 auto}
+.presentbar .pbtn:active,.presentbar .pbtn-sm:active{background:var(--line)}
 .presentbar .pbtn:disabled{opacity:.35}
-.presentbar .pinfo{flex:1;text-align:center;line-height:1.2}
-.presentbar #pv-esc{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
-.presentbar #pv-pos{display:block;font-size:13px;color:var(--text);font-weight:600;margin-top:1px}
+.presentbar .pinfo{flex:1;min-width:0;text-align:center;line-height:1.2}
+.presentbar #pv-title{display:block;font-size:14px;color:var(--text);font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.presentbar #pv-pos{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-top:1px}
+.pb-tom button{padding:7px 18px;font-size:17px;font-weight:700;min-width:48px;
+  background:var(--panel);border:1px solid var(--line);border-radius:11px;color:var(--text)}
+.pb-tom button:active{background:var(--panel2)}
+.pb-tom .val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;
+  color:var(--gold);min-width:56px;text-align:center}
+/* modo Apresentar: esconde os blocos grandes (a barra compacta cobre tudo) e sobe a cifra */
+#view-player.present .controls{display:none}
+#view-player.present .songhead{display:none}
+#view-player.present .cifra{padding-top:6px}
 
 /* ---------- Song picker ---------- */
 #picklist .songcard{margin-bottom:8px}
@@ -418,10 +437,20 @@ input,textarea,select{font-family:inherit}
         <button class="settingsbtn" id="p-settings">⚙ Ajustes</button>
       </div>
     </div>
+    <!-- Apresentação: barra compacta (vale só no modo Apresentar; o player normal usa .controls/.songhead acima) -->
     <div class="presentbar hidden" id="presentbar">
-      <button class="pbtn" id="pv-prev" aria-label="Música anterior">‹</button>
-      <div class="pinfo"><span id="pv-esc"></span><span id="pv-pos"></span></div>
-      <button class="pbtn" id="pv-next" aria-label="Próxima música">›</button>
+      <div class="pb-nav">
+        <button class="pbtn-sm" id="pv-back" aria-label="Voltar para a escala">←</button>
+        <button class="pbtn" id="pv-prev" aria-label="Música anterior">‹</button>
+        <div class="pinfo"><span id="pv-title"></span><span id="pv-pos"></span></div>
+        <button class="pbtn" id="pv-next" aria-label="Próxima música">›</button>
+        <button class="pbtn-sm" id="pv-settings" aria-label="Ajustes">⚙</button>
+      </div>
+      <div class="pb-tom">
+        <button id="pv-tdown" aria-label="Descer meio tom">♭</button>
+        <span class="val" id="pv-tkey">C</span>
+        <button id="pv-tup" aria-label="Subir meio tom">♯</button>
+      </div>
     </div>
     <div class="songhead">
       <div class="h" id="p-title"></div>
@@ -603,7 +632,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.17.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.18.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -978,10 +1007,11 @@ function openPlayer(id, ctx){
 }
 function updatePresentBar(){
   const bar=$("#presentbar");
+  // .present liga o layout compacto (esconde .controls/.songhead) só na Apresentação
+  $("#view-player").classList.toggle("present", !!escalaCtx);
   if(!escalaCtx){ bar.classList.add("hidden"); return; }
   bar.classList.remove("hidden");
-  const es=escalas.find(e=>e.id===escalaCtx.id);
-  $("#pv-esc").textContent = es?es.title:"Escala";
+  $("#pv-title").textContent = current.title;             // título pequeno no meio da barra
   $("#pv-pos").textContent = (escalaCtx.idx+1)+" de "+escalaCtx.list.length;
   $("#pv-prev").disabled = escalaCtx.idx<=0;
   $("#pv-next").disabled = escalaCtx.idx>=escalaCtx.list.length-1;
@@ -1010,6 +1040,7 @@ function drawPlayer(){
   if(capo>0) bits.push("Capo "+capo+" (forma em "+(transposeNote(origRoot,shapeShift(),ctxShape)+(minor?"m":""))+")");
   $("#p-sub").textContent=bits.join("  ·  ");
   $("#t-key").textContent=sounding;
+  $("#pv-tkey").textContent=sounding;   // Tom também na barra compacta da Apresentação
   $("#c-val").textContent=capo;
   const b=$("#p-body");
   b.style.fontSize=fontSize+"px";
@@ -1023,8 +1054,12 @@ function drawPlayer(){
 }
 
 /* controles do player */
-$("#t-up").onclick=()=>{transp++;drawPlayer();};
-$("#t-down").onclick=()=>{transp--;drawPlayer();};
+function transposeBy(d){ transp+=d; drawPlayer(); }   // usado pelos controles normais E pela barra compacta
+$("#t-up").onclick=()=>transposeBy(1);
+$("#t-down").onclick=()=>transposeBy(-1);
+$("#pv-tup").onclick=()=>transposeBy(1);     // Tom na barra compacta da Apresentação
+$("#pv-tdown").onclick=()=>transposeBy(-1);
+$("#pv-settings").onclick=()=>openPlayerSheet();
 $("#c-up").onclick=()=>{if(capo<11){capo++;drawPlayer();}};
 $("#c-down").onclick=()=>{if(capo>0){capo--;drawPlayer();}};
 $("#f-up").onclick=()=>{fontSize=Math.min(28,fontSize+1);drawPlayer();};
@@ -1033,13 +1068,16 @@ $("#f-down").onclick=()=>{fontSize=Math.max(10,fontSize-1);drawPlayer();};
 $("#lyr-toggle").onclick=()=>{const b=$("#lyr-toggle");showChords=!showChords;b.classList.toggle("on",!showChords);b.setAttribute("aria-pressed",String(!showChords));drawPlayer();};
 $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings();const b=$("#tabs-toggle");b.classList.toggle("on",!!settings.hideTabs);b.setAttribute("aria-pressed",String(!!settings.hideTabs));drawPlayer();};
 $("#scrollbar-toggle").onclick=()=>{settings.showScrollbar=!settings.showScrollbar;saveSettings();const b=$("#scrollbar-toggle");b.classList.toggle("on",!!settings.showScrollbar);b.setAttribute("aria-pressed",String(!!settings.showScrollbar));applyScrollbar();};
-$("#p-back").onclick=()=>{
+function exitPlayer(){   // voltar do player — usado pelo ← normal E pelo ← da barra compacta
   stopScroll();
+  $("#view-player").classList.remove("present");   // desliga o layout compacto da Apresentação
   const b=$("#p-body");   // ao sair, limpa o estado de página (não deixa DOM paginado órfão na view escondida)
   b.classList.remove("paged"); b.style.removeProperty("--page-h"); b.innerHTML=""; delete b.dataset.page; delete b.dataset.pages;
   $("#p-pageind").classList.add("hidden");
   if(escalaCtx){const id=escalaCtx.id;escalaCtx=null;openEscala(id);} else {show("lib");renderLibrary();}
-};
+}
+$("#p-back").onclick=exitPlayer;
+$("#pv-back").onclick=exitPlayer;
 $("#p-edit").onclick=()=>openEditor(current.id);
 $("#p-share").onclick=()=>shareSheet(current);
 

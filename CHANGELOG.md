@@ -22,6 +22,31 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.18.0 — Barra compacta no Modo Apresentação (mais cifra no palco)
+**Recurso (uso ao vivo).**
+- **O incômodo:** no modo Apresentar de uma escala, o topo empilhava **três blocos**
+  (controles + barra de navegação + título grande) — ~245px de cromo, ~30% de um
+  celular comidos justo na hora de tocar ao vivo, sobrando pouca cifra.
+- **A mudança:** só na Apresentação, os blocos grandes (`.controls` e `.songhead`)
+  somem e a navegação vira uma **barra compacta de duas fileiras finas** (~100px):
+  - **Fileira 1:** ← voltar · ‹ anterior · **título + posição (2/5)** · próxima › · ⚙ Ajustes.
+  - **Fileira 2:** ♭ · **Tom** · ♯ (transpõe ao vivo).
+  - As **setas de navegação** continuam em destaque (a prioridade do dono).
+- **Como:** classe `.present` em `#view-player` (ligada quando há `escalaCtx`); o
+  `#presentbar` virou a barra compacta. Os botões novos **reusam as mesmas funções**
+  dos controles normais (`transposeBy`, `exitPlayer`, `openPlayerSheet`) — sem
+  duplicar lógica nem mover nós no DOM. O **player de cifra avulsa não muda**.
+  A paginação (Modo Página) se ajusta sozinha: mede a posição real do `#p-body`.
+- **Fora do compacto (de propósito):** estrutura (☰), editar (✎) e compartilhar (↗)
+  não entram na barra ao vivo — ficam no player normal.
+- **Guarda de regressão:** novos testes — `.present` liga; `.controls`/`.songhead`
+  escondidos; título/posição/tom na barra; transpor e navegar (‹ ›) pela barra;
+  cifra começa no topo (`#p-body` acima de 180px); ← volta pra escala e desliga o
+  `.present`.
+- Validado: **79 verificações**, zero erro de JS.
+
+---
+
 ## v0.17.0 — Grafia fiel ao tom ao transpor (fim do botão ♯/♭ manual)
 **Recurso (qualidade da cifra).** Continuação da v0.16.0.
 - **O incômodo:** ao transpor, a grafia saía de um **botão manual ♯/♭** que valia
