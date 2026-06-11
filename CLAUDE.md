@@ -100,6 +100,8 @@ PLANO atualizado se aplicável · `npm test` verde.
   espelham o app; mantê-los coerentes no ritual).
 - `PLANO-redesign-ui.md`, `PLANO-modos-leitura.md` — planos de execução já
   **concluídos** (registro histórico; status no topo de cada um).
+- `PLANO-compartilhar-link.md` — plano **aprovado, não iniciado**: compartilhar
+  escala/repertório por link auto-importável (serverless) + hospedar no GitHub Pages.
 - `.gitignore` — ignora `node_modules/`, as cópias `louvai-v*.html` e o
   `COMMIT_MSG_tmp.txt`.
 - `CLAUDE.md` — este guia.
