@@ -8,6 +8,39 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.21.0 — Compartilhar por link auto-importável (sem servidor)
+**Recurso (importar/compartilhar).** Receber uma escala ou cifra era trabalhoso:
+baixar o `.json` e caçar o "importar". Agora dá pra mandar um **link** que a outra
+pessoa só **toca** — e o app abre já oferecendo importar.
+- **Como funciona:** o mesmo envelope JSON de hoje (`louvai-song` / `louvai-escala`
+  / `louvai-library`) vai **comprimido (gzip) e em base64url no fragmento `#`** da
+  URL — `…/#imp=…`. O `#` **nunca vai ao servidor**, cabe payload grande e
+  **decodifica 100% no aparelho** (offline ao receber). Sem backend, sem upload:
+  o link é montado no celular e enviado direto (WhatsApp). Fallback sem compressão
+  quando o navegador não tiver `CompressionStream`.
+- **Enviar:** nova ação **"Enviar link"** nas três folhas — cifra (`shareSheet`),
+  **escala + cifras** (`shareEscalaSheet`, o caso principal) e repertório (Backup).
+  Usa o Web Share nativo `{url}` e cai no **copiar pra área de transferência** se
+  não houver (mesmo espírito à prova de falha do `shareFile`). O repertório inteiro
+  costuma ser grande: avisa quando o link passa de ~30 KB (o **arquivo** segue como
+  caminho primário do repertório).
+- **Receber (nada salvo no escuro):** ao abrir um link `#imp=` (no boot **ou** com o
+  app já aberto, via `hashchange`), o app decodifica e mostra uma **confirmação**
+  ("Importar Escala 'X' (N cifras)" / "Cifra 'Y'" / "Repertório (N)") **antes** de
+  mesclar — dado vindo de link é não-confiável. Confirmar reusa todo o `importJSON`
+  (dedup por `id`, resolução por `updatedAt`, compatível com `levita-*`). O hash é
+  **limpo na hora** (um refresh não reimporta) e link corrompido só mostra
+  "Link inválido 😕", sem quebrar o boot.
+- **Hosting-ready:** o código já roda em qualquer URL (boot lê o hash; o link usa a
+  base da `location`). Próximo passo do dono é **hospedar** (GitHub Pages — passo a
+  passo no `README` e no `PLANO-compartilhar-link.md`). **Honesto:** sem service
+  worker, o 1º acesso pede internet; PWA offline/instalável fica para depois.
+- **Testes:** round-trip dos helpers (gzip e fallback), geração do link, fluxo de
+  **receber + confirmar** (escala + cifra entram, hash limpo), **cancelar** (nada
+  entra) e **link inválido** (toast, sem exceção). **96 verificações**, zero erro de JS.
+
+---
+
 ---
 
 ---

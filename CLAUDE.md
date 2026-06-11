@@ -84,8 +84,9 @@ PLANO atualizado se aplicável · `npm test` verde.
   - O teste abre `louvai.html` num Chromium headless e valida transposição com
     **grafia fiel ao tom**, parser de acordes, importação por colagem, escalas e
     **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
-    Modo Página, menu de estrutura, Wake Lock e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~84 verificações.)
+    Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
+    (`#imp=`) e a compatibilidade com o nome antigo.
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~96 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -120,6 +121,14 @@ PLANO atualizado se aplicável · `npm test` verde.
 - **Corretor do editor:** `lintCifra` + `runLint`.
 - **Importar texto colado:** `parseImport` e `isMeta` (regras de limpeza do
   Cifra Club: remove `Tom:`, `Capotraste`, `Cifra:`, `Favoritar`, URLs…).
+- **Compartilhar/receber por LINK (v0.21.0):** envelope JSON gzipado em base64url no
+  **fragmento** `…/#imp=…` (sem servidor; decodifica no cliente). Empacotar:
+  `bytesToB64url`/`b64urlToBytes`, `gzipBytes`/`gunzipBytes` (com fallback `r.` sem
+  compressão), `packData`/`unpackData`, `buildImportLink`. Enviar: `shareLink(env,title)`
+  (Web Share `{url}` → fallback clipboard; aviso >30 KB) ligado nas 3 folhas
+  (`shareSheet`, `shareEscalaSheet`, Backup). Receber: `describeImport` +
+  `handleImportLink` (confirma via `openSheet` antes de `importJSON` — "nada salvo no
+  escuro" —, limpa o hash com `clearImpHash`), chamado no **boot** e no `hashchange`.
 - **Player (barra de uma linha, v0.20.0):** `.controls` é uma linha só
   `← · #p-title · ☰ · ⚙` priorizando a cifra; **Tom, Editar (`#p-edit`),
   Compartilhar (`#p-share`), capo, fonte, só-letra, tabs e auto-scroll moram no
@@ -151,11 +160,14 @@ PLANO atualizado se aplicável · `npm test` verde.
 
 ## Próximos passos
 Já entregues: redesign visual (v0.10.0–v0.13.x), grafia dos acordes (v0.16.0–v0.17.0),
-modos de leitura (v0.14.0–v0.15.x) e Apresentação enxuta + "livro" (v0.18.0–v0.19.0).
+modos de leitura (v0.14.0–v0.15.x), Apresentação enxuta + "livro" (v0.18.0–v0.19.0) e
+**compartilhar por link** auto-importável (v0.21.0 — ver `PLANO-compartilhar-link.md`).
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). Ordem sugerida agora:
-1. **Validação visual no celular** (dark/light) — redesign, Modo Página e a barra
+1. **Hospedar + validar o link em campo** (tarefa do dono): publicar no GitHub Pages
+   (passo a passo no `README` / `PLANO-compartilhar-link.md`) e testar o link entre celulares.
+2. **Validação visual no celular** (dark/light) — redesign, Modo Página e a barra
    compacta da Apresentação só se confirmam de verdade na tela do palco.
-2. **PWA instalável + backup seguro** (ícone, 100% offline; data do último backup,
-   tela de restaurar).
-3. **"Última vez que tocamos"** (derivado das escalas) e **transferência por QR Code**.
-4. **Diagramas de acorde** (pegada ao tocar no acorde) — fecha o Tema C.
+3. **PWA instalável + backup seguro** (ícone, 100% offline; data do último backup,
+   tela de restaurar) — fecha o offline do app hospedado.
+4. **"Última vez que tocamos"** (derivado das escalas) e **transferência por QR Code**.
+5. **Diagramas de acorde** (pegada ao tocar no acorde) — fecha o Tema C.

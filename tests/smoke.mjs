@@ -436,6 +436,70 @@ const dense = await page5.evaluate(() => {
 ok(dense >= 5, "Paginação empacota várias linhas por página no celular (máx " + dense + " linhas/página)");
 await ctx5.close();
 
+// ===== v0.21.0 — Compartilhar por link (auto-importável, serverless) =====
+// round-trip dos helpers: packData→unpackData devolve o JSON idêntico (gzip ou fallback)
+const rt = await page.evaluate(async () => {
+  const env = { type: "louvai-escala", version: 1, app: "x",
+    escala: { id: "e1", title: "Café com Deus", items: [] }, songs: [{ id: "s1", title: "Canção" }] };
+  const packed = await packData(env);
+  const back = await unpackData(packed);
+  return { tag: packed.slice(0, 2), same: back === JSON.stringify(env) };
+});
+ok(rt.same, "packData→unpackData devolve o JSON idêntico (round-trip)");
+ok(rt.tag === "g." || rt.tag === "r.", "Payload do link tem tag de compressão válido (" + rt.tag + ")");
+
+// buildImportLink monta base da location + #imp= com o payload taggeado
+const link = await page.evaluate(async () => {
+  const url = await buildImportLink({ type: "louvai-song", version: 1, app: "x", song: { title: "T" } });
+  const base = location.origin + location.pathname;
+  return { ok: url.indexOf(base + "#imp=") === 0, tag: url.split("#imp=")[1].slice(0, 2) };
+});
+ok(link.ok, "buildImportLink monta base + #imp=");
+ok(link.tag === "g." || link.tag === "r.", "Link gerado embute payload com tag de compressão");
+
+// receber por link (fluxo): monta uma escala nova com 1 cifra, seta o hash, abre a confirmação
+await page.evaluate(async () => {
+  const escala = { id: "link-esc-1", title: "Escala por Link", date: "2026-06-01", type: "Culto",
+    team: [], items: [{ type: "song", songId: "link-song-1" }], updatedAt: 10 };
+  const song = { id: "link-song-1", title: "Cifra por Link", key: "G", capo: 0, tags: [], updatedAt: 10, body: "G  C\nLetra" };
+  const url = await buildImportLink({ type: "louvai-escala", version: 1, app: "x", escala, songs: [song] });
+  location.hash = url.split("#")[1];
+  await handleImportLink();
+});
+await page.waitForTimeout(200);   // o #sheet ganha .show num requestAnimationFrame
+const recv = await page.evaluate(() => ({
+  shown: document.getElementById("sheet").classList.contains("show"),
+  title: document.getElementById("sheet-title").textContent,
+}));
+ok(recv.shown && recv.title === "Importar deste link?", "Link de escala abre a confirmação antes de salvar (nada salvo no escuro)");
+// confirma (primeiro item da folha = "Importar …")
+await page.locator("#sheet-body .sheetitem").first().click();
+await page.waitForTimeout(200);
+const after = await page.evaluate(() => ({
+  esc: escalas.some(e => e.id === "link-esc-1"),
+  song: songs.some(s => s.id === "link-song-1"),
+  hashImp: (location.hash || "").indexOf("#imp=") === 0,
+}));
+ok(after.esc && after.song, "Confirmar o link importa a escala E a cifra (reuso do importJSON)");
+ok(!after.hashImp, "Hash #imp= é limpo após tratar o link (refresh não reimporta)");
+
+// cancelar não importa nada
+const cancelBefore = await page.evaluate(async () => {
+  const escala = { id: "link-esc-2", title: "Não importar", type: "Culto", team: [], items: [], updatedAt: 1 };
+  const url = await buildImportLink({ type: "louvai-escala", version: 1, app: "x", escala, songs: [] });
+  location.hash = url.split("#")[1];
+  await handleImportLink();
+  return escalas.length;
+});
+await page.locator("#sheet-body .sheetitem").nth(1).click();   // "Cancelar"
+await page.waitForTimeout(150);
+ok(await page.evaluate(() => !escalas.some(e => e.id === "link-esc-2")), "Cancelar a confirmação não importa nada");
+
+// link inválido: payload com tag gzip mas conteúdo que não é gzip → toast de erro, sem exceção
+await page.evaluate(async () => { location.hash = "#imp=g.zzzzzzzz"; await handleImportLink(); });
+await page.waitForTimeout(150);
+ok((await page.locator("#toast").textContent()).includes("inválido"), "Link inválido mostra toast de erro (sem quebrar o boot)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

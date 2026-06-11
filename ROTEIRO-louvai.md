@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.20.1**.
+seguir. Atualizado até a **v0.21.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -75,6 +75,7 @@ instalação complexa.
 | **v0.19.0** | recurso | **"Livro" na Apresentação:** no modo Página, virar a última página passa pra próxima música; voltar da 1ª página retoma a última página da anterior. As setas ‹ › de música seguem iguais. |
 | **v0.20.0** | recurso | **Player normal em uma linha:** a tela de visualizar cifra vira `← · Título · ☰ · ⚙` (Tom, Editar e Compartilhar no ⚙ Ajustes; linha fininha com artista · Tom · capo). Mais cifra, menos cromo. |
 | **v0.20.1** | correção | **Tom no topo da Apresentação:** mostra a mesma linha fininha (artista · Tom · capo) da visualização normal, em vez de esconder. |
+| **v0.21.0** | recurso | **Compartilhar por link auto-importável (sem servidor):** envia escala/cifra/repertório num link `…/#imp=…` (envelope JSON gzipado em base64url no fragmento; decodifica 100% no aparelho). Quem recebe só toca — abre com confirmação antes de salvar. Código hosting-ready (GitHub Pages). |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -94,6 +95,9 @@ instalação complexa.
   total, modo Apresentar (música a música no tom do culto, com **barra compacta**
   que dá mais cifra na tela e **virar página como um livro** entre as músicas),
   compartilhar.
+- **Compartilhar:** por **arquivo `.json`** (cifra, escala ou repertório) e por
+  **link auto-importável** (`…/#imp=…`, sem servidor) — a pessoa toca o link e o app
+  abre oferecendo importar, com confirmação antes de salvar.
 - **Offline:** tudo salvo no aparelho (localStorage); funciona sem internet.
 - **Robustez e acessibilidade:** importação à prova de arquivo malformado (sem XSS,
   sem travar a lista); botões com nome em leitor de tela, toggles com estado, respeito
@@ -149,8 +153,15 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 - [ ] **Itens não-musicais no modo Apresentar** (mostrar o card de aviso/oração na sequência).
 
 ### Tema E — Importar e compartilhar (sem servidor)
+- [x] **Compartilhar por link auto-importável** (`…/#imp=…`, dados gzipados no fragmento,
+  sem backend; recebe tocando o link, com confirmação). *(entregue na v0.21.0 — ver
+  `PLANO-compartilhar-link.md`)*. Falta a tarefa operacional do dono: **hospedar** o app
+  (GitHub Pages — passo a passo no `README` e no plano).
+- [ ] **Transferência por QR Code** entre celulares (do link curto / via Drive) — entra
+  depois de validar o link em campo.
+- [ ] **Importar de URL (Drive/Dropbox/Gist)** — `fetch`+`importJSON`, para payloads
+  grandes por link curto (atenção a CORS).
 - [ ] **Compartilhar escala como texto formatado** para WhatsApp (além do `.json`).
-- [ ] **Transferência por QR Code** entre celulares (sincronização offline, sem servidor).
 - [ ] **Refinar o colar** com mais exemplos reais; **exportar para ChordPro**.
 
 ### Fase futura — Online
@@ -161,12 +172,15 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
 ## 5. Ordem sugerida para a próxima sessão
 
-1. **Validação visual no celular** (dark e light) — agora com **prioridade**: o
-   redesign, o **Modo Página** e a nova **barra compacta da Apresentação** só se
-   confirmam de verdade na tela real do palco.
-2. **PWA + backup seguro** — blinda os dados do ministério.
-3. **"Última vez que tocamos"** e **QR Code** — alto valor percebido.
-4. **Diagramas de acorde** (pegada ao tocar no acorde) — fecha o Tema C de qualidade.
+1. **Hospedar o app + validar o link em campo** (tarefa do dono): publicar no
+   GitHub Pages (passo a passo no `README` / `PLANO-compartilhar-link.md`), gerar
+   "Enviar link" numa escala e mandar pra outro aparelho no WhatsApp → tocar → importar.
+2. **Validação visual no celular** (dark e light): o redesign, o **Modo Página** e a
+   **barra compacta da Apresentação** só se confirmam de verdade na tela real do palco.
+3. **PWA + backup seguro** — blinda os dados do ministério (e fecha o offline 100%
+   do app hospedado: manifest + service worker).
+4. **"Última vez que tocamos"** e **QR Code** — alto valor percebido.
+5. **Diagramas de acorde** (pegada ao tocar no acorde) — fecha o Tema C de qualidade.
 
 > ✅ **Modos de leitura no player** (auto-scroll opcional + Modo Página) concluídos
 > nas v0.14.0–v0.15.0 — ver `PLANO-modos-leitura.md`.
@@ -174,6 +188,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > concluída nas v0.16.0–v0.17.0.
 > ✅ **Apresentação enxuta** (barra compacta + Tom no Ajustes) concluída nas
 > v0.18.0–v0.18.1; **"livro"** (virar página troca de música) na v0.19.0.
+> ✅ **Compartilhar por link** (auto-importável, sem servidor) concluído na v0.21.0 —
+> ver `PLANO-compartilhar-link.md` (resta a tarefa operacional de hospedar).
 
 ---
 
@@ -193,4 +209,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.20.1.*
+*Última atualização deste roteiro: v0.21.0.*

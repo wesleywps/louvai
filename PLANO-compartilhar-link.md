@@ -1,10 +1,24 @@
 # Plano — Compartilhar repertório e escala por LINK (serverless) + hosting-ready (v0.21.0)
 
-> **Como retomar:** abra o Claude Code nesta pasta e peça
-> *"vamos executar o PLANO-compartilhar-link.md"*.
-> Plano aprovado pelo dono em 2026-06; decisões já tomadas (não reabrir).
-> **Status: APROVADO — NÃO INICIADO.** Aguardando execução (o dono pediu pra guardar
-> e implementar depois). App está na v0.20.1 no momento da aprovação.
+> **Status: ✅ IMPLEMENTADO na v0.21.0** (commit/tag `v0.21.0`). Falta só a tarefa
+> **operacional do dono**: hospedar o app no GitHub Pages (Anexo abaixo) e validar o
+> link entre celulares em campo. Plano aprovado pelo dono em 2026-06.
+>
+> **O que foi entregue (código, `louvai.html`):** helpers `bytesToB64url`/`b64urlToBytes`,
+> `gzipBytes`/`gunzipBytes` (fallback `r.` sem compressão), `packData`/`unpackData`,
+> `buildImportLink`, `shareLink`; ação **"Enviar link"** nas 3 folhas (cifra, escala+cifras,
+> repertório com aviso >30 KB); recepção `describeImport`/`handleImportLink` (confirma antes
+> de salvar, limpa o hash) ligada no boot e no `hashchange`. Testes no `tests/smoke.mjs`
+> (round-trip, gerar link, receber+confirmar, cancelar, link inválido) — **96 verificações**.
+>
+> **Armadilhas aprendidas (p/ não repetir):**
+> - `openSheet` só adiciona `.show` ao `#sheet` num `requestAnimationFrame` → ao testar a
+>   confirmação, **espere** (waitForTimeout) antes de checar o `.show`.
+> - `CompressionStream`/`DecompressionStream`: ao falhar (dado não-gzip), o **writer** rejeita
+>   em paralelo ao `readable` → engolir a rejeição do writer (`.write().catch()`/`.close().catch()`)
+>   pra não vazar "unhandled rejection"; o erro real continua saindo pelo `readable` (capturado).
+> - Limpar o hash com `history.replaceState` (NÃO dispara `hashchange`, evita reentrada) e
+>   **antes de qualquer `await`**; fallback `location.hash=""` p/ `file://`.
 
 ## Contexto
 

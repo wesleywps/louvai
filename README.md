@@ -11,7 +11,7 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.20.1)
+## Recursos (v0.21.0)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
 - Repertório com busca e tags; criar/editar cifras; **importar colando do Cifra Club**.
@@ -24,9 +24,40 @@ para ter um ícone e abrir como app.
 - **Escalas/Setlists**: ordem do culto, tom por escala, equipe, tempo total e
   **modo Apresentar** com **barra compacta** (mais cifra na tela ao vivo) e
   **virar de página como um livro** entre as músicas.
-- Compartilhar e fazer backup por arquivo `.json`. Tudo offline.
+- **Compartilhar** por **arquivo `.json`** e por **link auto-importável** (`…/#imp=…`,
+  sem servidor): a pessoa só **toca o link** e o app abre oferecendo importar (com
+  confirmação antes de salvar). Backup do repertório por arquivo. Tudo offline.
 - **Robusto e acessível:** importação à prova de arquivo malformado (sem XSS, sem
   travar a lista), botões com nome em leitor de tela e respeito ao "Reduzir movimento".
+
+## Publicar (hospedar)
+Hospedar dá uma **URL fixa** ao app, e aí o **link de importação** (`…/#imp=…`) vira
+tocável entre celulares. É **hospedagem estática** (o GitHub só entrega o arquivo
+quando alguém abre o endereço) — **não é backend**: os dados das pessoas continuam
+só no aparelho; o que fica público é o **código** do app (já era compartilhável). O
+link é montado no celular e enviado direto (WhatsApp); o servidor nunca vê os dados.
+
+**GitHub Pages (recomendado, ~10 min, uma vez):**
+1. Crie um repositório **público** chamado `louvai` (a URL vira `usuario.github.io/louvai/`).
+2. Suba o `louvai.html` mais recente **renomeado para `index.html`** (o Pages serve o
+   `index.html` da raiz). *Add file → Upload files → Commit.*
+3. **Settings → Pages**: *Source* = **Deploy from a branch**, *Branch* = **main** ·
+   **/ (root)** → **Save**.
+4. Aguarde ~1 min: aparece *"Your site is live at …"*. Esse é o endereço pra divulgar.
+5. No celular: abra a URL → **"Adicionar à Tela de Início"**. Ao gerar **"Enviar link"**
+   numa escala, o app já produz `…github.io/louvai/#imp=…` (a base vem da própria URL).
+
+**Atualizar:** suba a cópia `louvai-vX.Y.Z.html` mais nova renomeada como `index.html`
+e commite — em ~1 min todos pegam a versão nova ao reabrir, sem reenviar arquivo.
+
+**Alternativa rápida — Netlify Drop:** arraste o `index.html` em
+<https://app.netlify.com/drop> e receba uma URL na hora.
+
+> **Offline (honesto):** sem *service worker*, o 1º acesso (e checar atualização)
+> pede internet; depois o navegador costuma cachear. Offline 100% garantido +
+> instalável "de verdade" é o **próximo passo** (PWA: manifest + service worker).
+
+O passo a passo detalhado (com a conta do dono) está em `PLANO-compartilhar-link.md`.
 
 ## Desenvolver
 Requer [Node.js](https://nodejs.org) 18+.
