@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#121212">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Louvai · Cifras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* superfícies em camadas de brilho (elevação = mais claro, estilo Spotify) */
+  --bg:#121212; --bg2:#181818; --panel:#1e1e1e; --panel2:#282828;
+  --line:rgba(255,255,255,.09); --text:#ffffff; --muted:#b3b3b3;
+  /* acento violeta (worship) — token único: trocar aqui muda o app todo */
+  --accent:#a78bfa; --accent-strong:#8b5cf6; --accent-soft:#c4b5fd;
+  --accent-ink:#190b2e;                 /* tinta sobre o acento (contraste AA) */
+  --accent-glow:rgba(139,92,246,.45);   /* sombras/brilhos do acento */
+  --glass:rgba(18,18,18,.78);           /* superfícies translúcidas (blur) */
+  --glass2:rgba(24,24,24,.92);          /* sheets/toast: translúcido mais denso */
+  /* cifra no escuro: acorde e letra em LUMINOSIDADES diferentes p/ ler de longe */
+  --chord:#c7a9ff;                       /* acorde: violeta vivo */
+  --chord-bg:rgba(139,92,246,.18);       /* chip sutil atrás do acorde */
+  --chord-halo:rgba(167,139,250,.45);    /* brilho do acorde (palco escuro) */
+  --lyric:rgba(255,255,255,.84);         /* letra: um tom abaixo do branco puro */
+  --section:#5eead4;
+  --danger:#f87171; --shadow:0 18px 50px -20px rgba(0,0,0,.7);
+  --r:16px; --r-lg:24px; --dur:.2s;
+  /* aliases da paleta antiga: o resto do CSS continua funcionando */
+  --gold:var(--accent); --gold-soft:var(--accent-soft);
+}
+.light{
+  --bg:#f6f5f8; --bg2:#edebf2; --panel:#ffffff; --panel2:#f1eff6;
+  --line:rgba(28,20,46,.13); --text:#17131f; --muted:#5f5a6e;
+  --accent:#7c3aed; --accent-strong:#6d28d9; --accent-soft:#5b21b6;
+  --accent-ink:#ffffff;
+  --accent-glow:rgba(124,58,237,.35);
+  --glass:rgba(246,245,248,.82);
+  --glass2:rgba(255,255,255,.92);
+  /* no claro o contraste já é bom: sem chip nem halo */
+  --chord:#6d28d9; --chord-bg:transparent; --chord-halo:transparent;
+  --lyric:#17131f;
+  --section:#0f766e;
+  --danger:#dc2626; --shadow:0 18px 50px -24px rgba(40,25,80,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  /* atmosfera: brilho violeta sutil no topo que se dissolve no near-black */
+  background:
+    radial-gradient(110% 52% at 50% -12%, var(--accent-glow), transparent 62%),
+    linear-gradient(180deg, var(--bg2), var(--bg) 420px);
+  background-color:var(--bg);
+  background-repeat:no-repeat;
+  color:var(--text);
+  font-family:'Inter',ui-sans-serif,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit}
+.app{max-width:860px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+.hidden{display:none!important}
+/* fluidez: cada tela entra com um fade curto (opacidade só — não desloca os fixos) */
+#view-lib,#view-player,#view-editor,#view-escala,#view-escala-edit{animation:viewin .22s ease}
+@keyframes viewin{from{opacity:0}to{opacity:1}}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:30;
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px calc(14px) 16px;
+  padding-top:max(14px,env(safe-area-inset-top));
+  background:var(--glass);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+/* o wordmark serif (Fraunces) é o selo da marca — só no logo da biblioteca */
+.brand{font-family:'Inter',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.2px;
+  display:flex;align-items:center;gap:9px}
+#view-lib .brand{font-family:'Fraunces',serif;font-weight:600;font-size:24px;letter-spacing:.3px}
+.brand .dot{width:11px;height:11px;border-radius:50%;background:var(--gold);
+  box-shadow:0 0 16px var(--gold)}
+.brand .ver{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  color:var(--muted);letter-spacing:0;align-self:flex-end;margin-bottom:4px;
+  background:var(--panel);border:1px solid var(--line);padding:1px 7px;border-radius:999px}
+.topbar .spacer{flex:1}
+.iconbtn{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;
+  background:var(--panel);border:1px solid var(--line);font-size:18px;transition:var(--dur)}
+.iconbtn:active{transform:scale(.93)}
+.iconbtn.gold{background:var(--gold);color:var(--accent-ink);border-color:transparent;font-weight:700}
+
+/* ---------- Library ---------- */
+.lib{padding:18px 16px calc(170px + env(safe-area-inset-bottom))}
+.searchwrap{position:relative;margin-bottom:14px}
+.search{width:100%;padding:14px 16px 14px 44px;border-radius:14px;background:var(--panel);
+  border:1px solid var(--line);color:var(--text);font-size:16px;outline:none}
+.search::placeholder{color:var(--muted)}
+.searchwrap .mag{position:absolute;left:15px;top:50%;transform:translateY(-50%);opacity:.6}
+.tagbar{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.tagbar::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:7px 14px;border-radius:999px;background:var(--panel);
+  border:1px solid var(--line);font-size:13.5px;color:var(--muted);font-weight:500}
+.chip.on{background:var(--gold);color:var(--accent-ink);border-color:transparent;font-weight:700}
+.count{font-size:12.5px;color:var(--muted);margin:2px 2px 12px;letter-spacing:.3px;text-transform:uppercase}
+.songcard{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:var(--r);
+  background:var(--panel);border:1px solid var(--line);margin-bottom:11px;transition:var(--dur)}
+.songcard:active{transform:scale(.985);background:var(--panel2)}
+.keytag{flex:0 0 auto;width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:17px;
+  background:linear-gradient(140deg,var(--panel2),var(--bg2));color:var(--gold);
+  border:1px solid var(--line)}
+.songcard .meta{flex:1;min-width:0}
+.songcard .ttl{font-size:16.5px;font-weight:700;letter-spacing:-.2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.songcard .sub{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;margin-top:2px}
+.songcard .tags{font-size:11.5px;color:var(--section);margin-top:3px}
+.empty{text-align:center;padding:84px 24px;color:var(--muted);line-height:1.6}
+.empty::before{content:"♪";display:block;font-size:34px;color:var(--accent);
+  opacity:.85;margin-bottom:14px;text-shadow:0 0 24px var(--accent-glow)}
+.empty .big{font-size:19px;font-weight:700;letter-spacing:-.2px;color:var(--text);margin-bottom:8px}
+
+/* ---------- Botões / FAB / bottom nav ---------- */
+.btn{flex:1;padding:16px;border-radius:15px;font-size:15.5px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:8px;transition:var(--dur);
+  border:1px solid var(--line);background:var(--panel)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;
+  box-shadow:0 10px 30px -10px var(--accent-glow)}
+/* FAB "+" único, contextual (Cifras → nova cifra; Escalas → nova escala) */
+.fab{position:fixed;right:18px;bottom:calc(82px + env(safe-area-inset-bottom));z-index:27}
+.fabbtn{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;
+  background:var(--accent);color:var(--accent-ink);font-size:30px;font-weight:700;
+  box-shadow:0 14px 32px -8px var(--accent-glow);transition:var(--dur)}
+.fabbtn:active{transform:scale(.92)}
+/* bottom nav fixa (estilo Spotify): some sozinha fora da biblioteca */
+.bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:26;max-width:860px;margin:0 auto;
+  display:flex;background:var(--glass);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  padding:6px 10px calc(8px + env(safe-area-inset-bottom))}
+.bottomnav .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 4px 6px;min-height:52px;border-radius:12px;
+  font-size:11.5px;font-weight:700;letter-spacing:.3px;color:var(--muted);
+  transition:color var(--dur)}
+.bottomnav .tab .nic{font-size:21px;line-height:1}
+.bottomnav .tab.on{color:var(--accent)}
+
+/* ---------- Player ---------- */
+.controls{position:sticky;top:0;z-index:20;background:var(--glass);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+  padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top))}
+.ctrlrow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;align-items:stretch}
+.ctrlrow::-webkit-scrollbar{display:none}
+.ctrl{flex:0 0 auto;display:flex;align-items:center;background:var(--panel);
+  border:1px solid var(--line);border-radius:13px;overflow:hidden}
+.ctrl .lbl{font-size:11px;color:var(--muted);padding:0 9px;text-transform:uppercase;
+  letter-spacing:.6px;font-weight:600;align-self:center}
+.ctrl button{padding:12px 14px;font-size:17px;font-weight:700;min-width:48px}
+.ctrl button:active{background:var(--panel2)}
+.ctrl .val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;
+  color:var(--gold);padding:0 4px;min-width:46px;text-align:center;align-self:center}
+.ctrl.toggle button.on{background:var(--accent);color:var(--accent-ink)}
+.settingsbtn{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:0 18px;
+  background:var(--panel);border:1px solid var(--line);border-radius:13px;
+  font-size:13.5px;font-weight:700;color:var(--text);transition:var(--dur)}
+.settingsbtn:active{background:var(--panel2)}
+/* controles dentro do sheet Ajustes: lista vertical, rótulo à esquerda */
+.sheetctrls{display:flex;flex-direction:column;gap:10px;padding:4px 2px 8px}
+.sheetctrls .ctrl{justify-content:space-between;padding-left:6px}
+.sheetctrls .ctrl .lbl{font-size:12.5px;letter-spacing:.4px}
+.sheetctrls .grp{display:flex;align-items:center;flex:0 0 auto}
+/* título da música na barra de UMA linha (player normal); some no modo Apresentar */
+.p-titlebar{flex:1;min-width:0;font-size:16px;font-weight:700;letter-spacing:-.2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+/* linha fininha de info (artista · Tom atual · capo) logo abaixo da barra */
+.songhead{padding:6px 18px 2px}
+.songhead .s{color:var(--muted);font-size:13px}
+.cifra{font-family:'JetBrains Mono',ui-monospace,'Courier New',monospace;
+  font-size:15px;line-height:1.85;padding:8px 18px 220px;white-space:pre;
+  overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* sem a barra de auto-scroll (padrão): encolhe o respiro inferior — não afeta o alinhamento mono */
+.cifra.nobar{padding-bottom:calc(48px + env(safe-area-inset-bottom))}
+.cifra .chord{color:var(--chord);font-weight:700;
+  background:var(--chord-bg);border-radius:4px;          /* sem padding lateral: não desloca o alinhamento */
+  text-shadow:0 0 14px var(--chord-halo)}
+.cifra .sec{color:var(--section);font-weight:700;font-style:normal;
+  display:inline-block;margin-top:6px}
+.cifra .lyr{color:var(--lyric)}
+.scrollbar-mini{position:fixed;left:0;right:0;bottom:0;z-index:24;max-width:860px;margin:0 auto;
+  padding:12px 16px calc(14px + env(safe-area-inset-bottom));
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(transparent,var(--bg) 40%)}
+.scrollbtn{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:20px;
+  background:var(--accent);color:var(--accent-ink);border:none;box-shadow:0 10px 26px -8px var(--accent-glow);
+  flex:0 0 auto}
+.scrollbtn:active{transform:scale(.94)}
+.speed{flex:1;display:flex;align-items:center;gap:10px;background:var(--panel);
+  border:1px solid var(--line);border-radius:15px;padding:10px 16px}
+.speed span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+/* slider de velocidade: alvo de toque maior (palco/pouca luz, ajuste com o polegar) */
+.speed input{flex:1;height:34px;background:transparent;-webkit-appearance:none;appearance:none;accent-color:var(--accent)}
+.speed input::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--panel2)}
+.speed input::-webkit-slider-thumb{-webkit-appearance:none;margin-top:-10px;width:26px;height:26px;border-radius:50%;
+  background:var(--accent);box-shadow:0 2px 8px var(--accent-glow)}
+.speed input::-moz-range-track{height:6px;border-radius:3px;background:var(--panel2)}
+.speed input::-moz-range-thumb{width:26px;height:26px;border:none;border-radius:50%;background:var(--accent);box-shadow:0 2px 8px var(--accent-glow)}
+
+/* ---------- Modo Página (leitura por páginas) ---------- */
+/* #p-body vira um trilho horizontal com scroll-snap; cada filho .page é um slide
+   de largura cheia e altura medida (var --page-h). A medição/.ln existem só aqui;
+   no modo rolagem o #p-body continua o bloco <pre> de sempre. */
+.cifra.paged{display:flex;overflow-x:auto;overflow-y:hidden;padding:0;
+  scroll-snap-type:x mandatory;scrollbar-width:none}
+.cifra.paged::-webkit-scrollbar{display:none}
+.cifra.paged .page{flex:0 0 100%;scroll-snap-align:start;box-sizing:border-box;
+  height:var(--page-h);overflow:hidden;padding:8px 18px 0}
+.cifra.paged .ln{display:block;white-space:pre;min-height:1em}
+/* indicador discreto "p / N" — só no modo página */
+.pageind{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);z-index:24;pointer-events:none;
+  background:var(--glass2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.5px;
+  padding:5px 13px;border-radius:999px;font-family:'JetBrains Mono',monospace}
+/* seletor segmentado Rolagem|Página no ⚙ Ajustes */
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+
+/* ---------- Editor ---------- */
+.editor{padding:18px 16px 140px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.7px;font-weight:600;margin-bottom:7px}
+.field input,.field textarea,.field select{width:100%;padding:13px 15px;border-radius:13px;
+  background:var(--panel);border:1px solid var(--line);color:var(--text);font-size:16px;outline:none}
+.field input:focus,.field textarea:focus,.field select:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.row2{display:flex;gap:12px}.row2>*{flex:1}
+.field textarea{min-height:300px;font-family:'JetBrains Mono',monospace;font-size:14px;
+  line-height:1.7;white-space:pre;resize:vertical}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:6px}
+.hint code{background:var(--panel2);padding:1px 6px;border-radius:5px;color:var(--gold-soft)}
+.deletebtn{width:100%;padding:14px;border-radius:13px;color:var(--danger);
+  background:transparent;border:1px solid var(--line);font-weight:600;margin-top:6px}
+.lint{margin-top:10px;font-size:13px;line-height:1.6;border-radius:11px;padding:11px 13px;
+  border:1px solid var(--line);background:var(--panel2)}
+.lint.ok{color:var(--section)}
+.lint.warn{color:var(--gold-soft);border-color:var(--gold)}
+.lint b{font-family:'JetBrains Mono',monospace;color:var(--danger);font-weight:700}
+
+/* (abas Cifras/Escalas agora vivem na .bottomnav, acima) */
+
+/* ---------- Escala cards (lista) ---------- */
+.escard{padding:15px 16px;border-radius:var(--r);background:var(--panel);
+  border:1px solid var(--line);margin-bottom:11px;transition:var(--dur)}
+.escard:active{transform:scale(.985);background:var(--panel2)}
+.escard .et{font-size:17px;font-weight:700;letter-spacing:-.2px}
+.escard .ed{font-size:13px;color:var(--muted);margin-top:3px}
+.escard .ex{font-size:12px;color:var(--section);margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+.estag{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+
+/* ---------- Escala detail ---------- */
+.escala{padding:18px 16px 130px}
+.es-head .es-title{font-size:25px;font-weight:800;letter-spacing:-.4px;line-height:1.12}
+.es-head .es-meta{color:var(--muted);font-size:14px;margin-top:6px}
+.present-btn{width:100%;margin:16px 0 6px}
+.es-team-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:12px 14px;margin:10px 0 4px}
+.es-team-box .th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;
+  font-weight:700;margin-bottom:8px}
+.es-team-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
+.tm{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.tm .role{color:var(--muted)}.tm .who{font-weight:600;text-align:right}
+.es-order-h{font-size:16px;font-weight:700;letter-spacing:-.2px;margin:18px 2px 10px}
+.orow{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;
+  background:var(--panel);border:1px solid var(--line);margin-bottom:9px}
+.orow:active{background:var(--panel2)}
+.orow.item{border-style:dashed;background:transparent}
+.orow .onum{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--muted);
+  background:var(--panel2);border:1px solid var(--line)}
+.orow .obody{flex:1;min-width:0}
+.orow .ot{font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orow .os{font-size:12.5px;color:var(--muted);margin-top:2px}
+.orow .momento{color:var(--section);font-weight:700}
+.orow .okey{flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;
+  color:var(--gold);background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:6px 9px;min-width:42px;text-align:center}
+.es-total{font-size:13px;color:var(--muted);text-align:right;margin:4px 2px 0;font-weight:600}
+.es-notes{white-space:pre-wrap;color:var(--text);font-size:14.5px;line-height:1.6;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:16px}
+
+/* ---------- Escala editor rows ---------- */
+.addrow{padding:11px;border-radius:12px;border:1px dashed var(--line);background:transparent;
+  color:var(--gold);font-weight:700;font-size:14px;width:100%}
+.addrow:active{background:var(--panel2)}
+.addgrid{display:flex;gap:10px;margin-top:8px}.addgrid .addrow{margin:0}
+.prow{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:10px;margin-bottom:9px}
+.prow.two{display:flex;gap:8px;align-items:center}
+.prow input,.prow select{padding:10px 11px;border-radius:10px;background:var(--panel2);
+  border:1px solid var(--line);color:var(--text);font-size:15px;outline:none;width:100%}
+.prow .rolesel{flex:1.1}.prow .nameinp{flex:1.6}
+.irow{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px;margin-bottom:10px}
+.irow.itemkind{border-style:dashed}
+.irow .ihead{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.irow .ihead .ic{font-size:15px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.irow .move{width:44px;height:44px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:15px;font-weight:700;flex:0 0 auto}
+.irow .move:active{background:var(--line)}
+.irow .rm{color:var(--danger);font-size:18px;width:44px;height:44px;flex:0 0 auto}
+.irow .igrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.irow .igrid.three{grid-template-columns:1fr 1fr 1fr}
+.irow .fld label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;
+  font-weight:700;display:block;margin-bottom:4px}
+.irow .fld input,.irow .fld select{width:100%;padding:9px 10px;border-radius:9px;background:var(--panel2);
+  border:1px solid var(--line);color:var(--text);font-size:14px;outline:none}
+
+/* ---------- Present bar (no player) ---------- */
+/* Apresentação: barra compacta de 2 fileiras finas (nav + tom). Aparece só no modo
+   Apresentar e substitui .controls + .songhead — mais cifra na tela ao vivo. */
+.presentbar{display:flex;flex-direction:column;gap:6px;margin:0;
+  position:sticky;top:0;z-index:20;
+  background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+  padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top))}
+.pb-nav{display:flex;align-items:center;gap:8px}
+.pb-tom{display:flex;align-items:center;justify-content:center;gap:8px}
+.presentbar .pbtn{width:44px;height:44px;border-radius:11px;background:var(--panel2);
+  border:1px solid var(--line);font-size:22px;font-weight:700;color:var(--gold);flex:0 0 auto}
+.presentbar .pbtn-sm{width:40px;height:40px;border-radius:10px;background:var(--panel2);
+  border:1px solid var(--line);font-size:17px;font-weight:700;color:var(--text);flex:0 0 auto}
+.presentbar .pbtn:active,.presentbar .pbtn-sm:active{background:var(--line)}
+.presentbar .pbtn:disabled{opacity:.35}
+.presentbar .pinfo{flex:1;min-width:0;text-align:center;line-height:1.2}
+.presentbar #pv-title{display:block;font-size:14px;color:var(--text);font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.presentbar #pv-pos{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-top:1px}
+/* modo Apresentar: esconde a barra grande (a compacta cobre tudo), mas mantém a linha
+   fininha do tom (.songhead = artista · Tom · capo) à vista, como no player normal */
+#view-player.present .controls{display:none}
+#view-player.present .cifra{padding-top:6px}
+
+/* ---------- Song picker ---------- */
+#picklist .songcard{margin-bottom:8px}
+
+/* ---------- Toast / sheet ---------- */
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+  background:var(--glass2);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--line);color:var(--text);
+  padding:13px 20px;border-radius:13px;font-size:14px;font-weight:600;z-index:60;
+  box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:90%}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sheetbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;opacity:0;transition:.2s;pointer-events:none}
+.sheetbg.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;max-width:860px;margin:0 auto;
+  background:var(--glass2);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-radius:var(--r-lg) var(--r-lg) 0 0;border:1px solid var(--line);
+  padding:10px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(110%);
+  transition:.28s cubic-bezier(.2,.9,.3,1);box-shadow:var(--shadow)}
+.sheet.show{transform:translateY(0)}
+#sheet{max-height:86dvh;display:flex;flex-direction:column}
+#sheet .grip,#sheet h3{flex:0 0 auto}
+#sheet-body{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sheet .grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:6px auto 14px}
+.sheet h3{margin:0 6px 10px;font-size:17px;font-weight:700;letter-spacing:-.2px}
+.sheetitem{display:flex;align-items:center;gap:14px;padding:15px 12px;border-radius:13px;font-size:16px}
+.sheetitem:active{background:var(--panel2)}
+.sheetitem .ic{font-size:19px;width:24px;text-align:center}
+.sheetitem.danger{color:var(--danger)}
+/* respeita o "Reduzir movimento" do sistema: sem fade entre telas, sem slide do
+   sheet, sem bounce no toque — útil no palco e p/ sensibilidade vestibular */
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===== LIBRARY VIEW ===== -->
+  <div id="view-lib">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span>Louvai<span class="ver" id="appVer"></span></div>
+      <div class="spacer"></div>
+      <button class="iconbtn" id="themeBtn" title="Tema" aria-label="Alternar tema claro/escuro">◐</button>
+      <button class="iconbtn" id="backupBtn" title="Backup" aria-label="Backup e compartilhamento">↥</button>
+      <button class="iconbtn" id="importBtn" title="Importar" aria-label="Importar arquivo">↧</button>
+    </div>
+    <div class="lib">
+      <!-- aba Cifras -->
+      <div id="pane-songs">
+        <div class="searchwrap">
+          <span class="mag">🔍</span>
+          <input class="search" id="search" placeholder="Buscar música, artista, tom…">
+        </div>
+        <div class="tagbar" id="tagbar"></div>
+        <div class="count" id="count"></div>
+        <div id="songlist"></div>
+      </div>
+
+      <!-- aba Escalas -->
+      <div id="pane-escalas" class="hidden">
+        <div class="count" id="escount"></div>
+        <div id="escalalist"></div>
+      </div>
+    </div>
+    <div class="fab">
+      <button class="fabbtn" id="newBtn" title="Nova cifra" aria-label="Nova cifra">＋</button>
+      <button class="fabbtn hidden" id="newEscBtn" title="Nova escala" aria-label="Nova escala">＋</button>
+    </div>
+    <nav class="bottomnav">
+      <button class="tab on" id="tab-songs"><span class="nic">♪</span><span>Cifras</span></button>
+      <button class="tab" id="tab-escalas"><span class="nic">▤</span><span>Escalas</span></button>
+    </nav>
+  </div>
+
+  <!-- ===== PLAYER VIEW ===== -->
+  <div id="view-player" class="hidden">
+    <!-- Player normal: barra de UMA linha, prioriza a cifra (Tom/Editar/Compartilhar moram no ⚙ Ajustes) -->
+    <div class="controls">
+      <div class="topbar" style="position:static;background:none;border:none;backdrop-filter:none;padding:6px 0 8px">
+        <button class="iconbtn" id="p-back" aria-label="Voltar">←</button>
+        <div class="p-titlebar" id="p-title"></div>
+        <button class="iconbtn" id="p-struct" title="Estrutura da música" aria-label="Estrutura da música">☰</button>
+        <button class="iconbtn" id="p-settings" aria-label="Ajustes">⚙</button>
+      </div>
+    </div>
+    <!-- Apresentação: barra compacta de uma linha (o Tom mora no ⚙ Ajustes; o player normal usa .controls/.songhead acima) -->
+    <div class="presentbar hidden" id="presentbar">
+      <div class="pb-nav">
+        <button class="pbtn-sm" id="pv-back" aria-label="Voltar para a escala">←</button>
+        <button class="pbtn" id="pv-prev" aria-label="Música anterior">‹</button>
+        <div class="pinfo"><span id="pv-title"></span><span id="pv-pos"></span></div>
+        <button class="pbtn" id="pv-next" aria-label="Próxima música">›</button>
+        <button class="pbtn-sm" id="pv-settings" aria-label="Ajustes">⚙</button>
+      </div>
+    </div>
+    <div class="songhead">
+      <div class="s" id="p-sub"></div>
+    </div>
+    <div class="cifra" id="p-body"></div>
+    <div class="scrollbar-mini" id="scrollbar-mini">
+      <button class="scrollbtn" id="scroll-toggle" aria-label="Rolar a tela">▶</button>
+      <div class="speed"><span>Velocidade</span>
+        <input type="range" id="scroll-speed" min="1" max="10" value="4" aria-label="Velocidade da rolagem">
+      </div>
+    </div>
+    <div class="pageind hidden" id="p-pageind" aria-hidden="true"></div>
+  </div>
+
+  <!-- ===== EDITOR VIEW ===== -->
+  <div id="view-editor" class="hidden">
+    <div class="topbar">
+      <button class="iconbtn" id="e-cancel" aria-label="Cancelar">✕</button>
+      <div class="brand" style="font-size:19px"><span id="e-mode">Nova cifra</span></div>
+      <div class="spacer"></div>
+      <button class="iconbtn gold" id="e-save" style="width:auto;padding:0 18px;font-size:15px">Salvar</button>
+    </div>
+    <div class="editor">
+      <button class="addrow hidden" id="e-paste" style="margin-bottom:14px">📋 Colar cifra pronta (Cifra Club…)</button>
+      <div class="field"><label>Título</label><input id="e-title" placeholder="Ex.: Tua Graça Me Basta"></div>
+      <div class="field"><label>Artista / autor</label><input id="e-artist" placeholder="Opcional"></div>
+      <div class="row2">
+        <div class="field"><label>Tom original</label>
+          <select id="e-key"></select>
+        </div>
+        <div class="field"><label>Capo</label>
+          <select id="e-capo"></select>
+        </div>
+      </div>
+      <div class="field"><label>Tags (separe por vírgula)</label>
+        <input id="e-tags" placeholder="adoração, lento, ceia"></div>
+      <div class="field"><label>Cifra</label>
+        <textarea id="e-body" spellcheck="false" placeholder="Cole a cifra aqui…"></textarea>
+        <div class="hint">
+          Funciona com cifra colada do estilo Cifra Club (acordes em cima da letra)
+          <b>ou</b> com colchetes no meio da letra: <code>[C]Letra [G]aqui</code>.<br>
+          Seções: escreva entre colchetes numa linha só, ex.: <code>[Refrão]</code> ou <code>Intro:</code>
+        </div>
+        <div class="lint" id="e-lint"></div>
+      </div>
+      <button class="deletebtn hidden" id="e-delete">🗑 Excluir esta cifra</button>
+    </div>
+  </div>
+
+  <!-- ===== ESCALA DETAIL VIEW ===== -->
+  <div id="view-escala" class="hidden">
+    <div class="topbar">
+      <button class="iconbtn" id="es-back" aria-label="Voltar">←</button>
+      <div class="spacer"></div>
+      <button class="iconbtn" id="es-edit" title="Editar" aria-label="Editar escala">✎</button>
+      <button class="iconbtn gold" id="es-share" title="Compartilhar" aria-label="Compartilhar escala">↗</button>
+    </div>
+    <div class="escala">
+      <div class="es-head">
+        <div class="es-title" id="es-title"></div>
+        <div class="es-meta" id="es-meta"></div>
+      </div>
+      <button class="btn primary present-btn" id="es-present">▶ Apresentar</button>
+      <div id="es-team"></div>
+      <div class="es-order-h" id="es-order-h">Ordem do culto</div>
+      <div id="es-order"></div>
+      <div class="es-notes" id="es-notes"></div>
+    </div>
+  </div>
+
+  <!-- ===== ESCALA EDITOR VIEW ===== -->
+  <div id="view-escala-edit" class="hidden">
+    <div class="topbar">
+      <button class="iconbtn" id="ee-cancel" aria-label="Cancelar">✕</button>
+      <div class="brand" style="font-size:19px"><span id="ee-mode">Nova escala</span></div>
+      <div class="spacer"></div>
+      <button class="iconbtn gold" id="ee-save" style="width:auto;padding:0 18px;font-size:15px">Salvar</button>
+    </div>
+    <div class="editor">
+      <div class="field"><label>Título do culto / evento</label>
+        <input id="ee-title" placeholder="Ex.: Culto de Domingo (noite)"></div>
+      <div class="row2">
+        <div class="field"><label>Data</label><input id="ee-date" type="date"></div>
+        <div class="field"><label>Hora</label><input id="ee-time" type="time"></div>
+      </div>
+      <div class="field"><label>Tipo</label>
+        <select id="ee-type">
+          <option>Culto</option><option>Ensaio</option><option>Santa Ceia</option>
+          <option>Vigília</option><option>Conferência</option><option>Evento</option>
+        </select></div>
+
+      <div class="field"><label>Equipe (escala de pessoas)</label>
+        <div id="ee-team"></div>
+        <button class="addrow" id="ee-add-person">＋ Adicionar função</button>
+      </div>
+
+      <div class="field"><label>Ordem do culto</label>
+        <div id="ee-items"></div>
+        <div class="addgrid">
+          <button class="addrow" id="ee-add-song">＋ Música</button>
+          <button class="addrow" id="ee-add-item">＋ Item (aviso, oração…)</button>
+        </div>
+        <div class="es-total" id="ee-total"></div>
+      </div>
+
+      <div class="field"><label>Observações do culto</label>
+        <textarea id="ee-notes" style="min-height:90px;white-space:pre-wrap;font-family:inherit;font-size:15px" placeholder="Tema, avisos gerais, transições…"></textarea></div>
+
+      <button class="deletebtn hidden" id="ee-delete">🗑 Excluir esta escala</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="sheetbg" id="sheetbg"></div>
+<div class="sheet" id="sheet">
+  <div class="grip"></div>
+  <h3 id="sheet-title">Compartilhar</h3>
+  <div id="sheet-body"></div>
+</div>
+<!-- Seletor de música (para montar a escala) -->
+<div class="sheetbg" id="pickbg"></div>
+<div class="sheet" id="picksheet">
+  <div class="grip"></div>
+  <h3>Adicionar música à escala</h3>
+  <div class="searchwrap" style="margin:4px 0 10px">
+    <span class="mag">🔍</span>
+    <input class="search" id="picksearch" placeholder="Buscar no repertório…">
+  </div>
+  <div id="picklist" style="max-height:50dvh;overflow:auto"></div>
+</div>
+<!-- Importar texto colado (Cifra Club etc.) -->
+<div class="sheetbg" id="pastebg"></div>
+<div class="sheet" id="pastesheet">
+  <div class="grip"></div>
+  <h3>Colar cifra pronta</h3>
+  <div class="hint" style="margin:0 2px 8px">
+    Copie a cifra (ex.: do Cifra Club) e cole abaixo. Eu reconheço título, artista,
+    tom e capotraste — você confere antes de salvar.
+  </div>
+  <textarea id="pastebox" spellcheck="false" placeholder="Cole aqui o texto copiado…"
+    style="width:100%;min-height:46dvh;padding:13px;border-radius:13px;background:var(--panel2);
+    border:1px solid var(--line);color:var(--text);font-family:'JetBrains Mono',monospace;
+    font-size:13px;line-height:1.6;white-space:pre;outline:none"></textarea>
+  <button class="btn primary" id="paste-go" style="width:100%;margin-top:10px">Reconhecer e preencher</button>
+</div>
+<!-- Ajustes do player (capo, fonte, só-letra, tabs, ♯/♭) — IDs preservados -->
+<div class="sheetbg" id="playerbg"></div>
+<div class="sheet" id="playersheet">
+  <div class="grip"></div>
+  <h3>Ajustes da cifra</h3>
+  <div class="sheetctrls">
+    <div class="ctrl"><span class="lbl">Tom</span>
+      <span class="grp"><button id="s-tdown" aria-label="Descer meio tom">♭</button><span class="val" id="s-tkey">C</span><button id="s-tup" aria-label="Subir meio tom">♯</button></span>
+    </div>
+    <div class="ctrl"><span class="lbl">Modo de leitura</span>
+      <span class="grp seg"><button id="mode-scroll" class="on">Rolagem</button><button id="mode-page">Página</button></span>
+    </div>
+    <div class="ctrl"><span class="lbl">Capo</span>
+      <span class="grp"><button id="c-down" aria-label="Diminuir capotraste">−</button><span class="val" id="c-val">0</span><button id="c-up" aria-label="Aumentar capotraste">＋</button></span>
+    </div>
+    <div class="ctrl"><span class="lbl">Tamanho da fonte</span>
+      <span class="grp"><button id="f-down" aria-label="Diminuir fonte">A−</button><button id="f-up" aria-label="Aumentar fonte">A＋</button></span>
+    </div>
+    <div class="ctrl toggle"><span class="lbl">Só letra (esconde acordes)</span>
+      <span class="grp"><button id="lyr-toggle" aria-label="Só letra (esconde acordes)" aria-pressed="false">𝄞</button></span>
+    </div>
+    <div class="ctrl toggle"><span class="lbl">Tablaturas</span>
+      <span class="grp"><button id="tabs-toggle" aria-label="Mostrar/ocultar tablaturas" aria-pressed="false">≣</button></span>
+    </div>
+    <div class="ctrl toggle" id="scrollbar-ctrl"><span class="lbl">Mostrar barra de auto-scroll</span>
+      <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false">▶</button></span>
+    </div>
+    <div class="ctrl"><span class="lbl">Música</span>
+      <span class="grp"><button id="p-edit" aria-label="Editar cifra">✎ Editar</button><button id="p-share" aria-label="Compartilhar cifra">↗ Enviar</button></span>
+    </div>
+  </div>
+</div>
+<input type="file" id="fileInput" accept=".json,application/json" class="hidden">
+
+<script>
+"use strict";
+/* =========================================================================
+   Louvai · app de cifras  —  offline-first, arquivo único
+   Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
+   ========================================================================= */
+const APP_VERSION = "0.21.0";  // ← versão do app (ver CHANGELOG.md)
+
+/* ---------- Música: notas e transposição ---------- */
+const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+const NOTE_IDX = {};
+SHARP.forEach((n,i)=>NOTE_IDX[n]=i);
+FLAT.forEach((n,i)=>NOTE_IDX[n]=i);
+
+/* ===== Grafia inteligente ao transpor =====
+   A grafia NÃO sai de um botão ♯/♭: ela vem do TOM. Transpomos preservando o
+   intervalo (a letra do acorde anda junto com o tom), então um acorde escrito
+   certo continua certo — Bb sobe pra C, vai pra Eb no tom de Fá, nunca vira A#.
+   Mesmo um acorde emprestado (Bb no tom de Dó) é respeitado. */
+const NAT = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};       // altura natural de cada letra
+const LETTERS = ["C","D","E","F","G","A","B"];
+const letterIdx = L => LETTERS.indexOf(L);
+// Tons que re-soletram pro lado BEMOL quando precisamos do enarmônico simples.
+// Inclui a qualidade menor (Am→Cm é tom bemol: F vira Ab, não G#).
+const FLAT_KEYS = new Set(["F","Bb","Eb","Ab","Db","Gb",
+                           "Dm","Gm","Cm","Fm","Bbm","Ebm"]);
+// Nome legível do tom (≤6 acidentes) por classe de altura 0..11.
+const PREF_MAJ = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+const PREF_MIN = ["Cm","C#m","Dm","Ebm","Em","Fm","F#m","Gm","G#m","Am","Bbm","Bm"];
+// Decompõe "Bb"→{L:"B", a:-1, pc:10}; aceita dobrados (bb/##) por robustez.
+function noteParts(n){
+  const m = String(n).match(/^([A-G])(#{1,2}|b{1,2})?/);
+  if(!m) return {L:"C",a:0,pc:0};
+  const L = m[1], a = m[2] ? (m[2][0]==="#"?1:-1)*m[2].length : 0;
+  return { L, a, pc:(NAT[L]+a+1200)%12 };
+}
+// Nome do tom de destino ao mover origKey por `semis`.
+function transposeKeyName(origKey, semis){
+  const min = /m$/.test(origKey), root = String(origKey).replace(/m$/,"");
+  const pc = (noteParts(root).pc + (semis%12) + 12) % 12;
+  return (min ? PREF_MIN : PREF_MAJ)[pc];
+}
+/* Contexto de grafia, derivado UMA vez do par (tom origem → tom destino).
+   destKeyExplicit: quando a escala fixa um tom (ex.: "Bb"), a escolha do usuário
+   vence a tabela automática. Retorna {letterStep, destFlat}. */
+function spellCtx(origKey, semis, destKeyExplicit){
+  const destKey = destKeyExplicit || transposeKeyName(origKey, semis);
+  const oRoot = String(origKey).replace(/m$/,""), dRoot = String(destKey).replace(/m$/,"");
+  const letterStep = (letterIdx(noteParts(dRoot).L) - letterIdx(noteParts(oRoot).L) + 7) % 7;
+  return { letterStep, destFlat: FLAT_KEYS.has(destKey) };
+}
+
+/* ===== FONTE DA VERDADE: o que é um acorde válido =====
+   Acorde = fundamental + alteração + qualidade/extensões + baixo opcional /X.
+   Esta gramática é usada em TODO lugar: exibição, transposição e validação.
+   Para aceitar um novo sufixo (ex.: um símbolo raro), basta adicioná-lo abaixo. */
+const QUAL_RX = new RegExp("^(?:" + [
+  "maj7","maj9","maj13","maj","min7","min",      // maiores/menores por extenso
+  "sus2","sus4","sus","add9","add11","add2","add4","add6","add13","add",
+  "dim7","dim","aug","m7b5","M7","M","m",         // qualidades
+  "°","º","ø","∅","Δ","\\+","\\-",                // símbolos
+  "13","11","9","7","6","5","4","3","2","6\\/9",   // extensões numéricas
+  "b5","b6","b9","b13","#5","#9","#11",            // tensões alteradas
+  "\\([^)]{0,14}\\)"                               // tensões entre parênteses: (9), (b9), (#11)…
+].join("|") + ")*$");
+// Tokens neutros que não desqualificam uma linha de acordes
+const NEUTRAL_RE = /^(\||:\||\|:|\|\||\(?\d+x\)?|x\d+|\.|·)$/i;
+
+// parseChord: o coração da fonte da verdade. Retorna {root, suffix, bass} ou null.
+function parseChord(raw){
+  if(!raw) return null;
+  let tok = String(raw).trim();
+  if(!tok) return null;
+  let bass=null;
+  const slash = tok.match(/^(.+)\/([A-G](?:#|b)?)$/);  // baixo invertido /Nota
+  if(slash){ tok = slash[1]; bass = slash[2]; }
+  const rm = tok.match(/^([A-G](?:#|b)?)(.*)$/);        // fundamental
+  if(!rm) return null;
+  const root = rm[1], suffix = rm[2];
+  if(!QUAL_RX.test(suffix)) return null;                // valida a qualidade
+  return { root, suffix, bass };
+}
+
+/* Transpõe uma nota preservando o intervalo. `ctx` = {letterStep, destFlat}.
+   Anda a LETRA por letterStep e ajusta o acidente pela altura — assim a grafia
+   acompanha o tom de destino. Se o resultado for ilegível (acidente dobrado ou
+   Cb/Fb/B#/E#), cai no enarmônico simples do lado do tom (SHARP/FLAT). */
+function transposeNote(note, semis, ctx){
+  if(!(note in NOTE_IDX)) return note;
+  // Sem transposição (inclui oitavas, múltiplos de 12): preserva o original.
+  if(semis % 12 === 0) return note;
+  const p = noteParts(note);
+  const newL  = LETTERS[(letterIdx(p.L) + ctx.letterStep) % 7];
+  const newPc = (p.pc + (semis%12) + 1200) % 12;
+  let acc = (((newPc - NAT[newL]) % 12) + 12) % 12;   // 0..11
+  if(acc > 6) acc -= 12;                              // → [-5..6]: diferença mínima assinada
+  const unreadable =
+    Math.abs(acc) >= 2 ||
+    (newL==="C" && acc<0) || (newL==="F" && acc<0) ||   // Cb / Fb
+    (newL==="B" && acc>0) || (newL==="E" && acc>0);     // B# / E#
+  if(unreadable) return (ctx.destFlat ? FLAT : SHARP)[newPc];
+  return newL + (acc>0 ? "#".repeat(acc) : acc<0 ? "b".repeat(-acc) : "");
+}
+function isChord(tok){ return parseChord(tok)!==null; }
+function transposeChord(tok, semis, ctx){
+  const p = parseChord(tok);
+  if(!p) return tok;
+  let out = transposeNote(p.root, semis, ctx) + p.suffix;
+  if(p.bass) out += "/" + transposeNote(p.bass, semis, ctx);
+  return out;
+}
+/* Corretor não-bloqueante: aponta tokens que parecem acorde mas não são válidos.
+   Só examina linhas que são "majoritariamente acordes" (assim a letra fica livre). */
+function lintCifra(body){
+  const lines = (body||"").replace(/\r/g,"").split("\n");
+  const issues = [];
+  lines.forEach((line,i)=>{
+    if(!line.trim() || isSectionLine(line)) return;
+    const toks = line.trim().split(/\s+/).filter(Boolean).filter(t=>!NEUTRAL_RE.test(t));
+    if(!toks.length) return;
+    const chords = toks.filter(isChord).length;
+    if(chords>=1 && chords<toks.length && chords/toks.length>=0.5){
+      // só acusa o que TEM FORMA de acorde (raiz + caracteres de acorde) e não é um;
+      // palavras da letra (Deus, Glória, Cristo, Amor…) têm letras que não existem em
+      // acordes → não viram falso alarme nem disparam o confirm() ao salvar.
+      toks.forEach(t=>{ if(!isChord(t) && /^[A-G][#b]?[0-9b#+\-\/()mMajsundigº°ø∅Δ]*$/.test(t)) issues.push({line:i+1, token:t}); });
+    }
+  });
+  // acordes inline entre colchetes: [G7x] -> suspeito
+  (body||"").split("\n").forEach((line,i)=>{
+    (line.match(/\[([^\]]+)\]/g)||[]).forEach(b=>{
+      const inner=b.slice(1,-1);
+      if(/^[A-G]/.test(inner) && !isChord(inner) && !isSectionLine(b))
+        issues.push({line:i+1, token:b});
+    });
+  });
+  return issues;
+}
+// Uma linha é "linha de acordes" se, tirando neutros, tudo o que sobra é acorde
+function isChordLine(line){
+  const toks = line.trim().split(/\s+/).filter(Boolean);
+  if(!toks.length) return false;
+  const real = toks.filter(t => !NEUTRAL_RE.test(t));
+  if(!real.length) return false;
+  return real.every(isChord);
+}
+function isSectionLine(line){
+  const t = line.trim();
+  if(/^\[.+\]$/.test(t) && !isChord(t.replace(/^\[|\]$/g,""))) return true;
+  // rótulos curtos terminados em ":" (Intro:, Refrão:, Solo:)
+  return /^[^\n]{1,28}:$/.test(t) && !/\s\S+\s\S+\s\S+/.test(t);
+}
+
+/* ---------- Renderização da cifra ---------- */
+// esc: fonte única de escape. Escapa também aspas (") e (') porque a saída é
+// interpolada tanto em texto quanto DENTRO de atributos value="…" (equipe/itens da
+// escala vêm de .json importado = dado não confiável). String() blinda valores
+// não-string vindos de JSON malformado (ex.: title numérico) — evita derrubar o render.
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+function renderCifra(body, semis, showChords, ctx, hideTabs){
+  const lines = (body||"").replace(/\r/g,"").split("\n");
+  const isTabLine = l => /^\s*[A-Ga-g][#b]?\s*\|/.test(l) && (l.match(/-/g)||[]).length>=4;
+  const out = [];
+  for(const line of lines){
+    // 0) Tablatura (escondida quando "Tabs" off): linhas E|--, cabeçalho [Tab…], "Parte X de Y"
+    if(hideTabs){
+      if(isTabLine(line)) continue;
+      if(/^\s*parte\s+\d+\s+de\s+\d+/i.test(line)) continue;
+      if(isSectionLine(line) && /tab/i.test(line)) continue;
+    }
+    // 1) Seções (rótulo sozinho na linha)
+    if(isSectionLine(line)){
+      if(showChords) out.push('<span class="sec">'+esc(line.trim())+'</span>');
+      else out.push('<span class="sec">'+esc(line.trim().replace(/^\[|\]$/g,""))+'</span>');
+      continue;
+    }
+    // 1b) Seção + acordes na mesma linha (ex.: "[Intro] C7M  G/B  Am7") — padrão Cifra Club
+    const sc = line.match(/^(\s*)(\[[^\]]+\])(\s+)(\S.*)$/);
+    if(sc && !isChord(sc[2].replace(/^\[|\]$/g,""))){
+      const label = sc[2];
+      if(!showChords){ out.push('<span class="sec">'+esc(label.replace(/^\[|\]$/g,""))+'</span>'); continue; }
+      const rest = isChordLine(sc[4])
+        ? sc[4].replace(/(\S+)/g, t => isChord(t) ? '<span class="chord">'+esc(transposeChord(t,semis,ctx))+'</span>' : esc(t))
+        : esc(sc[4]);
+      out.push(sc[1]+'<span class="sec">'+esc(label)+'</span>'+sc[3]+rest);
+      continue;
+    }
+    // 2) Linha só de acordes (estilo Cifra Club)
+    if(isChordLine(line)){
+      if(!showChords) continue; // modo "só letra" esconde
+      const html = line.replace(/(\S+)/g, t =>
+        isChord(t) ? '<span class="chord">'+esc(transposeChord(t,semis,ctx))+'</span>' : esc(t));
+      out.push(html);
+      continue;
+    }
+    // 3) Linha de letra (pode ter acordes inline [C])
+    let html = esc(line).replace(/\[([^\]]+)\]/g, (full,inner)=>{
+      if(isChord(inner)){
+        return showChords
+          ? '<span class="chord">['+esc(transposeChord(inner,semis,ctx))+']</span>'
+          : '';
+      }
+      return showChords ? esc(full) : '';
+    });
+    out.push('<span class="lyr">'+html+'</span>');
+  }
+  return out.join("\n");
+}
+
+/* ---------- Armazenamento ---------- */
+const KEYS = ["C","C#","Db","D","D#","Eb","E","F","F#","Gb","G","G#","Ab","A","A#","Bb","B",
+              "Cm","C#m","Dm","D#m","Em","Fm","F#m","Gm","G#m","Am","A#m","Bm"];
+const LS_SONGS="louvai.songs.v1", LS_SET="louvai.settings.v1", LS_ESC="louvai.escalas.v1";
+let songs=[], settings={theme:"dark"}, escalas=[];
+
+function migrateLevita(){
+  // o app se chamava "Levita": copia os dados das chaves antigas na primeira vez
+  try{
+    [["levita.songs.v1",LS_SONGS],["levita.settings.v1",LS_SET],["levita.escalas.v1",LS_ESC]]
+      .forEach(([old,nu])=>{
+        const v=localStorage.getItem(old);
+        if(v!==null && localStorage.getItem(nu)===null) localStorage.setItem(nu,v);
+      });
+  }catch(e){}
+}
+function load(){
+  migrateLevita();
+  try{songs=JSON.parse(localStorage.getItem(LS_SONGS))||[];}catch(e){songs=[];}
+  try{settings=Object.assign({theme:"dark"},JSON.parse(localStorage.getItem(LS_SET))||{});}catch(e){}
+  try{escalas=JSON.parse(localStorage.getItem(LS_ESC))||[];}catch(e){escalas=[];}
+  // semeia a cifra de exemplo só numa instalação NUNCA inicializada;
+  // assim, esvaziar o repertório de propósito não faz o exemplo voltar a cada abertura.
+  if(!settings.seeded){
+    if(!songs.length){ songs=[demoSong()]; saveSongs(); }
+    settings.seeded=true; saveSettings();
+  }
+}
+function saveSongs(){ try{localStorage.setItem(LS_SONGS, JSON.stringify(songs));}catch(e){console.warn("Sem armazenamento local:",e);} }
+function saveSettings(){ try{localStorage.setItem(LS_SET, JSON.stringify(settings));}catch(e){} }
+function saveEscalas(){ try{localStorage.setItem(LS_ESC, JSON.stringify(escalas));}catch(e){console.warn("Sem armazenamento local:",e);} }
+function uid(){ return "s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+function demoSong(){
+  return {
+    id:uid(), title:"Cifra de Exemplo", artist:"Toque pra abrir · edite no lápis ✎",
+    key:"G", capo:0, tags:["exemplo"], updatedAt:Date.now(),
+    body:
+`[Intro]
+G  D  Em  C
+
+Verso:
+G                 D
+Esta é uma cifra de exemplo
+       Em                C
+Os acordes ficam em cima da letra
+G               D
+Aperte ♯ e ♭ pra transpor o tom
+      Em            C
+E o ▶ embaixo rola a tela sozinho
+
+[Refrão]
+C            G
+Toque o lápis pra editar
+      D                 Em
+Toque ↗ pra mandar pro grupo
+C           G
+Crie quantas quiser sem internet
+        D            C        G
+Tudo fica salvo aqui no seu aparelho`
+  };
+}
+
+/* ---------- Estado da tela ---------- */
+let view="lib", current=null, transp=0, capo=0, fontSize=15, showChords=true, activeTag=null;
+const $=s=>document.querySelector(s);
+
+function show(v){
+  view=v;
+  $("#view-lib").classList.toggle("hidden",v!=="lib");
+  $("#view-player").classList.toggle("hidden",v!=="player");
+  $("#view-editor").classList.toggle("hidden",v!=="editor");
+  $("#view-escala").classList.toggle("hidden",v!=="escala");
+  $("#view-escala-edit").classList.toggle("hidden",v!=="escala-edit");
+  v==="player"?lockScreen():unlockScreen();
+  window.scrollTo(0,0);
+}
+
+/* ---------- Wake Lock: tela acesa enquanto o player está aberto ---------- */
+let wakeLock=null;
+async function lockScreen(){
+  if(!("wakeLock" in navigator)) return;            // sem suporte: segue normal, sem avisar
+  try{
+    wakeLock=await navigator.wakeLock.request("screen");
+    // o sistema solta a trava sozinho (trocar de app, economia de bateria);
+    // zerar a referência permite re-adquirir no visibilitychange
+    wakeLock.addEventListener("release",()=>{ wakeLock=null; });
+  }catch(e){ wakeLock=null; }                       // negado (ex.: bateria fraca) não é erro do app
+}
+function unlockScreen(){
+  if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
+}
+document.addEventListener("visibilitychange",()=>{  // voltou pro app com o player aberto? reacende
+  if(document.visibilityState==="visible" && view==="player") lockScreen();
+});
+
+/* ---------- Biblioteca ---------- */
+function allTags(){
+  const set=new Set();
+  songs.forEach(s=>(s.tags||[]).forEach(t=>t&&set.add(t)));
+  return [...set].sort((a,b)=>a.localeCompare(b,"pt"));
+}
+function renderLibrary(){
+  // tags
+  const tags=allTags();
+  const tb=$("#tagbar"); tb.innerHTML="";
+  if(tags.length){
+    tags.forEach(t=>{
+      const c=document.createElement("div");
+      c.className="chip"+(activeTag===t?" on":"");
+      c.textContent=t;
+      c.onclick=()=>{activeTag=activeTag===t?null:t;renderLibrary();};
+      tb.appendChild(c);
+    });
+  }
+  // filtro
+  const q=$("#search").value.trim().toLowerCase();
+  let list=songs.slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),"pt"));
+  if(activeTag) list=list.filter(s=>(s.tags||[]).includes(activeTag));
+  if(q) list=list.filter(s=>(s.title+" "+(s.artist||"")+" "+s.key+" "+(s.tags||[]).join(" ")).toLowerCase().includes(q));
+
+  $("#count").textContent = list.length+(list.length===1?" cifra":" cifras");
+  const box=$("#songlist"); box.innerHTML="";
+  if(!list.length){
+    box.innerHTML='<div class="empty"><div class="big">Nada por aqui ainda</div>'+
+      'Toque em <b>＋ Nova cifra</b> para começar, ou <b>↧</b> para importar um arquivo do grupo.</div>';
+    return;
+  }
+  list.forEach(s=>{
+    const card=document.createElement("div");
+    card.className="songcard";
+    const tags=(s.tags||[]).filter(Boolean).slice(0,3).join(" · ");
+    card.innerHTML=
+      '<div class="keytag">'+esc(s.key||"?")+'</div>'+
+      '<div class="meta"><div class="ttl">'+esc(s.title)+'</div>'+
+      (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+
+      (tags?'<div class="tags">'+esc(tags)+'</div>':'')+'</div>';
+    card.onclick=()=>openPlayer(s.id);
+    box.appendChild(card);
+  });
+}
+
+/* ---------- Player ---------- */
+function keyRoot(k){ const m=k.match(/^([A-G][#b]?)/); return m?m[1]:"C"; }
+function keyIsMinor(k){ return /m$/.test(k); }
+function offsetToKey(origKey, targetKey){           // semitons p/ levar do tom original ao tom da escala
+  const a=NOTE_IDX[keyRoot(origKey)], b=NOTE_IDX[keyRoot(targetKey)];
+  if(a==null||b==null) return 0;
+  let d=(b-a+12)%12; if(d>6) d-=12; return d;       // prefere o caminho mais curto
+}
+let escalaCtx=null;   // { id, idx, list:[{songId,key,capo}] } quando em modo Apresentar
+function openPlayer(id, ctx, atLast){   // atLast: abrir na ÚLTIMA página (ao voltar de música no "livro")
+  current=songs.find(s=>s.id===id); if(!current)return;
+  escalaCtx = ctx || null;
+  transp=0; capo=0; showChords=true; stopScroll();
+  $("#lyr-toggle").classList.remove("on"); $("#lyr-toggle").setAttribute("aria-pressed","false");
+  $("#tabs-toggle").classList.toggle("on",!!settings.hideTabs); $("#tabs-toggle").setAttribute("aria-pressed",String(!!settings.hideTabs));
+  $("#scrollbar-toggle").classList.toggle("on",!!settings.showScrollbar); $("#scrollbar-toggle").setAttribute("aria-pressed",String(!!settings.showScrollbar));
+  $("#p-body").dataset.page=0;   // sempre abre na 1ª página (vale também p/ o modo Apresentar)
+  applyReadMode();               // ajusta modo (rolagem/página) e a visibilidade da barra
+  if(escalaCtx){
+    const it=escalaCtx.list[escalaCtx.idx];
+    if(it.key) transp = offsetToKey(current.key, it.key);  // já abre no tom do culto
+    capo = it.capo||0;
+  }
+  updatePresentBar();
+  show("player"); drawPlayer();
+  // "livro": ao voltar pra música anterior virando a página, retoma a última página dela
+  if(atLast && isPageMode()) gotoPage(pageCount()-1, false);
+}
+function updatePresentBar(){
+  const bar=$("#presentbar");
+  // .present liga o layout compacto (esconde .controls/.songhead) só na Apresentação
+  $("#view-player").classList.toggle("present", !!escalaCtx);
+  if(!escalaCtx){ bar.classList.add("hidden"); return; }
+  bar.classList.remove("hidden");
+  $("#pv-title").textContent = current.title;             // título pequeno no meio da barra
+  $("#pv-pos").textContent = (escalaCtx.idx+1)+" de "+escalaCtx.list.length;
+  $("#pv-prev").disabled = escalaCtx.idx<=0;
+  $("#pv-next").disabled = escalaCtx.idx>=escalaCtx.list.length-1;
+}
+function presentGo(delta, atLast){     // retorna true se trocou de música (p/ o "livro" saber se virou)
+  if(!escalaCtx) return false;
+  const ni=escalaCtx.idx+delta;
+  if(ni<0||ni>=escalaCtx.list.length) return false;
+  openPlayer(escalaCtx.list[ni].songId, {id:escalaCtx.id, idx:ni, list:escalaCtx.list}, atLast);
+  return true;
+}
+$("#pv-prev").onclick=()=>presentGo(-1);   // botão volta pra música anterior (1ª página, como sempre)
+$("#pv-next").onclick=()=>presentGo(1);
+function shapeShift(){ return transp - capo; }   // forma tocada = som − capo
+function drawPlayer(){
+  $("#p-title").textContent=current.title;
+  const minor=keyIsMinor(current.key), origRoot=keyRoot(current.key);
+  // Tom SOANTE (cabeçalho): se a escala fixou um tom, a grafia escolhida vence a
+  // tabela automática. Tom da FORMA (corpo): sempre automático. Com capo 0 coincidem.
+  const soundDest = (escalaCtx && escalaCtx.list[escalaCtx.idx].key) ? escalaCtx.list[escalaCtx.idx].key : null;
+  const ctxSound = spellCtx(current.key, transp, soundDest);
+  const ctxShape = spellCtx(current.key, shapeShift());
+  const sounding = transposeNote(origRoot, transp, ctxSound)+(minor?"m":"");
+  const bits=[];
+  if(current.artist) bits.push(current.artist);
+  bits.push("Tom: "+sounding);
+  if(capo>0) bits.push("Capo "+capo+" (forma em "+(transposeNote(origRoot,shapeShift(),ctxShape)+(minor?"m":""))+")");
+  $("#p-sub").textContent=bits.join("  ·  ");   // linha fininha: artista · Tom atual · capo
+  $("#s-tkey").textContent=sounding;            // valor do Tom no ⚙ Ajustes (controle e indicador)
+  $("#c-val").textContent=capo;
+  const b=$("#p-body");
+  b.style.fontSize=fontSize+"px";
+  const html=renderCifra(current.body, shapeShift(), showChords, ctxShape, !!settings.hideTabs);
+  if(isPageMode()){ paginate(html); }      // modo página: fatia a saída em páginas medidas
+  else{                                     // modo rolagem: bloco <pre> de sempre (intocado)
+    b.classList.remove("paged"); b.style.removeProperty("--page-h");
+    delete b.dataset.page; delete b.dataset.pages;
+    b.innerHTML=html;
+  }
+}
+
+/* controles do player */
+function transposeBy(d){ transp+=d; drawPlayer(); }   // o Tom mora no ⚙ Ajustes (player normal e Apresentação)
+$("#s-tup").onclick=()=>transposeBy(1);
+$("#s-tdown").onclick=()=>transposeBy(-1);
+$("#pv-settings").onclick=()=>openPlayerSheet();
+$("#c-up").onclick=()=>{if(capo<11){capo++;drawPlayer();}};
+$("#c-down").onclick=()=>{if(capo>0){capo--;drawPlayer();}};
+$("#f-up").onclick=()=>{fontSize=Math.min(28,fontSize+1);drawPlayer();};
+$("#f-down").onclick=()=>{fontSize=Math.max(10,fontSize-1);drawPlayer();};
+// nos toggles, espelhamos o estado no aria-pressed (leitor de tela no palco precisa saber ligado/desligado)
+$("#lyr-toggle").onclick=()=>{const b=$("#lyr-toggle");showChords=!showChords;b.classList.toggle("on",!showChords);b.setAttribute("aria-pressed",String(!showChords));drawPlayer();};
+$("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings();const b=$("#tabs-toggle");b.classList.toggle("on",!!settings.hideTabs);b.setAttribute("aria-pressed",String(!!settings.hideTabs));drawPlayer();};
+$("#scrollbar-toggle").onclick=()=>{settings.showScrollbar=!settings.showScrollbar;saveSettings();const b=$("#scrollbar-toggle");b.classList.toggle("on",!!settings.showScrollbar);b.setAttribute("aria-pressed",String(!!settings.showScrollbar));applyScrollbar();};
+function exitPlayer(){   // voltar do player — usado pelo ← normal E pelo ← da barra compacta
+  stopScroll();
+  $("#view-player").classList.remove("present");   // desliga o layout compacto da Apresentação
+  const b=$("#p-body");   // ao sair, limpa o estado de página (não deixa DOM paginado órfão na view escondida)
+  b.classList.remove("paged"); b.style.removeProperty("--page-h"); b.innerHTML=""; delete b.dataset.page; delete b.dataset.pages;
+  $("#p-pageind").classList.add("hidden");
+  if(escalaCtx){const id=escalaCtx.id;escalaCtx=null;openEscala(id);} else {show("lib");renderLibrary();}
+}
+$("#p-back").onclick=exitPlayer;
+$("#pv-back").onclick=exitPlayer;
+$("#p-edit").onclick=()=>openEditor(current.id);
+$("#p-share").onclick=()=>shareSheet(current);
+
+/* sheet ⚙ Ajustes do player (os controles mantêm os IDs e handlers de sempre) */
+function openPlayerSheet(){ openS("#playerbg","#playersheet"); }
+function closePlayerSheet(){ closeS("#playerbg","#playersheet"); }
+$("#p-settings").onclick=openPlayerSheet;
+$("#playerbg").onclick=closePlayerSheet;
+
+/* navegação por estrutura da música (☰) */
+function scrollToSec(el){
+  if(isPageMode()){                       // no modo página, salta para a página da seção
+    const pg=el.closest(".page");
+    if(pg) gotoPage([...$("#p-body").children].indexOf(pg), true);
+    return;
+  }
+  const ctrl=document.querySelector("#view-player .controls");
+  const off=(ctrl?ctrl.offsetHeight:110)+14;
+  const y=el.getBoundingClientRect().top+window.scrollY-off;
+  window.scrollTo({top:Math.max(0,y),behavior:"smooth"});
+}
+$("#p-struct").onclick=()=>{
+  const secs=[...document.querySelectorAll("#p-body .sec")].filter(el=>!/\btab\b/i.test(el.textContent));
+  if(!secs.length){ toast("Esta cifra não tem seções marcadas"); return; }
+  const labels=secs.map(el=>el.textContent.replace(/^\[|\]$/g,"").trim());
+  const total={}; labels.forEach(l=>total[l]=(total[l]||0)+1);
+  const seen={};
+  const items=secs.map((el,i)=>{
+    const l=labels[i]; seen[l]=(seen[l]||0)+1;
+    return {ic:"▸", label: total[l]>1 ? l+"  ·"+seen[l] : l, fn:()=>{ closeSheet(); scrollToSec(el); }};
+  });
+  openSheet("Estrutura da música", items);
+};
+
+/* auto-scroll */
+let scrollRAF=null;
+/* a barra de auto-scroll é OPCIONAL (oculta por padrão): liga/desliga no ⚙ Ajustes.
+   ao ocultar, encolhe o respiro inferior da cifra e para qualquer rolagem em curso. */
+function applyScrollbar(){
+  const on=!!settings.showScrollbar;
+  $("#scrollbar-mini").classList.toggle("hidden",!on);
+  $("#p-body").classList.toggle("nobar",!on);
+  if(!on) stopScroll();
+}
+function startScroll(){
+  $("#scroll-toggle").textContent="❚❚"; $("#scroll-toggle").setAttribute("aria-label","Pausar rolagem");
+  let last=performance.now(),acc2=0;
+  const step=now=>{
+    const dt=now-last; last=now;
+    const spd=+$("#scroll-speed").value;
+    acc2+=dt*spd*0.012;
+    if(acc2>=1){const px=Math.floor(acc2);window.scrollBy(0,px);acc2-=px;}
+    scrollRAF=requestAnimationFrame(step);
+  };
+  scrollRAF=requestAnimationFrame(step);
+}
+function stopScroll(){ if(scrollRAF){cancelAnimationFrame(scrollRAF);scrollRAF=null;} $("#scroll-toggle").textContent="▶"; $("#scroll-toggle").setAttribute("aria-label","Rolar a tela"); }
+$("#scroll-toggle").onclick=()=>{ scrollRAF?stopScroll():startScroll(); };
+
+/* ========================================================================
+   MODO DE LEITURA — Rolagem | Página
+   Página: fatia a SAÍDA do renderCifra (fonte única) em páginas horizontais
+   com scroll-snap nativo. As "unidades atômicas" garantem que um acorde nunca
+   se separa da sua letra e que um cabeçalho de seção nunca termina uma página
+   sozinho (órfão). A altura de cada página é MEDIDA no DOM (lida com qualquer
+   fonte/tela). No modo rolagem, nada disso existe — o #p-body é o <pre> de sempre.
+   ======================================================================== */
+function isPageMode(){ return settings.readMode==="page"; }
+function applyReadMode(){
+  const paged=isPageMode();
+  $("#mode-scroll").classList.toggle("on",!paged);
+  $("#mode-page").classList.toggle("on",paged);
+  $("#scrollbar-ctrl").classList.toggle("hidden",paged);   // auto-scroll só faz sentido na rolagem
+  $("#p-pageind").classList.toggle("hidden",!paged);
+  if(paged){ stopScroll(); $("#scrollbar-mini").classList.add("hidden"); }
+  else applyScrollbar();
+}
+function setReadMode(m){
+  settings.readMode=m; saveSettings();
+  $("#p-body").dataset.page=0;        // recomeça na 1ª página ao trocar de modo
+  applyReadMode(); drawPlayer();
+}
+$("#mode-scroll").onclick=()=>setReadMode("scroll");
+$("#mode-page").onclick=()=>setReadMode("page");
+
+/* agrupa as linhas visuais do renderCifra em unidades que NÃO se quebram entre
+   páginas: seção e linha-só-de-acordes "colam" para frente; letra ou linha em
+   branco fecham a unidade. Assim acorde→letra e seção→conteúdo ficam sempre juntos. */
+function pageUnits(html){
+  const lines=html.split("\n");
+  const kind=l=>{
+    if(l.replace(/<[^>]*>/g,"").trim()==="") return "blank";
+    if(l.includes('class="sec"')) return "sec";
+    if(l.includes('class="chord"') && !l.includes('class="lyr"')) return "chord";
+    return "lyric";
+  };
+  const k=lines.map(kind);
+  const units=[]; let cur=[];
+  for(let i=0;i<lines.length;i++){
+    cur.push(lines[i]);
+    // pode quebrar a página DEPOIS desta linha, EXCETO: cabeçalho de seção (não pode
+    // ficar órfão no fim da página) e linha de acordes seguida da SUA letra (par atômico).
+    // Acordes instrumentais (sem letra logo abaixo) NÃO grudam — assim seções
+    // instrumentais sem linha em branco não viram uma unidade gigante que clipa.
+    const glue = k[i]==="sec" || (k[i]==="chord" && k[i+1]==="lyric");
+    if(!glue){ units.push(cur); cur=[]; }
+  }
+  if(cur.length) units.push(cur);
+  return units;
+}
+/* monta as páginas medindo a altura REAL no DOM */
+function paginate(html){
+  const b=$("#p-body");
+  window.scrollTo(0,0);               // no modo página a janela não rola; mede a posição real
+  b.classList.add("paged");
+  b.innerHTML="";
+  const top=b.getBoundingClientRect().top;
+  // a página não pode passar por baixo do indicador fixo "p / N" (que já desconta a
+  // safe-area via env() no CSS): mede a posição REAL dele — assim nada some abaixo da
+  // dobra mesmo em paisagem/Apresentar (telas baixas), sem inventar altura com um piso.
+  const pill=$("#p-pageind"); pill.textContent="·";          // dá altura estável p/ medir
+  const pr=pill.getBoundingClientRect();
+  const bottom=pr.height ? pr.top-8 : window.innerHeight-24;  // fallback: janela − folga
+  const avail=Math.max(60, bottom-top);                      // piso pequeno só p/ evitar página 0px
+  b.style.setProperty("--page-h", avail+"px");
+  const isBlank=l=>l.replace(/<[^>]*>/g,"").trim()==="";
+  const mkLn=l=>{ const d=document.createElement("div"); d.className="ln"; d.innerHTML=l; return d; };
+  const newPage=()=>{ const p=document.createElement("div"); p.className="page"; b.appendChild(p); return p; };
+  let page=newPage(), hasContent=false;
+  for(const unit of pageUnits(html)){
+    if(!hasContent && unit.every(isBlank)) continue;          // não começa página com linha em branco
+    const lns=unit.map(mkLn); lns.forEach(l=>page.appendChild(l));
+    // overflow = conteúdo passou da CAIXA da página. Comparar scrollHeight com
+    // clientHeight (ambos inteiros, do MESMO elemento) — e não com avail, que é
+    // fracionário: o arredondamento de clientHeight passava de avail e quebrava a
+    // página a cada unidade (cifra virava 1 linha por página). Bug de sub-pixel.
+    if(page.scrollHeight>page.clientHeight && hasContent){     // estourou: a unidade inteira vai pra próxima página
+      lns.forEach(l=>page.removeChild(l));
+      page=newPage(); hasContent=false;
+      if(unit.every(isBlank)) continue;
+      lns.forEach(l=>page.appendChild(l));
+    }
+    hasContent=true;
+  }
+  if(b.children.length>1 && b.lastChild.childElementCount===0) b.removeChild(b.lastChild);
+  b.dataset.pages=b.children.length;
+  const cur=Math.max(0,Math.min(b.children.length-1, +(b.dataset.page||0)));   // clampa a página atual
+  b.dataset.page=cur;
+  b.scrollLeft=cur*b.clientWidth;     // posiciona sem animar (reconstrução)
+  updatePageInd();
+}
+function curPage(){ return +($("#p-body").dataset.page||0); }
+function pageCount(){ return +($("#p-body").dataset.pages||1); }
+function updatePageInd(){ $("#p-pageind").textContent=(curPage()+1)+" / "+pageCount(); }
+let pgProg=false, pgProgT=null;
+function gotoPage(i,smooth){
+  const b=$("#p-body");
+  i=Math.max(0,Math.min(pageCount()-1,i));
+  b.dataset.page=i;
+  pgProg=true;                        // evita o handler de scroll brigar com o salto programático
+  b.scrollTo({left:i*b.clientWidth, behavior:smooth?"smooth":"auto"});
+  clearTimeout(pgProgT); pgProgT=setTimeout(()=>{ pgProg=false; }, smooth?500:60);
+  updatePageInd();
+}
+function goPage(d){
+  const next=curPage()+d;
+  // "Livro" no modo Apresentar + Página: virar além da última/antes da 1ª troca de música,
+  // mantendo as setas de música intactas. Avançar → próxima (1ª pág); voltar → anterior (última pág).
+  if(escalaCtx && isPageMode()){
+    if(next>pageCount()-1 && presentGo(1)) return;
+    if(next<0 && presentGo(-1,true)) return;
+  }
+  gotoPage(next,true);   // dentro da música (ou sem escala): vira a página normalmente (clampado)
+}
+/* virar página por TOQUE: metade direita avança, esquerda volta (só no modo página);
+   ignora arrastos para não conflitar com o deslizar nativo do scroll-snap. */
+let pgDownX=0,pgDownY=0,pgDownT=0;
+$("#p-body").addEventListener("pointerdown",e=>{ pgDownX=e.clientX; pgDownY=e.clientY; pgDownT=Date.now(); });
+$("#p-body").addEventListener("pointerup",e=>{
+  if(!isPageMode()) return;
+  // só ignora se foi ARRASTE (mexeu) — um toque parado, mesmo demorado, ainda vira página;
+  // limiar de 16px acomoda o tremor natural do dedo no palco.
+  if(Math.abs(e.clientX-pgDownX)>16 || Math.abs(e.clientY-pgDownY)>16 || Date.now()-pgDownT>900) return;
+  goPage(e.clientX < window.innerWidth/2 ? -1 : 1);
+});
+/* DESLIZAR nativo (scroll-snap) atualiza o índice quando a rolagem assenta */
+let pgScrollT=null;
+$("#p-body").addEventListener("scroll",()=>{
+  if(!isPageMode() || pgProg) return;
+  clearTimeout(pgScrollT);
+  pgScrollT=setTimeout(()=>{
+    const b=$("#p-body"); if(!b.clientWidth) return;
+    b.dataset.page=Math.max(0,Math.min(pageCount()-1,Math.round(b.scrollLeft/b.clientWidth)));
+    updatePageInd();
+  },120);
+});
+/* recalcula a paginação ao girar o aparelho / mudar o tamanho da tela */
+let pgResizeT=null;
+window.addEventListener("resize",()=>{
+  if(view!=="player" || !isPageMode()) return;
+  clearTimeout(pgResizeT); pgResizeT=setTimeout(drawPlayer,200);
+});
+
+/* ---------- Editor ---------- */
+let editingId=null;
+function fillSelect(sel,opts,val){
+  sel.innerHTML=opts.map(o=>'<option'+(typeof o==="object"?' value="'+o.v+'"':'')+'>'+(typeof o==="object"?o.t:o)+'</option>').join("");
+  sel.value=val;
+}
+function runLint(){
+  const issues = lintCifra($("#e-body").value);
+  const el = $("#e-lint");
+  if(!issues.length){
+    el.className="lint ok";
+    el.textContent="✓ Acordes reconhecidos. Cifra pronta.";
+    return [];
+  }
+  // agrupa por token, mostra até 6
+  const uniq=[...new Set(issues.map(i=>i.token))].slice(0,6);
+  el.className="lint warn";
+  el.innerHTML="⚠ Não reconheci como acorde: "+uniq.map(t=>"<b>"+esc(t)+"</b>").join(", ")+
+    (issues.length>uniq.length?" …":"")+"<br>Vão aparecer como letra. Confira se é erro de digitação.";
+  return issues;
+}
+function openEditor(id){
+  editingId=id||null;
+  fillSelect($("#e-key"),KEYS,"G");
+  fillSelect($("#e-capo"),Array.from({length:12},(_,i)=>i),0);
+  const del=$("#e-delete");
+  $("#e-paste").classList.toggle("hidden", !!id);   // botão "colar" só ao criar nova
+  if(id){
+    const s=songs.find(x=>x.id===id);
+    $("#e-mode").textContent="Editar";
+    $("#e-title").value=s.title; $("#e-artist").value=s.artist||"";
+    $("#e-key").value=KEYS.includes(s.key)?s.key:"G"; $("#e-capo").value=s.capo||0;
+    $("#e-tags").value=(s.tags||[]).join(", "); $("#e-body").value=s.body||"";
+    del.classList.remove("hidden");
+  }else{
+    $("#e-mode").textContent="Nova cifra";
+    $("#e-title").value="";$("#e-artist").value="";$("#e-key").value="G";
+    $("#e-capo").value=0;$("#e-tags").value="";$("#e-body").value="";
+    del.classList.add("hidden");
+  }
+  runLint();
+  show("editor");
+}
+$("#e-body").addEventListener("input", runLint);
+
+/* ---------- Importar texto colado (Cifra Club etc.) ---------- */
+function normKey(k){ if(!k)return""; const m=k.trim().match(/^([A-Ga-g])([#b]?)(m?)/i); return m?m[1].toUpperCase()+(m[2]||"")+(m[3]?"m":""):""; }
+function parseImport(raw){
+  const text=(raw||"").replace(/\r/g,"").replace(/\t/g,"  ");
+  let key="",capo=0;
+  const tomM=text.match(/\btom:\s*([A-Ga-g][#b]?m?)\b/i); if(tomM) key=normKey(tomM[1]);
+  if(/sem\s+capotraste/i.test(text)) capo=0;
+  else{ const c=text.match(/capotraste[^\d]*(\d+)/i)||text.match(/\bcapo\s*[:\-]?\s*(\d+)/i); if(c) capo=+c[1]; }
+  const isMeta=l=>/^\s*(tom:|cifra:|afina|cifra ?club|ver no app|ver as cifras|imprimir|adicionar|tocar|ouvir|enviar|salvar|gravar|receber|https?:\/\/|www\.|©|todos os direitos|\d+\s*(visualiza|exibi|acess))/i.test(l)
+    || /capotraste/i.test(l) || /afina[çc][aã]o/i.test(l) || /cifraclub/i.test(l) || /\bfavoritar\b/i.test(l);
+  const lines=text.split("\n");
+  let idx=0;
+  while(idx<lines.length && (lines[idx].trim()===""||isMeta(lines[idx]))) idx++;
+  const leading=[];
+  while(idx<lines.length && leading.length<2){
+    const l=lines[idx];
+    if(isMeta(l)){idx++;continue;}
+    if(l.trim()===""){idx++;continue;}
+    if(isChordLine(l)||isSectionLine(l)||/^\s*\[[^\]]+\]/.test(l)) break;  // estrutura -> fim do cabeçalho
+    leading.push(l.trim()); idx++;
+  }
+  const rest=[];
+  for(; idx<lines.length; idx++){ if(!isMeta(lines[idx])) rest.push(lines[idx]); }
+  let title="",artist="";
+  if(leading[0]){
+    const d=leading[0].split(/\s+[-–—]\s+/);
+    if(d.length>=2 && !leading[1]){ title=d[0].trim(); artist=d.slice(1).join(" - ").trim(); }
+    else { title=leading[0]; artist=leading[1]||""; }
+  }
+  let body=rest.join("\n").replace(/\n{3,}/g,"\n\n").replace(/^\n+|\n+$/g,"");
+  if(!key){ for(const l of rest){ if(isChordLine(l)){ const p=parseChord(l.trim().split(/\s+/)[0]); if(p){ key=p.root+(/^m(?!aj)/.test(p.suffix)?"m":""); break; } } } }
+  return {title,artist,key,capo,body};
+}
+function openPaste(){ $("#pastebox").value=""; openS("#pastebg","#pastesheet","#pastebox"); }
+function closePaste(){ closeS("#pastebg","#pastesheet"); }
+$("#pastebg").onclick=closePaste;
+$("#e-paste").onclick=openPaste;
+$("#paste-go").onclick=()=>{
+  const raw=$("#pastebox").value;
+  if(!raw.trim()){toast("Cole o texto primeiro 🙂");return;}
+  const r=parseImport(raw);
+  if(!r.body.trim()){toast("Não encontrei a cifra no texto 😕");return;}
+  if(r.title)  $("#e-title").value=r.title;
+  if(r.artist) $("#e-artist").value=r.artist;
+  if(r.key && KEYS.includes(r.key)) $("#e-key").value=r.key;
+  if(r.capo>=0 && r.capo<=11) $("#e-capo").value=r.capo;
+  $("#e-body").value=r.body;
+  closePaste(); runLint();
+  const bits=[]; if(r.title)bits.push("título"); if(r.key)bits.push("tom "+r.key); if(r.capo)bits.push("capo "+r.capo);
+  toast("Reconheci "+(bits.length?bits.join(", "):"o corpo")+" · confira e salve ✓");
+};
+$("#newBtn").onclick=()=>openEditor(null);
+$("#e-cancel").onclick=()=>{ editingId?openPlayer(editingId):show("lib"); editingId||renderLibrary(); };
+$("#e-save").onclick=()=>{
+  const title=$("#e-title").value.trim();
+  if(!title){toast("Dê um título à cifra 🙂");return;}
+  const issues=lintCifra($("#e-body").value);
+  if(issues.length){
+    const uniq=[...new Set(issues.map(i=>i.token))].slice(0,8).join(", ");
+    if(!confirm("Encontrei algo que não parece acorde: "+uniq+"\n\nVai aparecer como letra. Salvar mesmo assim?")) return;
+  }
+  const data={
+    title, artist:$("#e-artist").value.trim(),
+    key:$("#e-key").value, capo:+$("#e-capo").value,
+    tags:$("#e-tags").value.split(",").map(t=>t.trim()).filter(Boolean),
+    body:$("#e-body").value, updatedAt:Date.now()
+  };
+  if(editingId){ Object.assign(songs.find(s=>s.id===editingId),data); }
+  else{ data.id=uid(); songs.push(data); editingId=data.id; }
+  saveSongs(); openPlayer(editingId); toast("Salvo ✓");
+};
+$("#e-delete").onclick=()=>{
+  if(!editingId)return;
+  if(confirm("Excluir esta cifra? Não dá pra desfazer.")){
+    songs=songs.filter(s=>s.id!==editingId); saveSongs();
+    editingId=null; show("lib"); renderLibrary(); toast("Cifra excluída");
+  }
+};
+
+/* ---------- Compartilhamento por arquivo ---------- */
+function download(filename, text){
+  const blob=new Blob([text],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+async function shareFile(filename, text, title){
+  // 1) tenta o compartilhamento nativo (celular) — protegido contra qualquer falha
+  try{
+    if(navigator.share && navigator.canShare){
+      const file=new File([text],filename,{type:"application/json"});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title});
+        return true;                       // compartilhou (ou o usuário concluiu)
+      }
+    }
+  }catch(e){
+    if(e && e.name==="AbortError") return true;   // usuário cancelou: tudo certo
+    /* qualquer outro erro: segue para o download abaixo */
+  }
+  // 2) fallback universal: baixa o arquivo (desktop, file://, tipos não suportados…)
+  try{ download(filename,text); return false; }
+  catch(e){ toast("Não consegui gerar o arquivo 😕"); return false; }
+}
+const slug=s=>(s||"cifra").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"-").replace(/^-|-$/g,"").toLowerCase();
+
+/* ---------- Compartilhamento por LINK (auto-import\u00e1vel, serverless) ----------
+   O payload \u00e9 o MESMO envelope JSON de hoje (type/version/app/...), comprimido
+   (gzip quando h\u00e1 suporte) e em base64url no FRAGMENTO (#) da URL. O # nunca vai
+   ao servidor, cabe payload grande e decodifica 100% no cliente (offline ao
+   receber). Tudo vanilla \u2014 sem depend\u00eancia, mant\u00e9m o arquivo \u00fanico. */
+function bytesToB64url(bytes){
+  // converte em blocos: String.fromCharCode.apply estoura a pilha com arrays grandes
+  let bin=""; const CH=0x8000;
+  for(let i=0;i<bytes.length;i+=CH) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH));
+  return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function b64urlToBytes(s){
+  s=String(s).replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4) s+="=";
+  const bin=atob(s), out=new Uint8Array(bin.length);   // atob lan\u00e7a em base64 inv\u00e1lido (link corrompido) \u2014 quem chama trata
+  for(let i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i);
+  return out;
+}
+async function gzipBytes(bytes){
+  const cs=new CompressionStream("gzip");
+  // o erro real (dado inválido) sai pelo readable abaixo; engolir a rejeição do
+  // writer evita uma "unhandled rejection" paralela quando o stream falha.
+  const w=cs.writable.getWriter(); w.write(bytes).catch(()=>{}); w.close().catch(()=>{});
+  return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+}
+async function gunzipBytes(bytes){
+  const ds=new DecompressionStream("gzip");
+  const w=ds.writable.getWriter(); w.write(bytes).catch(()=>{}); w.close().catch(()=>{});
+  return new Uint8Array(await new Response(ds.readable).arrayBuffer());
+}
+async function packData(obj){
+  const bytes=new TextEncoder().encode(JSON.stringify(obj));
+  if(typeof CompressionStream==="function"){
+    try{ return "g."+bytesToB64url(await gzipBytes(bytes)); }catch(e){/* cai no cru */}
+  }
+  return "r."+bytesToB64url(bytes);                    // fallback sem compress\u00e3o
+}
+async function unpackData(payload){
+  const i=String(payload).indexOf("."); if(i<0) throw new Error("payload sem tag");
+  const tag=payload.slice(0,i); let bytes=b64urlToBytes(payload.slice(i+1));
+  if(tag==="g") bytes=await gunzipBytes(bytes);        // lan\u00e7a se n\u00e3o for gzip de verdade
+  return new TextDecoder().decode(bytes);
+}
+async function buildImportLink(envelopeObj){
+  // base da location: funciona em qualquer host (em file:// gera link file://, esperado at\u00e9 hospedar)
+  return location.origin+location.pathname+"#imp="+await packData(envelopeObj);
+}
+async function shareLink(envelopeObj, title){
+  let url; try{ url=await buildImportLink(envelopeObj); }
+  catch(e){ toast("N\u00e3o consegui gerar o link \ud83d\ude15"); return; }
+  const big=url.length>30000;   // ~30 KB: repert\u00f3rio grande n\u00e3o cola bem \u2014 o arquivo \u00e9 o caminho
+  // 1) Web Share nativo (manda o link direto pro WhatsApp etc.)
+  try{
+    if(navigator.share){ await navigator.share({title,url}); return; }
+  }catch(e){ if(e&&e.name==="AbortError") return; /* outro erro: cai no clipboard */ }
+  // 2) fallback universal: copia pro clipboard (mesmo esp\u00edrito \u00e0 prova de falha do shareFile)
+  try{ await navigator.clipboard.writeText(url); toast(big?"Link grande \u2014 se falhar, use o arquivo":"Link copiado \u2713"); }
+  catch(e){ toast("Copie o link da barra do navegador"); }
+}
+
+function shareSheet(song){
+  openSheet("Compartilhar “"+song.title+"”",[
+    {ic:"🔗",label:"Enviar link da cifra",fn:()=>{
+      closeSheet();
+      shareLink({type:"louvai-song",version:1,app:APP_VERSION,song},"Cifra: "+song.title);
+    }},
+    {ic:"↗",label:"Enviar esta cifra (.json)",fn:()=>{
+      shareFile(slug(song.title)+".louvai.json",
+        JSON.stringify({type:"louvai-song",version:1,app:APP_VERSION,song}),"Cifra: "+song.title);
+      closeSheet();
+    }},
+    {ic:"✎",label:"Editar cifra",fn:()=>{closeSheet();openEditor(song.id);}},
+    {ic:"⧉",label:"Copiar texto da cifra",fn:async()=>{
+      try{await navigator.clipboard.writeText(song.body);toast("Texto copiado ✓");}
+      catch(e){toast("Não consegui copiar");}
+      closeSheet();
+    }},
+    {ic:"🗑",label:"Excluir",danger:true,fn:()=>{closeSheet();openEditor(song.id);$("#e-delete").click();}},
+  ]);
+}
+$("#backupBtn").onclick=()=>{
+  openSheet("Backup e compartilhamento",[
+    {ic:"↥",label:"Exportar TODO o repertório (.json)",fn:()=>{
+      shareFile("repertorio-louvai.json",
+        JSON.stringify({type:"louvai-library",version:1,app:APP_VERSION,songs}),"Repertório Louvai");
+      closeSheet();
+    }},
+    {ic:"🔗",label:"Copiar link do repertório",fn:()=>{
+      // repertório inteiro costuma ser grande: o arquivo segue como caminho primário;
+      // o link avisa quando passa do tamanho que cola bem (shareLink trata o aviso).
+      closeSheet();
+      shareLink({type:"louvai-library",version:1,app:APP_VERSION,songs},"Repertório Louvai");
+    }},
+    {ic:"↧",label:"Importar arquivo (cifra ou repertório)",fn:()=>{closeSheet();$("#fileInput").click();}},
+  ]);
+};
+$("#importBtn").onclick=()=>$("#fileInput").click();
+$("#fileInput").onchange=e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{ importJSON(r.result); $("#fileInput").value=""; };
+  // falha de leitura (arquivo travado/removido no mobile) não pode ficar silenciosa;
+  // limpa o value nos dois caminhos p/ permitir re-selecionar o MESMO arquivo.
+  r.onerror=()=>{ toast("Não consegui ler o arquivo 😕"); $("#fileInput").value=""; };
+  r.readAsText(f);
+};
+function mergeSongs(arr){
+  let added=0,updated=0;
+  (arr||[]).forEach(s=>{
+    if(!s)return;
+    // normaliza tipos na importação (dados saudáveis): um título numérico vindo de
+    // .json malformado quebraria o sort/esc do render e travaria a lista.
+    s.title=String(s.title==null?"":s.title).trim(); if(!s.title)return;
+    if(s.key!=null) s.key=String(s.key);
+    if(s.artist!=null) s.artist=String(s.artist);
+    s.tags=s.tags||[]; s.capo=s.capo||0; s.updatedAt=s.updatedAt||Date.now();
+    const ex=s.id&&songs.find(x=>x.id===s.id);
+    if(ex){ if((s.updatedAt||0)>=(ex.updatedAt||0)){Object.assign(ex,s);updated++;} }
+    else{ s.id=s.id||uid(); if(songs.some(x=>x.id===s.id))s.id=uid(); songs.push(s); added++; }
+  });
+  return {added,updated};
+}
+function importJSON(text){
+  let data; try{data=JSON.parse(text);}catch(e){toast("Arquivo inválido 😕");return;}
+  // arquivos da era "Levita" (nome antigo do app) continuam abrindo normalmente
+  const tp=String(data.type||"").replace(/^levita-/,"louvai-");
+  // Escala (traz as cifras junto)
+  if(tp==="louvai-escala"&&data.escala){
+    const m=mergeSongs(data.songs||[]);
+    // dedup por id como em mergeSongs: re-importar a mesma escala (ou uma versão
+    // corrigida) ATUALIZA a existente em vez de empilhar duplicatas na lista.
+    const inc=data.escala; inc.updatedAt=inc.updatedAt||Date.now();
+    const ix=inc.id?escalas.findIndex(x=>x.id===inc.id):-1;
+    if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)) escalas[ix]=inc; }   // só sobrescreve com versão igual/mais nova
+    else{ if(!inc.id||escalas.some(x=>x.id===inc.id)) inc.id=uid(); escalas.push(inc); }
+    saveSongs(); saveEscalas();
+    renderLibrary();            // cifras agregadas pela escala já aparecem na aba Cifras
+    switchTab("escalas"); renderEscalas();
+    toast("Escala importada"+(m.added?` (+${m.added} cifra(s))`:""));
+    return;
+  }
+  let incoming=[];
+  if(tp==="louvai-song"&&data.song) incoming=[data.song];
+  else if(tp==="louvai-library"&&Array.isArray(data.songs)) incoming=data.songs;
+  else if(Array.isArray(data)) incoming=data;
+  else if(data.title&&data.body) incoming=[data];
+  else{toast("Não reconheci esse arquivo");return;}
+  const {added,updated}=mergeSongs(incoming);
+  saveSongs(); renderLibrary();
+  toast(`Importado: ${added} nova(s)`+(updated?`, ${updated} atualizada(s)`:""));
+}
+
+/* ---------- Receber por LINK (#imp=...) ---------- */
+// rótulo legível pra confirmação (reusa a mesma gramática de tipos do importJSON)
+function describeImport(data){
+  const tp=String((data&&data.type)||"").replace(/^levita-/,"louvai-");
+  if(tp==="louvai-escala"&&data.escala)
+    return "Escala “"+(data.escala.title||"sem nome")+"”"+(data.songs&&data.songs.length?` (${data.songs.length} cifra(s))`:"");
+  if(tp==="louvai-song"&&data.song) return "Cifra “"+(data.song.title||"sem nome")+"”";
+  if(tp==="louvai-library"&&Array.isArray(data.songs)) return "Repertório ("+data.songs.length+" cifra(s))";
+  return "";
+}
+function clearImpHash(){
+  // replaceState NÃO dispara hashchange (sem reentrada); fallback p/ file:// onde pode lançar
+  try{ history.replaceState(null,"",location.pathname+location.search); }
+  catch(e){ try{ location.hash=""; }catch(_){} }
+}
+async function handleImportLink(){
+  const h=location.hash||"";
+  if(h.indexOf("#imp=")!==0) return;
+  const payload=h.slice(5);
+  // limpa o hash JÁ (síncrono, antes de qualquer await): um refresh não reimporta e
+  // o hashchange disparado pela própria abertura do link não reentra na confirmação.
+  clearImpHash();
+  let data, jsonText;
+  try{ jsonText=await unpackData(payload); data=JSON.parse(jsonText); }
+  catch(e){ toast("Link inválido 😕"); return; }   // link corrompido não pode quebrar o boot
+  const label=describeImport(data);
+  if(!label){ toast("Link inválido 😕"); return; }
+  // "nada salvo no escuro": dado vindo de link é não-confiável — confirma antes de mesclar
+  // (o esc() da v0.13.2 ainda blinda XSS na exibição depois de importado).
+  openSheet("Importar deste link?",[
+    {ic:"↧",label:"Importar "+label,fn:()=>{ closeSheet(); importJSON(jsonText); }},
+    {ic:"✕",label:"Cancelar",fn:closeSheet},
+  ]);
+}
+
+/* ========================================================================
+   ESCALAS / SETLISTS — montagem do culto, escala de pessoas, modo Apresentar
+   ======================================================================== */
+const MOMENTOS=["","Abertura","Adoração","Celebração","Ministração","Santa Ceia","Oferta","Apelo","Encerramento"];
+const FUNCOES=["Ministrante","Vocal","Violão","Guitarra","Teclado","Baixo","Bateria","Cajon","Sax","Violino","Mídia/Projeção","Som"];
+let editEscala=null;  // rascunho em edição
+
+function newEscalaObj(){
+  const d=new Date(), iso=d.toISOString().slice(0,10);
+  return {id:uid(), title:"", date:iso, time:"", type:"Culto", notes:"", team:[], items:[], updatedAt:Date.now()};
+}
+function fmtDate(iso){
+  if(!iso) return "";
+  const [y,m,d]=iso.split("-"); if(!d) return iso;
+  const dt=new Date(+y,+m-1,+d);
+  return dt.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short"});
+}
+function songById(id){ return songs.find(s=>s.id===id); }
+function escTotalMin(e){ return (e.items||[]).reduce((a,it)=>a+(+it.dur||0),0); }
+function fmtDur(min){ if(!min)return ""; const h=Math.floor(min/60),m=min%60; return h?`${h}h${String(m).padStart(2,"0")}`:`${m} min`; }
+function songItems(e){ return (e.items||[]).filter(it=>it.kind==="song" && songById(it.songId)); }
+
+/* ---- lista de escalas ---- */
+function renderEscalas(){
+  const list=escalas.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  $("#escount").textContent=list.length+(list.length===1?" escala":" escalas");
+  const box=$("#escalalist"); box.innerHTML="";
+  if(!list.length){
+    box.innerHTML='<div class="empty"><div class="big">Nenhuma escala ainda</div>'+
+      'Toque em <b>＋ Nova escala</b> para montar a ordem do próximo culto.</div>';
+    return;
+  }
+  list.forEach(e=>{
+    const nSongs=songItems(e).length, tot=escTotalMin(e);
+    const card=document.createElement("div"); card.className="escard";
+    card.innerHTML='<div class="et">'+esc(e.title||"(sem título)")+'</div>'+
+      '<div class="ed">'+esc([fmtDate(e.date),e.time,e.type].filter(Boolean).join(" · "))+'</div>'+
+      '<div class="ex">'+
+        '<span class="estag">'+nSongs+' música'+(nSongs===1?'':'s')+'</span>'+
+        (tot?'<span class="estag">'+esc(fmtDur(tot))+'</span>':'')+
+        ((e.team||[]).length?'<span class="estag">'+e.team.length+' na equipe</span>':'')+
+      '</div>';
+    card.onclick=()=>openEscala(e.id);
+    box.appendChild(card);
+  });
+}
+
+/* ---- detalhe da escala (ordem do culto) ---- */
+let currentEscalaId=null;
+function openEscala(id){
+  const e=escalas.find(x=>x.id===id); if(!e)return;
+  currentEscalaId=id;
+  $("#es-title").textContent=e.title||"(sem título)";
+  $("#es-meta").textContent=[fmtDate(e.date),e.time,e.type].filter(Boolean).join("  ·  ");
+
+  // equipe
+  const teamBox=$("#es-team");
+  if((e.team||[]).length){
+    teamBox.innerHTML='<div class="es-team-box"><div class="th">Equipe</div><div class="es-team-grid">'+
+      e.team.map(t=>'<div class="tm"><span class="role">'+esc(t.role||"")+'</span><span class="who">'+esc(t.name||"—")+'</span></div>').join("")+
+      '</div></div>';
+  }else teamBox.innerHTML="";
+
+  // ordem do culto
+  const order=$("#es-order"); order.innerHTML="";
+  const tot=escTotalMin(e);
+  $("#es-order-h").textContent="Ordem do culto"+(tot?"  ·  "+fmtDur(tot):"");
+  if(!(e.items||[]).length){
+    order.innerHTML='<div class="hint" style="padding:4px 2px">Sem itens. Toque em ✎ para montar a ordem.</div>';
+  }
+  const sList=songItems(e).map(it=>({songId:it.songId,key:it.key,capo:it.capo}));
+  let n=0, si=-1;
+  (e.items||[]).forEach(it=>{
+    const row=document.createElement("div");
+    if(it.kind==="song"){
+      const s=songById(it.songId); if(!s){return;}
+      n++; si++; const myIdx=si;
+      const k=it.key||s.key;
+      const sub=[it.momento?'<span class="momento">'+esc(it.momento)+'</span>':'', s.artist?esc(s.artist):'', it.dur?fmtDur(it.dur):'', it.note?esc(it.note):'']
+                .filter(Boolean).join(" · ");
+      row.className="orow";
+      row.innerHTML='<div class="onum">'+n+'</div><div class="obody"><div class="ot">'+esc(s.title)+'</div>'+
+        (sub?'<div class="os">'+sub+'</div>':'')+'</div><div class="okey">'+esc(k)+(it.capo?' · c'+it.capo:'')+'</div>';
+      row.onclick=()=>openPlayer(it.songId,{id:e.id, idx:myIdx, list:sList});
+    }else{
+      const sub=[it.momento?'<span class="momento">'+esc(it.momento)+'</span>':'', it.dur?fmtDur(it.dur):'', it.note?esc(it.note):''].filter(Boolean).join(" · ");
+      row.className="orow item";
+      row.innerHTML='<div class="onum">•</div><div class="obody"><div class="ot">'+esc(it.title||"Item")+'</div>'+
+        (sub?'<div class="os">'+sub+'</div>':'')+'</div>';
+    }
+    order.appendChild(row);
+  });
+
+  $("#es-notes").textContent=e.notes||"";
+  $("#es-notes").style.display=e.notes?"block":"none";
+  show("escala");
+}
+$("#es-back").onclick=()=>{switchTab("escalas");show("lib");renderEscalas();};
+$("#es-edit").onclick=()=>openEscalaEditor(currentEscalaId);
+$("#es-present").onclick=()=>{
+  const e=escalas.find(x=>x.id===currentEscalaId);
+  const sList=songItems(e).map(it=>({songId:it.songId,key:it.key,capo:it.capo}));
+  if(!sList.length){toast("Adicione músicas à escala primeiro");return;}
+  openPlayer(sList[0].songId,{id:e.id, idx:0, list:sList});
+};
+$("#es-share").onclick=()=>shareEscalaSheet(currentEscalaId);
+
+/* ---- editor da escala ---- */
+function openEscalaEditor(id){
+  editEscala = id ? JSON.parse(JSON.stringify(escalas.find(e=>e.id===id))) : newEscalaObj();
+  $("#ee-mode").textContent = id ? "Editar escala" : "Nova escala";
+  $("#ee-title").value=editEscala.title||"";
+  $("#ee-date").value=editEscala.date||"";
+  $("#ee-time").value=editEscala.time||"";
+  $("#ee-type").value=editEscala.type||"Culto";
+  $("#ee-notes").value=editEscala.notes||"";
+  $("#ee-delete").classList.toggle("hidden",!id);
+  renderTeamEditor(); renderItemsEditor();
+  show("escala-edit");
+}
+function renderTeamEditor(){
+  const box=$("#ee-team"); box.innerHTML="";
+  (editEscala.team||[]).forEach((t,i)=>{
+    const row=document.createElement("div"); row.className="prow two";
+    row.innerHTML=
+      '<select class="rolesel">'+FUNCOES.map(f=>'<option'+(f===t.role?' selected':'')+'>'+f+'</option>').join("")+'</select>'+
+      '<input class="nameinp" placeholder="Nome" value="'+esc(t.name||"")+'">'+
+      '<button class="rm" title="Remover">✕</button>';
+    row.querySelector(".rolesel").onchange=e=>{editEscala.team[i].role=e.target.value;};
+    row.querySelector(".nameinp").oninput=e=>{editEscala.team[i].name=e.target.value;};
+    row.querySelector(".rm").onclick=()=>{editEscala.team.splice(i,1);renderTeamEditor();};
+    box.appendChild(row);
+  });
+}
+$("#ee-add-person").onclick=()=>{ editEscala.team.push({role:"Vocal",name:""}); renderTeamEditor(); };
+
+function renderItemsEditor(){
+  const box=$("#ee-items"); box.innerHTML="";
+  (editEscala.items||[]).forEach((it,i)=>{
+    const row=document.createElement("div");
+    row.className="irow"+(it.kind==="item"?" itemkind":"");
+    const moveBtns='<button class="move" data-d="-1" aria-label="Mover para cima">↑</button><button class="move" data-d="1" aria-label="Mover para baixo">↓</button><button class="rm" aria-label="Remover item" title="Remover">✕</button>';
+    const momSel='<select class="f-mom">'+MOMENTOS.map(m=>'<option'+(m===(it.momento||"")?' selected':'')+'>'+(m||"— momento —")+'</option>').join("")+'</select>';
+    if(it.kind==="song"){
+      const s=songById(it.songId);
+      const keySel='<select class="f-key"><option value="">'+esc(s?("Tom: "+s.key):"Tom")+'</option>'+
+        KEYS.map(k=>'<option'+(k===it.key?' selected':'')+'>'+k+'</option>').join("")+'</select>';
+      const capoSel='<select class="f-capo">'+Array.from({length:12},(_,c)=>'<option'+(c===(it.capo||0)?' selected':'')+'>'+c+'</option>').join("")+'</select>';
+      row.innerHTML=
+        '<div class="ihead"><span class="ic">🎵 '+esc(s?s.title:"(cifra removida)")+'</span>'+moveBtns+'</div>'+
+        '<div class="igrid three">'+
+          '<div class="fld"><label>Tom (escala)</label>'+keySel+'</div>'+
+          '<div class="fld"><label>Capo</label>'+capoSel+'</div>'+
+          '<div class="fld"><label>Momento</label>'+momSel+'</div></div>'+
+        '<div class="igrid" style="margin-top:8px"><div class="fld"><label>Duração (min)</label><input class="f-dur" type="number" min="0" value="'+(it.dur||"")+'"></div>'+
+          '<div class="fld"><label>Obs.</label><input class="f-note" value="'+esc(it.note||"")+'"></div></div>';
+      row.querySelector(".f-key").onchange=e=>{editEscala.items[i].key=e.target.value;};
+      row.querySelector(".f-capo").onchange=e=>{editEscala.items[i].capo=+e.target.value;};
+    }else{
+      row.innerHTML=
+        '<div class="ihead"><input class="f-title" placeholder="Ex.: Avisos, Oração, Palavra" value="'+esc(it.title||"")+'" style="flex:1;padding:9px 10px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:15px">'+moveBtns+'</div>'+
+        '<div class="igrid three"><div class="fld"><label>Momento</label>'+momSel+'</div>'+
+          '<div class="fld"><label>Duração (min)</label><input class="f-dur" type="number" min="0" value="'+(it.dur||"")+'"></div>'+
+          '<div class="fld"><label>Obs.</label><input class="f-note" value="'+esc(it.note||"")+'"></div></div>';
+      row.querySelector(".f-title").oninput=e=>{editEscala.items[i].title=e.target.value;};
+    }
+    row.querySelector(".f-mom").onchange=e=>{editEscala.items[i].momento=e.target.value.startsWith("—")?"":e.target.value;};
+    row.querySelector(".f-dur").oninput=e=>{editEscala.items[i].dur=+e.target.value||0;updateEditorTotal();};
+    row.querySelector(".f-note").oninput=e=>{editEscala.items[i].note=e.target.value;};
+    row.querySelectorAll(".move").forEach(b=>b.onclick=()=>moveItem(i,+b.dataset.d));
+    row.querySelector(".rm").onclick=()=>{editEscala.items.splice(i,1);renderItemsEditor();};
+    box.appendChild(row);
+  });
+  updateEditorTotal();
+}
+function updateEditorTotal(){
+  const t=escTotalMin(editEscala);
+  $("#ee-total").textContent = t ? "Tempo estimado: "+fmtDur(t) : "";
+}
+function moveItem(i,d){
+  const j=i+d; if(j<0||j>=editEscala.items.length)return;
+  const a=editEscala.items; [a[i],a[j]]=[a[j],a[i]]; renderItemsEditor();
+}
+$("#ee-add-item").onclick=()=>{ editEscala.items.push({kind:"item",title:"",momento:"",dur:0,note:""}); renderItemsEditor(); };
+$("#ee-add-song").onclick=()=>openPicker();
+
+$("#ee-cancel").onclick=()=>{ editEscala=null; currentEscalaId?openEscala(currentEscalaId):(switchTab("escalas"),show("lib"),renderEscalas()); };
+$("#ee-save").onclick=()=>{
+  if(!$("#ee-title").value.trim()){toast("Dê um título à escala 🙂");return;}
+  editEscala.title=$("#ee-title").value.trim();
+  editEscala.date=$("#ee-date").value;
+  editEscala.time=$("#ee-time").value;
+  editEscala.type=$("#ee-type").value;
+  editEscala.notes=$("#ee-notes").value;
+  editEscala.updatedAt=Date.now();
+  const ix=escalas.findIndex(e=>e.id===editEscala.id);
+  if(ix>=0) escalas[ix]=editEscala; else escalas.push(editEscala);
+  currentEscalaId=editEscala.id; const saved=editEscala; editEscala=null;
+  saveEscalas(); openEscala(saved.id); toast("Escala salva ✓");
+};
+$("#ee-delete").onclick=()=>{
+  if(confirm("Excluir esta escala? Não dá pra desfazer.")){
+    escalas=escalas.filter(e=>e.id!==editEscala.id); saveEscalas();
+    editEscala=null; currentEscalaId=null; switchTab("escalas"); show("lib"); renderEscalas(); toast("Escala excluída");
+  }
+};
+
+/* ---- seletor de música ---- */
+function openPicker(){ $("#picksearch").value=""; renderPicker(""); openS("#pickbg","#picksheet","#picksearch"); }
+function closePicker(){ closeS("#pickbg","#picksheet"); }
+$("#pickbg").onclick=closePicker;
+$("#picksearch").oninput=e=>renderPicker(e.target.value);
+function renderPicker(q){
+  q=(q||"").trim().toLowerCase();
+  let list=songs.slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),"pt"));
+  if(q) list=list.filter(s=>(s.title+" "+(s.artist||"")).toLowerCase().includes(q));
+  const box=$("#picklist"); box.innerHTML="";
+  if(!list.length){ box.innerHTML='<div class="hint" style="padding:10px">Nenhuma cifra encontrada.</div>'; return; }
+  list.forEach(s=>{
+    const c=document.createElement("div"); c.className="songcard";
+    c.innerHTML='<div class="keytag">'+esc(s.key||"?")+'</div><div class="meta"><div class="ttl">'+esc(s.title)+'</div>'+
+      (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+'</div>';
+    c.onclick=()=>{
+      editEscala.items.push({kind:"song",songId:s.id,key:"",capo:0,momento:"",dur:0,note:""});
+      closePicker(); renderItemsEditor(); toast("“"+s.title+"” adicionada");
+    };
+    box.appendChild(c);
+  });
+}
+
+/* ---- compartilhar escala (leva as cifras junto) ---- */
+function shareEscalaSheet(id){
+  const e=escalas.find(x=>x.id===id); if(!e)return;
+  const usedIds=[...new Set(songItems(e).map(it=>it.songId))];
+  const bundle=songs.filter(s=>usedIds.includes(s.id));
+  const env={type:"louvai-escala",version:1,app:APP_VERSION,escala:e,songs:bundle};
+  openSheet("Compartilhar “"+(e.title||"escala")+"”",[
+    {ic:"🔗",label:"Enviar link (escala + cifras)",fn:()=>{
+      closeSheet();
+      shareLink(env,"Escala: "+(e.title||"escala"));
+    }},
+    {ic:"↗",label:"Enviar escala + cifras (.json)",fn:()=>{
+      shareFile(slug(e.title)+".escala.louvai.json",JSON.stringify(env),"Escala: "+e.title);
+      closeSheet();
+    }},
+    {ic:"✎",label:"Editar escala",fn:()=>{closeSheet();openEscalaEditor(id);}},
+    {ic:"🗑",label:"Excluir",danger:true,fn:()=>{closeSheet();openEscalaEditor(id);$("#ee-delete").click();}},
+  ]);
+}
+
+/* ---- abas Cifras / Escalas ---- */
+function switchTab(which){
+  const songsOn = which!=="escalas";
+  $("#tab-songs").classList.toggle("on",songsOn);
+  $("#tab-escalas").classList.toggle("on",!songsOn);
+  $("#pane-songs").classList.toggle("hidden",!songsOn);
+  $("#pane-escalas").classList.toggle("hidden",songsOn);
+  $("#newBtn").classList.toggle("hidden",!songsOn);
+  $("#newEscBtn").classList.toggle("hidden",songsOn);   // Backup agora vive fixo na topbar
+  if(!songsOn) renderEscalas();
+}
+$("#tab-songs").onclick=()=>switchTab("songs");
+$("#tab-escalas").onclick=()=>switchTab("escalas");
+$("#newEscBtn").onclick=()=>openEscalaEditor(null);
+
+/* ---------- Sheet & toast ---------- */
+/* coreografia única dos sheets: abrir = fundo + rAF (deixa o CSS animar a subida);
+   fechar = remove os dois. Centralizado p/ ter um só lugar se o timing mudar. */
+function openS(bgSel,sheetSel,focusSel){
+  $(bgSel).classList.add("show");
+  requestAnimationFrame(()=>$(sheetSel).classList.add("show"));
+  if(focusSel) setTimeout(()=>$(focusSel).focus(),200);
+}
+function closeS(bgSel,sheetSel){ $(sheetSel).classList.remove("show"); $(bgSel).classList.remove("show"); }
+function openSheet(title,items){
+  $("#sheet-title").textContent=title;
+  const b=$("#sheet-body"); b.innerHTML="";
+  items.forEach(it=>{
+    const el=document.createElement("div");
+    el.className="sheetitem"+(it.danger?" danger":"");
+    el.innerHTML='<span class="ic">'+it.ic+'</span>'+esc(it.label);
+    el.onclick=it.fn; b.appendChild(el);
+  });
+  openS("#sheetbg","#sheet");
+}
+function closeSheet(){ closeS("#sheetbg","#sheet"); }
+$("#sheetbg").onclick=closeSheet;
+
+let toastT=null;
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+/* ---------- Tema ---------- */
+function applyTheme(){
+  document.body.classList.toggle("light",settings.theme==="light");
+  $("#themeBtn").textContent=settings.theme==="light"?"◑":"◐";
+  document.querySelector('meta[name=theme-color]').setAttribute("content",settings.theme==="light"?"#f6f5f8":"#121212");
+}
+$("#themeBtn").onclick=()=>{settings.theme=settings.theme==="light"?"dark":"light";saveSettings();applyTheme();};
+
+/* ---------- Busca ---------- */
+$("#search").oninput=renderLibrary;
+
+/* ---------- Boot ---------- */
+$("#appVer").textContent="v"+APP_VERSION;
+load(); applyTheme(); renderLibrary(); show("lib");
+// link auto-importável: após carregar/render, trata #imp= do boot e de links tocados depois
+handleImportLink();
+window.addEventListener("hashchange",handleImportLink);
+</script>
+</body>
+</html>
