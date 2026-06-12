@@ -11,6 +11,13 @@
 > de salvar, limpa o hash) ligada no boot e no `hashchange`. Testes no `tests/smoke.mjs`
 > (round-trip, gerar link, receber+confirmar, cancelar, link inválido) — **96 verificações**.
 >
+> **Ajuste pós-campo (v0.21.1):** o dono mandou o **repertório inteiro** (~10 KB) por link
+> no WhatsApp e deu "Link inválido" no celular — o **app decodifica certo** (abria no PC), mas
+> o **WhatsApp cortou a URL longa**. O aviso de tamanho original (>30 KB, e só no caminho do
+> clipboard) não pegou: no celular o Web Share pulava o aviso. Corrigido: aviso **antes** de
+> enviar, limite `LINK_MAX≈4000`, e folha que oferece **mandar o arquivo** (sem corte). Lição
+> de produto: **link = escala curta**; **repertório/escala grande = arquivo** (anexo, não cola).
+>
 > **Armadilhas aprendidas (p/ não repetir):**
 > - `openSheet` só adiciona `.show` ao `#sheet` num `requestAnimationFrame` → ao testar a
 >   confirmação, **espere** (waitForTimeout) antes de checar o `.show`.

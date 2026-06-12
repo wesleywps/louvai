@@ -8,6 +8,29 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.21.1 — Aviso de link longo (apps de mensagem cortam a URL)
+**Correção (descoberta em campo).** Logo após a v0.21.0, o dono gerou um link do
+**repertório inteiro** (~10 KB) e mandou no WhatsApp: no celular deu **"Link inválido"**.
+- **A causa real:** o app **decodifica** o link sem problema (o mesmo link abria no PC) —
+  o **WhatsApp cortou a URL longa** no caminho. O celular recebeu meio payload de gzip
+  e não teve como abrir. Dois agravantes no código: **(1)** o aviso de tamanho só existia
+  acima de **~30 KB** (alto demais — os ~10 KB passaram sem aviso); e **(2)** o aviso só
+  aparecia no caminho do *copiar pro clipboard* — no celular, o **Web Share nativo**
+  (`navigator.share`) era usado e **pulava o aviso**, então o dono nunca foi alertado.
+- **A correção:** o aviso agora acontece **antes de compartilhar** (vale pro Web Share e
+  pro clipboard) e com um limite realista (`LINK_MAX = 4000` chars). Link longo abre uma
+  **folha** com **"Enviar como arquivo (recomendado)"** — que não sofre o corte —, "Enviar
+  link mesmo assim" e "Cancelar". Uma cifra ou escala pequena segue indo **direto**, sem
+  atrito. O envio em si virou `sendLink`; as 3 folhas passam o `fileFn` pro plano B.
+- **Por quê arquivo:** o `.json` vai como anexo/documento e **não tem o limite de tamanho
+  da URL** — é o caminho certo pro repertório e pra escalas grandes (o link brilha na
+  **escala do culto**, curtinha, no grupo do WhatsApp).
+- **Testes de regressão:** link longo dispara a folha de aviso (e "arquivo" é a 1ª opção e
+  realmente chama o envio por arquivo); link curto **não** dispara o aviso e vai direto.
+  **100 verificações**, zero erro de JS.
+
+---
+
 ## v0.21.0 — Compartilhar por link auto-importável (sem servidor)
 **Recurso (importar/compartilhar).** Receber uma escala ou cifra era trabalhoso:
 baixar o `.json` e caçar o "importar". Agora dá pra mandar um **link** que a outra

@@ -500,6 +500,39 @@ await page.evaluate(async () => { location.hash = "#imp=g.zzzzzzzz"; await handl
 await page.waitForTimeout(150);
 ok((await page.locator("#toast").textContent()).includes("inválido"), "Link inválido mostra toast de erro (sem quebrar o boot)");
 
+// ===== v0.21.1 — aviso de link longo (apps de mensagem cortam a URL) =====
+// link grande (repertório) dispara a folha de aviso ANTES de compartilhar, com a opção arquivo
+await page.evaluate(async () => {
+  window.__fileCalled = false;
+  const bigSongs = Array.from({ length: 60 }, (_, i) => ({
+    id: "big" + i, title: "Música " + i, key: "C", capo: 0, tags: [], updatedAt: 1,
+    body: Array.from({ length: 40 }, (_, j) => "C  G  Am  F  linha " + i + "-" + j).join("\n") }));
+  await shareLink({ type: "louvai-library", version: 1, app: "x", songs: bigSongs },
+    "Repertório", () => { window.__fileCalled = true; });
+});
+await page.waitForTimeout(200);   // o #sheet ganha .show num requestAnimationFrame
+const warn = await page.evaluate(() => ({
+  shown: document.getElementById("sheet").classList.contains("show"),
+  title: document.getElementById("sheet-title").textContent,
+  items: [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent),
+}));
+ok(warn.shown && /Link longo/.test(warn.title), "Link longo dispara a folha de aviso antes de enviar");
+ok(warn.items.length === 3 && /arquivo/i.test(warn.items[0]), "Aviso oferece 'enviar como arquivo' como 1ª opção");
+// escolher "arquivo" no aviso aciona o envio por arquivo (caminho que sobrevive ao WhatsApp)
+await page.locator("#sheet-body .sheetitem").first().click();
+await page.waitForTimeout(100);
+ok(await page.evaluate(() => window.__fileCalled === true), "Escolher 'arquivo' no aviso chama o envio por arquivo");
+
+// link curto (uma cifra) NÃO dispara o aviso de tamanho — vai direto
+await page.evaluate(async () => {
+  await shareLink({ type: "louvai-song", version: 1, app: "x", song: { title: "T", body: "C  G" } },
+    "Cifra T", () => {});
+});
+await page.waitForTimeout(150);
+ok(!(await page.evaluate(() => document.getElementById("sheet").classList.contains("show")
+     && /Link longo/.test(document.getElementById("sheet-title").textContent))),
+   "Link curto não dispara o aviso de tamanho (vai direto)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

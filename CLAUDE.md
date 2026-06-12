@@ -86,7 +86,7 @@ PLANO atualizado se aplicável · `npm test` verde.
     **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`) e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~96 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~100 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -124,9 +124,12 @@ PLANO atualizado se aplicável · `npm test` verde.
 - **Compartilhar/receber por LINK (v0.21.0):** envelope JSON gzipado em base64url no
   **fragmento** `…/#imp=…` (sem servidor; decodifica no cliente). Empacotar:
   `bytesToB64url`/`b64urlToBytes`, `gzipBytes`/`gunzipBytes` (com fallback `r.` sem
-  compressão), `packData`/`unpackData`, `buildImportLink`. Enviar: `shareLink(env,title)`
-  (Web Share `{url}` → fallback clipboard; aviso >30 KB) ligado nas 3 folhas
-  (`shareSheet`, `shareEscalaSheet`, Backup). Receber: `describeImport` +
+  compressão), `packData`/`unpackData`, `buildImportLink`. Enviar: `shareLink(env,title,fileFn)`
+  → `sendLink` (Web Share `{url}` → fallback clipboard). **Aviso de link longo (v0.21.1):**
+  apps de mensagem cortam URL longa → `shareLink` avisa **antes** de enviar quando
+  `url.length>LINK_MAX` (~4000) e oferece o `fileFn` (mandar o arquivo, sem corte). As 3
+  folhas (`shareSheet`, `shareEscalaSheet`, Backup) passam `env` + `fileFn`.
+  Receber: `describeImport` +
   `handleImportLink` (confirma via `openSheet` antes de `importJSON` — "nada salvo no
   escuro" —, limpa o hash com `clearImpHash`), chamado no **boot** e no `hashchange`.
 - **Player (barra de uma linha, v0.20.0):** `.controls` é uma linha só

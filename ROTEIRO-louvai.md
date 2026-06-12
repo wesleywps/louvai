@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.21.0**.
+seguir. Atualizado até a **v0.21.1**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -76,6 +76,7 @@ instalação complexa.
 | **v0.20.0** | recurso | **Player normal em uma linha:** a tela de visualizar cifra vira `← · Título · ☰ · ⚙` (Tom, Editar e Compartilhar no ⚙ Ajustes; linha fininha com artista · Tom · capo). Mais cifra, menos cromo. |
 | **v0.20.1** | correção | **Tom no topo da Apresentação:** mostra a mesma linha fininha (artista · Tom · capo) da visualização normal, em vez de esconder. |
 | **v0.21.0** | recurso | **Compartilhar por link auto-importável (sem servidor):** envia escala/cifra/repertório num link `…/#imp=…` (envelope JSON gzipado em base64url no fragmento; decodifica 100% no aparelho). Quem recebe só toca — abre com confirmação antes de salvar. Código hosting-ready (GitHub Pages). |
+| **v0.21.1** | correção | **Aviso de link longo:** apps de mensagem (WhatsApp) cortam URLs longas → "Link inválido" no destino. O aviso agora aparece **antes** de compartilhar (não só no clipboard) e com limite realista (~4 KB), oferecendo **mandar o arquivo** (sem o corte). Descoberto em campo com o repertório inteiro. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -189,7 +190,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > ✅ **Apresentação enxuta** (barra compacta + Tom no Ajustes) concluída nas
 > v0.18.0–v0.18.1; **"livro"** (virar página troca de música) na v0.19.0.
 > ✅ **Compartilhar por link** (auto-importável, sem servidor) concluído na v0.21.0 —
-> ver `PLANO-compartilhar-link.md` (resta a tarefa operacional de hospedar).
+> ver `PLANO-compartilhar-link.md` (resta a tarefa operacional de hospedar). A v0.21.1
+> ajustou o **aviso de link longo** (apps de mensagem cortam a URL → mandar o arquivo).
 
 ---
 
@@ -209,4 +211,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.21.0.*
+*Última atualização deste roteiro: v0.21.1.*
