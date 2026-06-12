@@ -623,7 +623,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.21.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.21.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1469,30 +1469,45 @@ async function buildImportLink(envelopeObj){
   // base da location: funciona em qualquer host (em file:// gera link file://, esperado at\u00e9 hospedar)
   return location.origin+location.pathname+"#imp="+await packData(envelopeObj);
 }
-async function shareLink(envelopeObj, title){
-  let url; try{ url=await buildImportLink(envelopeObj); }
-  catch(e){ toast("N\u00e3o consegui gerar o link \ud83d\ude15"); return; }
-  const big=url.length>30000;   // ~30 KB: repert\u00f3rio grande n\u00e3o cola bem \u2014 o arquivo \u00e9 o caminho
+// limite acima do qual o link costuma ser CORTADO por apps de mensagem (WhatsApp): o
+// destinat\u00e1rio recebe meio payload e v\u00ea "Link inv\u00e1lido". Valor conservador descoberto
+// em campo (um repert\u00f3rio de ~10 KB j\u00e1 n\u00e3o sobreviveu ao WhatsApp). Abaixo disso uma
+// cifra ou escala pequena passa numa boa; acima, \u00e9 mais seguro mandar o arquivo.
+const LINK_MAX=4000;
+async function sendLink(url, title){
   // 1) Web Share nativo (manda o link direto pro WhatsApp etc.)
   try{
     if(navigator.share){ await navigator.share({title,url}); return; }
   }catch(e){ if(e&&e.name==="AbortError") return; /* outro erro: cai no clipboard */ }
   // 2) fallback universal: copia pro clipboard (mesmo esp\u00edrito \u00e0 prova de falha do shareFile)
-  try{ await navigator.clipboard.writeText(url); toast(big?"Link grande \u2014 se falhar, use o arquivo":"Link copiado \u2713"); }
+  try{ await navigator.clipboard.writeText(url); toast("Link copiado \u2713"); }
   catch(e){ toast("Copie o link da barra do navegador"); }
+}
+async function shareLink(envelopeObj, title, fileFn){
+  let url; try{ url=await buildImportLink(envelopeObj); }
+  catch(e){ toast("N\u00e3o consegui gerar o link \ud83d\ude15"); return; }
+  // ANTES de compartilhar (no celular o Web Share pularia um toast p\u00f3s-envio): se o link
+  // \u00e9 longo demais pra mensagem, avisa e oferece o arquivo \u2014 que n\u00e3o sofre esse corte.
+  if(url.length>LINK_MAX && fileFn){
+    openSheet("Link longo (~"+Math.round(url.length/1024)+" KB)",[
+      {ic:"\ud83d\udcc4",label:"Enviar como arquivo (recomendado)",fn:()=>{ closeSheet(); fileFn(); }},
+      {ic:"\ud83d\udd17",label:"Enviar link mesmo assim",fn:()=>{ closeSheet(); sendLink(url,title); }},
+      {ic:"\u2715",label:"Cancelar",fn:closeSheet},
+    ]);
+    return;
+  }
+  return sendLink(url,title);
 }
 
 function shareSheet(song){
+  const env={type:"louvai-song",version:1,app:APP_VERSION,song};
+  const sendFile=()=>shareFile(slug(song.title)+".louvai.json",JSON.stringify(env),"Cifra: "+song.title);
   openSheet("Compartilhar “"+song.title+"”",[
     {ic:"🔗",label:"Enviar link da cifra",fn:()=>{
       closeSheet();
-      shareLink({type:"louvai-song",version:1,app:APP_VERSION,song},"Cifra: "+song.title);
+      shareLink(env,"Cifra: "+song.title,sendFile);
     }},
-    {ic:"↗",label:"Enviar esta cifra (.json)",fn:()=>{
-      shareFile(slug(song.title)+".louvai.json",
-        JSON.stringify({type:"louvai-song",version:1,app:APP_VERSION,song}),"Cifra: "+song.title);
-      closeSheet();
-    }},
+    {ic:"↗",label:"Enviar esta cifra (.json)",fn:()=>{ sendFile(); closeSheet(); }},
     {ic:"✎",label:"Editar cifra",fn:()=>{closeSheet();openEditor(song.id);}},
     {ic:"⧉",label:"Copiar texto da cifra",fn:async()=>{
       try{await navigator.clipboard.writeText(song.body);toast("Texto copiado ✓");}
@@ -1503,17 +1518,15 @@ function shareSheet(song){
   ]);
 }
 $("#backupBtn").onclick=()=>{
+  const env={type:"louvai-library",version:1,app:APP_VERSION,songs};
+  const sendFile=()=>shareFile("repertorio-louvai.json",JSON.stringify(env),"Repertório Louvai");
   openSheet("Backup e compartilhamento",[
-    {ic:"↥",label:"Exportar TODO o repertório (.json)",fn:()=>{
-      shareFile("repertorio-louvai.json",
-        JSON.stringify({type:"louvai-library",version:1,app:APP_VERSION,songs}),"Repertório Louvai");
+    {ic:"↥",label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); closeSheet(); }},
+    {ic:"🔗",label:"Enviar link do repertório",fn:()=>{
+      // repertório inteiro quase sempre passa do limite: o shareLink vai oferecer o
+      // arquivo (caminho primário do repertório) em vez de um link fadado a ser cortado.
       closeSheet();
-    }},
-    {ic:"🔗",label:"Copiar link do repertório",fn:()=>{
-      // repertório inteiro costuma ser grande: o arquivo segue como caminho primário;
-      // o link avisa quando passa do tamanho que cola bem (shareLink trata o aviso).
-      closeSheet();
-      shareLink({type:"louvai-library",version:1,app:APP_VERSION,songs},"Repertório Louvai");
+      shareLink(env,"Repertório Louvai",sendFile);
     }},
     {ic:"↧",label:"Importar arquivo (cifra ou repertório)",fn:()=>{closeSheet();$("#fileInput").click();}},
   ]);
@@ -1845,15 +1858,13 @@ function shareEscalaSheet(id){
   const usedIds=[...new Set(songItems(e).map(it=>it.songId))];
   const bundle=songs.filter(s=>usedIds.includes(s.id));
   const env={type:"louvai-escala",version:1,app:APP_VERSION,escala:e,songs:bundle};
+  const sendFile=()=>shareFile(slug(e.title)+".escala.louvai.json",JSON.stringify(env),"Escala: "+e.title);
   openSheet("Compartilhar “"+(e.title||"escala")+"”",[
     {ic:"🔗",label:"Enviar link (escala + cifras)",fn:()=>{
       closeSheet();
-      shareLink(env,"Escala: "+(e.title||"escala"));
+      shareLink(env,"Escala: "+(e.title||"escala"),sendFile);
     }},
-    {ic:"↗",label:"Enviar escala + cifras (.json)",fn:()=>{
-      shareFile(slug(e.title)+".escala.louvai.json",JSON.stringify(env),"Escala: "+e.title);
-      closeSheet();
-    }},
+    {ic:"↗",label:"Enviar escala + cifras (.json)",fn:()=>{ sendFile(); closeSheet(); }},
     {ic:"✎",label:"Editar escala",fn:()=>{closeSheet();openEscalaEditor(id);}},
     {ic:"🗑",label:"Excluir",danger:true,fn:()=>{closeSheet();openEscalaEditor(id);$("#ee-delete").click();}},
   ]);
