@@ -119,7 +119,12 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
 ### Tema A — Segurança dos dados
 - [ ] **PWA instalável de verdade** (ícone, 100% offline inclusive fontes;
-  destrava o compartilhar nativo no desktop).
+  destrava o compartilhar nativo no desktop, e "Abrir com Louvai" pra importar
+  arquivo em 1 toque). **Decisão registrada:** a migração para PWA **encerra a regra
+  "arquivo único"** — a partir dela o critério passa a ser **qualidade de software e
+  organização do repositório** (multi-arquivo ok), mantendo offline-first/vanilla/sem
+  build/sem backend. Detalhe no `CLAUDE.md` (seção "Horizonte"). Antes do PWA, seguimos
+  refinando em arquivo único.
 - [ ] **Backup com rede de segurança:** registrar data do último backup, lembrar
   de exportar, e uma tela clara de "restaurar de arquivo".
 - [ ] **Migrar de localStorage para IndexedDB** (mais espaço e robustez).

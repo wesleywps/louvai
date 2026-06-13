@@ -25,8 +25,9 @@ arquivo `.json` (cifra, repertório ou escala).
 ---
 
 ## Regras invioláveis (não quebrar)
-1. **Arquivo único:** todo HTML + CSS + JS vive em `louvai.html`. JS puro
-   (vanilla), sem framework, sem etapa de build, sem dependências em runtime.
+1. **Arquivo único** *(restrição da fase atual — ver "Horizonte" abaixo)*: todo
+   HTML + CSS + JS vive em `louvai.html`. JS puro (vanilla), sem framework, sem
+   etapa de build, sem dependências em runtime.
 2. **Offline-first:** o app funciona sem internet. As fontes do Google são só
    cosméticas e têm fallback — nada essencial pode depender da rede.
 3. **Fonte da verdade de acordes:** `parseChord()` é a ÚNICA definição do que é
@@ -40,6 +41,21 @@ arquivo `.json` (cifra, repertório ou escala).
    qualquer falha, cai no download. Mantenha esse fallback.
 6. **Compatibilidade com o nome antigo:** `importJSON` aceita `levita-*` e
    `migrateLevita()` copia as chaves antigas do `localStorage`. Não remover.
+
+### Horizonte — "arquivo único" é meio, não fim (decisão registrada, 2026-06)
+> A regra nº1 (**arquivo único**) é uma **restrição da fase atual**, não um valor em si.
+> Ela **será intencionalmente removida na migração para PWA** (que exige `manifest` +
+> service worker + ícones como arquivos separados — ver `ROTEIRO`, Tema A). A partir daí,
+> o critério **deixa de ser "minimizar a quantidade de arquivos"** e passa a ser
+> **qualidade de software e organização do repositório**: separar por responsabilidade,
+> nomes claros, sem arquivos órfãos, fácil de navegar.
+>
+> **O que NÃO muda** (são princípios do projeto, não consequência do "arquivo único"):
+> **offline-first, JS vanilla, sem etapa de build, sem dependências em runtime e sem
+> backend.** Multi-arquivo ≠ inchar: continua tudo estático e simples.
+>
+> **Enquanto o PWA não chega**, seguimos refinando em `louvai.html` único e a regra nº1
+> vale normalmente. Quando o plano de PWA for aprovado, atualizar esta seção e a regra nº1.
 
 ## Ritual de CADA entrega (obrigatório, sem exceção)
 > Vale para **toda** implementação, correção ou alteração entregue — recurso novo,
