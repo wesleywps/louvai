@@ -533,6 +533,61 @@ ok(!(await page.evaluate(() => document.getElementById("sheet").classList.contai
      && /Link longo/.test(document.getElementById("sheet-title").textContent))),
    "Link curto não dispara o aviso de tamanho (vai direto)");
 
+// ===== v0.22.0 — aviso de título duplicado antes de mesclar =====
+const dupEnv = {
+  type: "louvai-escala", version: 1, app: "x",
+  escala: { id: "esc-dup-t", title: "Escala T", type: "Culto", team: [], items: [{ type: "song", songId: "deles-1" }], updatedAt: 10 },
+  songs: [{ id: "deles-1", title: "Repetida", key: "G", capo: 0, tags: [], updatedAt: 10, body: "G\nversao deles" }],
+};
+const setupDup = () => page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id: "meu-1", title: "Repetida", key: "C", capo: 0, tags: [], updatedAt: 5, body: "C\nminha versao" });
+  saveSongs(); saveEscalas();
+});
+// importar escala com cifra de MESMO título e id diferente → avisa antes de mesclar
+await setupDup();
+await page.evaluate((env) => { importJSON(JSON.stringify(env)); }, dupEnv);
+await page.waitForTimeout(200);
+const dupSheet = await page.evaluate(() => ({
+  shown: document.getElementById("sheet").classList.contains("show"),
+  title: document.getElementById("sheet-title").textContent,
+  items: [...document.querySelectorAll("#sheet-body .sheetitem")].length,
+}));
+ok(dupSheet.shown && /Repetida/.test(dupSheet.title), "Título duplicado abre o aviso antes de mesclar");
+ok(dupSheet.items === 3, "Aviso de duplicado oferece 3 opções (minhas / cópias / cancelar)");
+// nada foi salvo ainda (aviso antes de mexer)
+ok(await page.evaluate(() => songs.length === 1), "Antes de escolher, nada é importado (nada salvo no escuro)");
+// "Importar como cópias" (2º item) → fica com as duas, escala aponta pra cifra importada
+await page.locator("#sheet-body .sheetitem").nth(1).click();
+await page.waitForTimeout(150);
+const both = await page.evaluate(() => ({
+  count: songs.filter(s => s.title === "Repetida").length,
+  escSong: escalas.find(e => e.id === "esc-dup-t").items[0].songId,
+}));
+ok(both.count === 2, "‘Importar como cópias’ mantém as duas cifras de mesmo título");
+ok(both.escSong === "deles-1", "Cópias: a escala aponta pra cifra importada (deles-1)");
+// "Manter as minhas" (1º item) → não duplica e remapeia a escala pra minha cifra
+await setupDup();
+await page.evaluate((env) => { importJSON(JSON.stringify(env)); }, dupEnv);
+await page.waitForTimeout(200);
+await page.locator("#sheet-body .sheetitem").first().click();
+await page.waitForTimeout(150);
+const mine = await page.evaluate(() => ({
+  reps: songs.filter(s => s.title === "Repetida").map(s => s.id),
+  escSong: escalas.find(e => e.id === "esc-dup-t").items[0].songId,
+}));
+ok(mine.reps.length === 1 && mine.reps[0] === "meu-1", "‘Manter as minhas’ não duplica (fica só a minha)");
+ok(mine.escSong === "meu-1", "Manter as minhas: a escala é remapeada pra minha cifra (meu-1)");
+// importar cifra de título NOVO não dispara aviso — entra direto (comportamento de sempre)
+await setupDup();
+await page.evaluate(() => {
+  importJSON(JSON.stringify({ type: "louvai-song", version: 1, song: { id: "nova-1", title: "Inédita", key: "D", body: "D\nx" } }));
+});
+await page.waitForTimeout(150);
+ok(await page.evaluate(() => songs.some(s => s.id === "nova-1") &&
+   !(document.getElementById("sheet").classList.contains("show") && /Você já tem/.test(document.getElementById("sheet-title").textContent))),
+   "Título inédito importa direto, sem aviso de duplicado");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

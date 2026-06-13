@@ -623,7 +623,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.21.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.22.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1541,8 +1541,22 @@ $("#fileInput").onchange=e=>{
   r.onerror=()=>{ toast("Não consegui ler o arquivo 😕"); $("#fileInput").value=""; };
   r.readAsText(f);
 };
-function mergeSongs(arr){
-  let added=0,updated=0;
+const normTitle=t=>String(t==null?"":t).trim().toLowerCase();
+// títulos que JÁ existem no aparelho com id DIFERENTE (mesma música nascida noutro
+// aparelho) — usado p/ avisar antes de empilhar uma duplicata sem querer.
+function collidingTitles(incoming){
+  const out=[];
+  (incoming||[]).forEach(s=>{
+    if(!s) return;
+    const t=normTitle(s.title); if(!t) return;
+    if(s.id && songs.some(x=>x.id===s.id)) return;        // mesmo id = mesma música, sem conflito
+    const ex=songs.find(x=>normTitle(x.title)===t && x.id!==s.id);
+    if(ex && !out.includes(ex.title)) out.push(ex.title);
+  });
+  return out;
+}
+function mergeSongs(arr, policy){
+  let added=0,updated=0; const remap={};   // remap: id que chegou → id da cifra que ficou (p/ remapear escala)
   (arr||[]).forEach(s=>{
     if(!s)return;
     // normaliza tipos na importação (dados saudáveis): um título numérico vindo de
@@ -1552,37 +1566,64 @@ function mergeSongs(arr){
     if(s.artist!=null) s.artist=String(s.artist);
     s.tags=s.tags||[]; s.capo=s.capo||0; s.updatedAt=s.updatedAt||Date.now();
     const ex=s.id&&songs.find(x=>x.id===s.id);
-    if(ex){ if((s.updatedAt||0)>=(ex.updatedAt||0)){Object.assign(ex,s);updated++;} }
-    else{ s.id=s.id||uid(); if(songs.some(x=>x.id===s.id))s.id=uid(); songs.push(s); added++; }
+    if(ex){ if((s.updatedAt||0)>=(ex.updatedAt||0)){Object.assign(ex,s);updated++;} return; }
+    // sem match por id: pode ser título repetido (mesma música, id diferente).
+    if(policy==="mine"){
+      const byTitle=songs.find(x=>normTitle(x.title)===normTitle(s.title));
+      if(byTitle){ if(s.id) remap[s.id]=byTitle.id; return; }   // mantém a minha; só remapeia referências
+    }
+    s.id=s.id||uid(); if(songs.some(x=>x.id===s.id))s.id=uid(); songs.push(s); added++;
   });
-  return {added,updated};
+  return {added,updated,remap};
 }
 function importJSON(text){
   let data; try{data=JSON.parse(text);}catch(e){toast("Arquivo inválido 😕");return;}
   // arquivos da era "Levita" (nome antigo do app) continuam abrindo normalmente
   const tp=String(data.type||"").replace(/^levita-/,"louvai-");
+  // descobre QUAIS cifras chegam (sem mexer em nada ainda) p/ detectar título repetido
+  let incoming;
+  if(tp==="louvai-escala"&&data.escala) incoming=data.songs||[];
+  else if(tp==="louvai-song"&&data.song) incoming=[data.song];
+  else if(tp==="louvai-library"&&Array.isArray(data.songs)) incoming=data.songs;
+  else if(Array.isArray(data)) incoming=data;
+  else if(data.title&&data.body) incoming=[data];
+  else{toast("Não reconheci esse arquivo");return;}
+
+  const dups=collidingTitles(incoming);
+  if(dups.length){
+    // "nada salvo no escuro": a mesma música pode ter nascido noutro aparelho (id
+    // diferente). Avisa antes de mesclar e deixa o usuário escolher — não empilha
+    // duplicata sem querer nem sobrescreve a versão dele silenciosamente.
+    const names=dups.slice(0,3).join(", ")+(dups.length>3?` +${dups.length-3}`:"");
+    openSheet("Você já tem: "+names,[
+      {ic:"👤",label:"Manter as minhas (não duplicar)",fn:()=>{closeSheet();doImport(data,tp,incoming,"mine");}},
+      {ic:"⧉",label:"Importar como cópias (ficar com as duas)",fn:()=>{closeSheet();doImport(data,tp,incoming,"both");}},
+      {ic:"✕",label:"Cancelar importação",fn:closeSheet},
+    ]);
+    return;
+  }
+  doImport(data,tp,incoming,"both");   // sem conflito: comportamento de sempre
+}
+function doImport(data,tp,incoming,policy){
   // Escala (traz as cifras junto)
   if(tp==="louvai-escala"&&data.escala){
-    const m=mergeSongs(data.songs||[]);
+    const {added,remap}=mergeSongs(incoming,policy);
     // dedup por id como em mergeSongs: re-importar a mesma escala (ou uma versão
     // corrigida) ATUALIZA a existente em vez de empilhar duplicatas na lista.
     const inc=data.escala; inc.updatedAt=inc.updatedAt||Date.now();
+    // se o usuário escolheu "manter as minhas", a escala apontava p/ a cifra que NÃO
+    // entrou — remapeia a referência p/ a cifra equivalente que já existia no aparelho.
+    if(Array.isArray(inc.items)) inc.items.forEach(it=>{ if(it&&it.songId&&remap[it.songId]) it.songId=remap[it.songId]; });
     const ix=inc.id?escalas.findIndex(x=>x.id===inc.id):-1;
     if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)) escalas[ix]=inc; }   // só sobrescreve com versão igual/mais nova
     else{ if(!inc.id||escalas.some(x=>x.id===inc.id)) inc.id=uid(); escalas.push(inc); }
     saveSongs(); saveEscalas();
     renderLibrary();            // cifras agregadas pela escala já aparecem na aba Cifras
     switchTab("escalas"); renderEscalas();
-    toast("Escala importada"+(m.added?` (+${m.added} cifra(s))`:""));
+    toast("Escala importada"+(added?` (+${added} cifra(s))`:""));
     return;
   }
-  let incoming=[];
-  if(tp==="louvai-song"&&data.song) incoming=[data.song];
-  else if(tp==="louvai-library"&&Array.isArray(data.songs)) incoming=data.songs;
-  else if(Array.isArray(data)) incoming=data;
-  else if(data.title&&data.body) incoming=[data];
-  else{toast("Não reconheci esse arquivo");return;}
-  const {added,updated}=mergeSongs(incoming);
+  const {added,updated}=mergeSongs(incoming,policy);
   saveSongs(); renderLibrary();
   toast(`Importado: ${added} nova(s)`+(updated?`, ${updated} atualizada(s)`:""));
 }

@@ -8,6 +8,31 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.22.0 — Aviso de cifra com título repetido antes de importar
+**Recurso (importação).** A deduplicação na importação sempre foi por **`id`**: reimportar
+a mesma cifra/escala atualiza no lugar, sem empilhar. Mas quando **a mesma música nasce em
+aparelhos diferentes** (ids distintos — um integrante digitou no celular dele, você no seu),
+importar a escala dele criava uma **segunda cópia** com o mesmo título, em silêncio.
+- **A mudança:** ao importar (arquivo **ou** link), se alguma cifra que chega tem **título
+  igual ao de uma já existente, mas `id` diferente**, o app **avisa antes de mesclar** —
+  "Você já tem: …" — com três opções:
+  - **Manter as minhas (não duplicar):** descarta a versão que chegou e, **numa escala,
+    remapeia a referência** pra sua cifra (a escala continua íntegra, apontando pra música
+    que você já tinha — sem deixar item "órfão").
+  - **Importar como cópias (ficar com as duas):** comportamento anterior, pra quando você
+    quer comparar arranjos.
+  - **Cancelar importação.**
+- **Sem conflito = sem atrito:** título inédito (ou mesmo `id`, que é a mesma música) importa
+  **direto**, como sempre. O aviso só aparece quando há de fato risco de duplicar.
+- **Como funciona:** `collidingTitles()` detecta o choque (título normalizado, `id` diferente)
+  **antes de tocar nos dados**; `mergeSongs(arr, policy)` agora aceita `"mine"`/`"both"` e
+  devolve um **remap** de ids; `doImport()` aplica a política e remapeia `escala.items`.
+- **Testes:** aviso aparece e nada é salvo antes da escolha; "cópias" gera duas cifras e a
+  escala aponta pra importada; "minhas" não duplica e remapeia a escala pra cifra local;
+  título inédito entra direto. **108 verificações**, zero erro de JS.
+
+---
+
 ## v0.21.1 — Aviso de link longo (apps de mensagem cortam a URL)
 **Correção (descoberta em campo).** Logo após a v0.21.0, o dono gerou um link do
 **repertório inteiro** (~10 KB) e mandou no WhatsApp: no celular deu **"Link inválido"**.

@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.21.1**.
+seguir. Atualizado até a **v0.22.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -77,6 +77,7 @@ instalação complexa.
 | **v0.20.1** | correção | **Tom no topo da Apresentação:** mostra a mesma linha fininha (artista · Tom · capo) da visualização normal, em vez de esconder. |
 | **v0.21.0** | recurso | **Compartilhar por link auto-importável (sem servidor):** envia escala/cifra/repertório num link `…/#imp=…` (envelope JSON gzipado em base64url no fragmento; decodifica 100% no aparelho). Quem recebe só toca — abre com confirmação antes de salvar. Código hosting-ready (GitHub Pages). |
 | **v0.21.1** | correção | **Aviso de link longo:** apps de mensagem (WhatsApp) cortam URLs longas → "Link inválido" no destino. O aviso agora aparece **antes** de compartilhar (não só no clipboard) e com limite realista (~4 KB), oferecendo **mandar o arquivo** (sem o corte). Descoberto em campo com o repertório inteiro. |
+| **v0.22.0** | recurso | **Aviso de título repetido ao importar:** quando a mesma música nasce em aparelhos diferentes (id distinto), importar avisa antes de mesclar — manter as minhas (sem duplicar, remapeando a escala) / importar como cópias / cancelar. Título inédito entra direto. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -85,7 +86,9 @@ instalação complexa.
 ## 3. Onde o app está hoje (resumo de capacidades)
 
 - **Repertório:** criar/editar/excluir cifras, busca, tags; importar colando do
-  Cifra Club; importar/exportar arquivos; backup do repertório inteiro.
+  Cifra Club; importar/exportar arquivos; backup do repertório inteiro. Importação
+  deduplica por `id` e **avisa antes de mesclar** quando o título repete com `id`
+  diferente (manter as minhas / cópias / cancelar).
 - **Player:** **barra de uma linha** (`← · Título · ☰ · ⚙`) que prioriza a cifra;
   transposição (subir/abaixar, no ⚙ Ajustes) com **grafia fiel ao tom** — preserva o
   que foi escrito e, ao transpor, escolhe ♯/♭ sozinho pelo tom (Bb nunca vira A#),
@@ -216,4 +219,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.21.1.*
+*Última atualização deste roteiro: v0.22.0.*

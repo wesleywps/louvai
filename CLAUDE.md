@@ -102,7 +102,7 @@ PLANO atualizado se aplicável · `npm test` verde.
     **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`) e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~100 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~108 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -137,6 +137,13 @@ PLANO atualizado se aplicável · `npm test` verde.
 - **Corretor do editor:** `lintCifra` + `runLint`.
 - **Importar texto colado:** `parseImport` e `isMeta` (regras de limpeza do
   Cifra Club: remove `Tom:`, `Capotraste`, `Cifra:`, `Favoritar`, URLs…).
+- **Importar JSON (arquivo/link):** `importJSON` reconhece o tipo e **detecta título
+  repetido** via `collidingTitles` (mesmo título, `id` diferente) **antes de mexer nos
+  dados** → folha de escolha (`mine`/`both`/cancelar). `doImport(data,tp,incoming,policy)`
+  aplica a política: `mergeSongs(arr,policy)` deduplica por `id`, e com `policy="mine"`
+  pula o título repetido e devolve um **`remap`** (id que chegou → id local) que `doImport`
+  usa pra **remapear `escala.items`** (a escala continua íntegra). Título inédito = sem
+  folha, importa direto.
 - **Compartilhar/receber por LINK (v0.21.0):** envelope JSON gzipado em base64url no
   **fragmento** `…/#imp=…` (sem servidor; decodifica no cliente). Empacotar:
   `bytesToB64url`/`b64urlToBytes`, `gzipBytes`/`gunzipBytes` (com fallback `r.` sem
