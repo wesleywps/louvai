@@ -102,7 +102,7 @@ PLANO atualizado se aplicável · `npm test` verde.
     **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`) e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~108 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~116 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -177,6 +177,12 @@ PLANO atualizado se aplicável · `npm test` verde.
   via `openPlayer(...,atLast)`). As setas ‹ › de música seguem indo pro início.
 - **Armazenamento:** chaves `LS_SONGS`, `LS_ESC`, `LS_SET` (`louvai.*.v1`);
   funções `load`, `migrateLevita`, `saveSongs`, `saveEscalas`, `saveSettings`.
+- **Rede de segurança do backup (v0.23.0):** `settings.lastBackup` (data) +
+  `settings.dirtySinceBackup` (marcado em `saveSongs`/`saveEscalas` via `markDirty`,
+  limpo em `recordBackup` ao exportar — só o **arquivo** conta). `backupDue()` (nunca-backup
+  com `hasRealContent`, ou dirty há ≥7 dias) liga o pontinho `.due` no `#backupBtn`
+  (`updateBackupBadge`) e um toast leve no boot. O sheet de Backup mostra `backupNote()`
+  (via 3º arg de `openSheet`, `#sheet-note`) e tem "Restaurar de um arquivo" (reusa `importJSON`).
 
 ## Convenções
 - **Idioma de tudo** (UI, comentários, mensagens de commit, CHANGELOG): pt-BR.

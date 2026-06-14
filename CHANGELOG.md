@@ -8,6 +8,31 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.23.0 — Backup com rede de segurança
+**Recurso (segurança dos dados).** O Louvai guarda tudo **só no aparelho** — se você troca,
+perde ou limpa o celular sem ter exportado, o repertório vai junto. O backup já existia, mas
+era passivo: o app não lembrava de fazer nem mostrava quando foi a última vez. Agora há uma
+rede de segurança em volta do backup **local** (sem nuvem — isso é fase online, com backend).
+- **Data do último backup:** "Exportar TODO o repertório (.json)" passa a **registrar** a data
+  (`settings.lastBackup`). Só o **arquivo** conta como backup — um link copiado não é backup salvo.
+- **"Há mudanças desde então":** criar/editar/excluir cifra ou escala marca um flag
+  (`dirtySinceBackup`, engatado no `saveSongs`/`saveEscalas`), limpo ao exportar.
+- **Lembrete ativo (escolha do dono):** um **pontinho** no botão **↥** quando o backup está
+  devido — **nunca feito** (com conteúdo real) **ou** há mudanças e já faz **≥ 7 dias** — e um
+  **toast leve ao abrir o app** nesse caso. Não atropela uma importação por link (mesmo toast).
+  Repertório mínimo (só a cifra de exemplo) **não** cutuca.
+- **Restaurar claro:** o "Importar arquivo" do Backup virou **"Restaurar de um arquivo (.json)"**,
+  e o sheet ganhou uma **linha de status** no topo ("Último backup: há 3 dias · há mudanças
+  desde então"). Restaurar reusa o `importJSON` — já protegido pelo **aviso de título duplicado**
+  (v0.22.0). Sem "apagar tudo e substituir" destrutivo.
+- **Por dentro:** `backupDue`/`hasRealContent`/`markDirty`/`recordBackup`/`fmtAgo`/`backupNote`;
+  `openSheet` aceita uma **nota** opcional; pontinho via classe `.due` no `#backupBtn`.
+- **Testes:** devido sem backup (pontinho on); exportar grava data e limpa o flag; lembrete some
+  após backup; editar remarca; repertório mínimo não cutuca; rótulo "Restaurar" + linha de status
+  no sheet; abrir com backup atrasado mostra o toast. **116 verificações**, zero erro de JS.
+
+---
+
 ## v0.22.0 — Aviso de cifra com título repetido antes de importar
 **Recurso (importação).** A deduplicação na importação sempre foi por **`id`**: reimportar
 a mesma cifra/escala atualiza no lugar, sem empilhar. Mas quando **a mesma música nasce em

@@ -588,6 +588,51 @@ ok(await page.evaluate(() => songs.some(s => s.id === "nova-1") &&
    !(document.getElementById("sheet").classList.contains("show") && /Você já tem/.test(document.getElementById("sheet-title").textContent))),
    "Título inédito importa direto, sem aviso de duplicado");
 
+// ===== v0.23.0 — backup com rede de segurança =====
+// com conteúdo real e sem backup: "devido" (pontinho no ↥); exportar registra e limpa
+const bk = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id: "a", title: "A", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });
+  songs.push({ id: "b", title: "B", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });
+  delete settings.lastBackup; settings.dirtySinceBackup = true; saveSettings(); updateBackupBadge();
+  const dueNever = backupDue(), badgeNever = document.getElementById("backupBtn").classList.contains("due");
+  recordBackup();
+  return { dueNever, badgeNever, dueAfter: backupDue(),
+    badgeAfter: document.getElementById("backupBtn").classList.contains("due"),
+    hasLB: !!settings.lastBackup, dirty: settings.dirtySinceBackup };
+});
+ok(bk.dueNever && bk.badgeNever, "Com conteúdo e sem backup, o lembrete fica devido (pontinho no ↥)");
+ok(bk.hasLB && bk.dirty === false, "Exportar registra a data do backup e limpa 'mudanças desde então'");
+ok(!bk.dueAfter && !bk.badgeAfter, "Logo após o backup, o lembrete some");
+// alterar o repertório volta a marcar pendente
+ok(await page.evaluate(() => { songs.push({ id: "c", title: "C", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" }); saveSongs(); return settings.dirtySinceBackup; }),
+   "Alterar o repertório marca 'há mudanças desde o último backup'");
+// repertório mínimo (1 cifra) não enche o saco
+ok(await page.evaluate(() => { songs.length = 0; escalas.length = 0; songs.push({ id: "só", title: "Só uma", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" }); delete settings.lastBackup; settings.dirtySinceBackup = true; saveSettings(); return backupDue(); }) === false,
+   "Repertório mínimo (1 cifra) não pede backup");
+// sheet de Backup: rótulo de restaurar + linha de status do backup
+await page.evaluate(() => document.getElementById("backupBtn").click());
+await page.waitForTimeout(200);
+ok(/Restaurar de um arquivo/.test(await page.evaluate(() => [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent).join("|"))),
+   "Sheet de Backup tem 'Restaurar de um arquivo (.json)'");
+ok(/[Úú]ltimo backup/.test(await page.evaluate(() => document.getElementById("sheet-note").textContent)),
+   "Sheet de Backup mostra a linha do último backup");
+await page.evaluate(() => closeSheet());
+
+// lembrete "ativo": abrir o app com backup atrasado mostra um toast (config do dono)
+const ctxBk = await browser.newContext({ viewport: { width: 412, height: 915 } });
+const pageBk = await ctxBk.newPage();
+await pageBk.addInitScript(() => {
+  localStorage.setItem("louvai.settings.v1", JSON.stringify({ theme: "dark", seeded: true, dirtySinceBackup: true }));
+  localStorage.setItem("louvai.songs.v1", JSON.stringify([
+    { id: "x1", title: "Um", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" },
+    { id: "x2", title: "Dois", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" }]));
+});
+await pageBk.goto(APP_URL);
+await pageBk.waitForTimeout(1200);   // espera o lembrete do boot (700ms) + folga
+ok(/backup/i.test(await pageBk.locator("#toast").textContent()), "Ao abrir com backup atrasado, cutuca por backup (lembrete ativo)");
+await ctxBk.close();
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

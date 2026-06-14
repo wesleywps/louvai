@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.22.0**.
+seguir. Atualizado até a **v0.23.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -78,6 +78,7 @@ instalação complexa.
 | **v0.21.0** | recurso | **Compartilhar por link auto-importável (sem servidor):** envia escala/cifra/repertório num link `…/#imp=…` (envelope JSON gzipado em base64url no fragmento; decodifica 100% no aparelho). Quem recebe só toca — abre com confirmação antes de salvar. Código hosting-ready (GitHub Pages). |
 | **v0.21.1** | correção | **Aviso de link longo:** apps de mensagem (WhatsApp) cortam URLs longas → "Link inválido" no destino. O aviso agora aparece **antes** de compartilhar (não só no clipboard) e com limite realista (~4 KB), oferecendo **mandar o arquivo** (sem o corte). Descoberto em campo com o repertório inteiro. |
 | **v0.22.0** | recurso | **Aviso de título repetido ao importar:** quando a mesma música nasce em aparelhos diferentes (id distinto), importar avisa antes de mesclar — manter as minhas (sem duplicar, remapeando a escala) / importar como cópias / cancelar. Título inédito entra direto. |
+| **v0.23.0** | recurso | **Backup com rede de segurança:** registra a data do último backup, marca "há mudanças desde então", cutuca quando está atrasado (pontinho no ↥ + toast leve ao abrir) e deixa o "restaurar de arquivo" claro. Tudo local (nuvem é fase online). |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -102,7 +103,9 @@ instalação complexa.
 - **Compartilhar:** por **arquivo `.json`** (cifra, escala ou repertório) e por
   **link auto-importável** (`…/#imp=…`, sem servidor) — a pessoa toca o link e o app
   abre oferecendo importar, com confirmação antes de salvar.
-- **Offline:** tudo salvo no aparelho (localStorage); funciona sem internet.
+- **Offline:** tudo salvo no aparelho (localStorage); funciona sem internet. **Rede de
+  segurança do backup:** registra a data do último backup, avisa quando há mudanças não
+  salvas (pontinho no ↥ + lembrete ao abrir) e tem "Restaurar de um arquivo" claro.
 - **Robustez e acessibilidade:** importação à prova de arquivo malformado (sem XSS,
   sem travar a lista); botões com nome em leitor de tela, toggles com estado, respeito
   ao "Reduzir movimento" e alvos de toque grandes para o palco.
@@ -128,8 +131,9 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   organização do repositório** (multi-arquivo ok), mantendo offline-first/vanilla/sem
   build/sem backend. Detalhe no `CLAUDE.md` (seção "Horizonte"). Antes do PWA, seguimos
   refinando em arquivo único.
-- [ ] **Backup com rede de segurança:** registrar data do último backup, lembrar
-  de exportar, e uma tela clara de "restaurar de arquivo".
+- [x] **Backup com rede de segurança:** data do último backup, "há mudanças desde então",
+  lembrete ativo (pontinho no ↥ + toast ao abrir quando atrasado) e "Restaurar de um
+  arquivo" claro. *(entregue na v0.23.0 — backup local; nuvem é fase online)*
 - [ ] **Migrar de localStorage para IndexedDB** (mais espaço e robustez).
 
 ### Tema B — Uso ao vivo / palco
@@ -186,8 +190,9 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
    "Enviar link" numa escala e mandar pra outro aparelho no WhatsApp → tocar → importar.
 2. **Validação visual no celular** (dark e light): o redesign, o **Modo Página** e a
    **barra compacta da Apresentação** só se confirmam de verdade na tela real do palco.
-3. **PWA + backup seguro** — blinda os dados do ministério (e fecha o offline 100%
-   do app hospedado: manifest + service worker).
+3. **PWA instalável** — fecha o offline 100% do app hospedado (manifest + service worker)
+   e destrava "Abrir com Louvai" pra importar arquivo em 1 toque. **Encerra a regra
+   "arquivo único"** (ver `CLAUDE.md`, seção "Horizonte").
 4. **"Última vez que tocamos"** e **QR Code** — alto valor percebido.
 5. **Diagramas de acorde** (pegada ao tocar no acorde) — fecha o Tema C de qualidade.
 
@@ -200,6 +205,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > ✅ **Compartilhar por link** (auto-importável, sem servidor) concluído na v0.21.0 —
 > ver `PLANO-compartilhar-link.md` (resta a tarefa operacional de hospedar). A v0.21.1
 > ajustou o **aviso de link longo** (apps de mensagem cortam a URL → mandar o arquivo).
+> ✅ **Aviso de título duplicado** ao importar na v0.22.0; **backup com rede de
+> segurança** (data, "mudanças desde então", lembrete, restaurar claro) na v0.23.0.
 
 ---
 
@@ -219,4 +226,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.22.0.*
+*Última atualização deste roteiro: v0.23.0.*

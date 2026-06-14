@@ -11,12 +11,15 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.22.0)
+## Recursos (v0.23.0)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
 - Repertório com busca e tags; criar/editar cifras; **importar colando do Cifra Club**.
   Importar arquivo/link **avisa antes de mesclar** quando uma cifra tem título repetido
   (manter as suas sem duplicar, ficar com as duas, ou cancelar).
+- **Rede de segurança do backup:** registra a data do último backup, marca quando há
+  mudanças desde então, **lembra de exportar** (pontinho no ↥ + aviso ao abrir quando
+  atrasado) e tem **"Restaurar de um arquivo"** claro. Tudo local (sem nuvem).
 - Player em **barra de uma linha** (prioriza a cifra): transposição com **grafia fiel
   ao tom** — preserva o que você escreveu e, ao subir/abaixar, escolhe ♯/♭ sozinho
   pelo tom de destino (Bb nunca vira A#, mesmo em acordes emprestados), capo, fonte,

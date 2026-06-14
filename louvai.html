@@ -367,6 +367,11 @@ input,textarea,select{font-family:inherit}
 #sheet-body{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .sheet .grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:6px auto 14px}
 .sheet h3{margin:0 6px 10px;font-size:17px;font-weight:700;letter-spacing:-.2px}
+.sheetnote{margin:-4px 6px 12px;font-size:13px;color:var(--muted);line-height:1.4}
+/* pontinho de "backup devido" no botão ↥ (rede de segurança) */
+#backupBtn{position:relative}
+#backupBtn.due::after{content:"";position:absolute;top:7px;right:7px;width:9px;height:9px;
+  border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--bg),0 0 8px var(--accent-glow)}
 .sheetitem{display:flex;align-items:center;gap:14px;padding:15px 12px;border-radius:13px;font-size:16px}
 .sheetitem:active{background:var(--panel2)}
 .sheetitem .ic{font-size:19px;width:24px;text-align:center}
@@ -555,6 +560,7 @@ input,textarea,select{font-family:inherit}
 <div class="sheet" id="sheet">
   <div class="grip"></div>
   <h3 id="sheet-title">Compartilhar</h3>
+  <div id="sheet-note" class="sheetnote hidden"></div>
   <div id="sheet-body"></div>
 </div>
 <!-- Seletor de música (para montar a escala) -->
@@ -623,7 +629,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.22.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.23.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -856,9 +862,36 @@ function load(){
     settings.seeded=true; saveSettings();
   }
 }
-function saveSongs(){ try{localStorage.setItem(LS_SONGS, JSON.stringify(songs));}catch(e){console.warn("Sem armazenamento local:",e);} }
+function saveSongs(){ try{localStorage.setItem(LS_SONGS, JSON.stringify(songs));}catch(e){console.warn("Sem armazenamento local:",e);} markDirty(); }
 function saveSettings(){ try{localStorage.setItem(LS_SET, JSON.stringify(settings));}catch(e){} }
-function saveEscalas(){ try{localStorage.setItem(LS_ESC, JSON.stringify(escalas));}catch(e){console.warn("Sem armazenamento local:",e);} }
+function saveEscalas(){ try{localStorage.setItem(LS_ESC, JSON.stringify(escalas));}catch(e){console.warn("Sem armazenamento local:",e);} markDirty(); }
+
+/* ---------- Rede de segurança do backup (local, sem nuvem) ---------- */
+// Dados moram só no aparelho: se trocar/limpar o celular sem exportar, perde tudo.
+// Aqui o app registra o último backup, marca quando há mudanças desde então e cutuca.
+function fmtAgo(ts){
+  if(!ts) return "nunca";
+  const d=Math.floor((Date.now()-ts)/864e5);
+  if(d<=0) return "hoje"; if(d===1) return "ontem";
+  if(d<7) return "há "+d+" dias";
+  if(d<30) return "há "+Math.floor(d/7)+" semana(s)";
+  return "há mais de um mês";
+}
+function hasRealContent(){ return songs.length>1 || escalas.length>0; }   // demo sozinho não conta (não enche o saco)
+function backupDue(){
+  if(!hasRealContent()) return false;
+  if(!settings.lastBackup) return true;                                    // tem conteúdo e nunca exportou
+  return !!settings.dirtySinceBackup && (Date.now()-settings.lastBackup)>=7*864e5;  // mudou e faz ≥7 dias
+}
+function updateBackupBadge(){ const b=$("#backupBtn"); if(b) b.classList.toggle("due",backupDue()); }
+function markDirty(){ if(settings && !settings.dirtySinceBackup){ settings.dirtySinceBackup=true; saveSettings(); updateBackupBadge(); } }
+function recordBackup(){ settings.lastBackup=Date.now(); settings.dirtySinceBackup=false; saveSettings(); updateBackupBadge(); }
+function backupNote(){
+  let s="Último backup: "+fmtAgo(settings.lastBackup);
+  if(!settings.lastBackup) s+=" — exporte pra não perder o repertório se trocar de celular";
+  else if(settings.dirtySinceBackup) s+=" · há mudanças desde então";
+  return s;
+}
 function uid(){ return "s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
 function demoSong(){
@@ -1521,15 +1554,15 @@ $("#backupBtn").onclick=()=>{
   const env={type:"louvai-library",version:1,app:APP_VERSION,songs};
   const sendFile=()=>shareFile("repertorio-louvai.json",JSON.stringify(env),"Repertório Louvai");
   openSheet("Backup e compartilhamento",[
-    {ic:"↥",label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); closeSheet(); }},
+    {ic:"↥",label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); recordBackup(); closeSheet(); }},
     {ic:"🔗",label:"Enviar link do repertório",fn:()=>{
       // repertório inteiro quase sempre passa do limite: o shareLink vai oferecer o
       // arquivo (caminho primário do repertório) em vez de um link fadado a ser cortado.
       closeSheet();
       shareLink(env,"Repertório Louvai",sendFile);
     }},
-    {ic:"↧",label:"Importar arquivo (cifra ou repertório)",fn:()=>{closeSheet();$("#fileInput").click();}},
-  ]);
+    {ic:"↧",label:"Restaurar de um arquivo (.json)",fn:()=>{closeSheet();$("#fileInput").click();}},
+  ],backupNote());
 };
 $("#importBtn").onclick=()=>$("#fileInput").click();
 $("#fileInput").onchange=e=>{
@@ -1935,8 +1968,9 @@ function openS(bgSel,sheetSel,focusSel){
   if(focusSel) setTimeout(()=>$(focusSel).focus(),200);
 }
 function closeS(bgSel,sheetSel){ $(sheetSel).classList.remove("show"); $(bgSel).classList.remove("show"); }
-function openSheet(title,items){
+function openSheet(title,items,note){
   $("#sheet-title").textContent=title;
+  const n=$("#sheet-note"); if(n){ n.textContent=note||""; n.classList.toggle("hidden",!note); }
   const b=$("#sheet-body"); b.innerHTML="";
   items.forEach(it=>{
     const el=document.createElement("div");
@@ -1972,6 +2006,11 @@ load(); applyTheme(); renderLibrary(); show("lib");
 // link auto-importável: após carregar/render, trata #imp= do boot e de links tocados depois
 handleImportLink();
 window.addEventListener("hashchange",handleImportLink);
+// rede de segurança: pontinho no ↥ e, se o backup está atrasado, um lembrete leve ao abrir
+// (não atropela uma importação por link em andamento, que usa o mesmo toast).
+updateBackupBadge();
+if(backupDue() && location.hash.indexOf("#imp=")!==0)
+  setTimeout(()=>{ if(backupDue()) toast("Faça backup do repertório ↥"); },700);
 </script>
 </body>
 </html>
