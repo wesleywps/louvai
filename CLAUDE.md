@@ -125,6 +125,9 @@ PLANO atualizado se aplicável · `npm test` verde.
   hospedado, com "Atualizar do link" (pull, mão única) — **implementado na v0.26.0**.
 - `PLANO-publicar-nuvem.md` — "Publicar na nuvem" (escrever o `louvai.json` do celular via
   token fino do GitHub + API Contents) — **implementado na v0.27.0**.
+- `PLANO-ui.md` — polimento de UI/ícones em **ondas** (1: ganhos rápidos + ícone do Backup;
+  2: ícones SVG inline; 3: incrementos maiores). **Aguardando OK pra Onda 1.** Insumo:
+  `ANALISE-ui.md` (G1–G12, M1–M8) e `ANALISE-icones.md` (conjunto SVG, `archive`).
 - `.gitignore` — ignora `node_modules/`, as cópias `louvai-v*.html` e o
   `COMMIT_MSG_tmp.txt`.
 - `CLAUDE.md` — este guia.
