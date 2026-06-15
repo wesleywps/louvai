@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.24.0**.
+seguir. Atualizado até a **v0.25.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -80,6 +80,7 @@ instalação complexa.
 | **v0.22.0** | recurso | **Aviso de título repetido ao importar:** quando a mesma música nasce em aparelhos diferentes (id distinto), importar avisa antes de mesclar — manter as minhas (sem duplicar, remapeando a escala) / importar como cópias / cancelar. Título inédito entra direto. |
 | **v0.23.0** | recurso | **Backup com rede de segurança:** registra a data do último backup, marca "há mudanças desde então", cutuca quando está atrasado (pontinho no ↥ + toast leve ao abrir) e deixa o "restaurar de arquivo" claro. Tudo local (nuvem é fase online). |
 | **v0.24.0** | recurso | **"Última vez que tocamos":** cada cifra mostra a recência (tocada há X / nunca tocada), na lista e no seletor de escala. Derivado só de escalas marcadas **"Culto realizado"** — porque a escala é plano, e o que rola se confirma no culto (não infla a recência). |
+| **v0.25.0** | recurso | **Diagramas de acorde:** tocar num acorde no player abre a pegada no violão (popover SVG). Híbrido — formas abertas curadas + motor de pestanas móveis (E/A-shape) pros 12 tons; "sem diagrama" honesto pro resto. Capo-aware (mostra a forma). Validado por notas no CI. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -96,7 +97,8 @@ instalação complexa.
   que foi escrito e, ao transpor, escolhe ♯/♭ sozinho pelo tom (Bb nunca vira A#),
   capo, tamanho de fonte, modo escuro/claro, só letra, ocultar tabs, **modos de
   leitura** (rolagem com auto-scroll opcional **ou** página), navegação por
-  estrutura (☰) e tela sempre acesa (Wake Lock).
+  estrutura (☰), **diagrama de acorde ao tocar no acorde** (pegada no violão, capo-aware)
+  e tela sempre acesa (Wake Lock).
 - **Escalas:** montar o culto (músicas + itens), tom por escala, equipe, tempo
   total, **"Culto realizado"** (confirma a escala → alimenta a recência "última vez que
   tocamos" nas cifras), modo Apresentar (música a música no tom do culto, com **barra compacta**
@@ -158,7 +160,9 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   *(entregue na v0.16.0 — correção na fonte da verdade `transposeNote`)*
 - [x] **Grafia inteligente ao transpor** (sustenido/bemol conforme o tom de destino).
   *(entregue na v0.17.0 — transposição que preserva o intervalo; botão ♯/♭ removido)*
-- [ ] **Diagramas de acorde** (pegada) ao tocar no acorde.
+- [x] **Diagramas de acorde** (pegada) ao tocar no acorde. *(entregue na v0.25.0 — híbrido
+  curado + motor de pestanas; capo-aware; validado por notas — ver `PLANO-diagramas-acorde.md`)*
+  - [ ] *Evoluções:* outras posições por acorde; dim/aug/m7b5/6 no motor; cavaco/ukulele.
 - [ ] **Resolver o modelo de capotraste** (cifra do Cifra Club já vem nas formas com capo).
 
 ### Tema D — Repertório e escalas
@@ -198,7 +202,7 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
    e destrava "Abrir com Louvai" pra importar arquivo em 1 toque. **Encerra a regra
    "arquivo único"** (ver `CLAUDE.md`, seção "Horizonte").
 4. **Ordenar por menos tocadas** (usa a recência da v0.24.0) e **QR Code** — alto valor percebido.
-5. **Diagramas de acorde** (pegada ao tocar no acorde) — fecha o Tema C de qualidade.
+5. **PWA instalável** (Tema A) — fecha o offline do app hospedado e encerra a regra "arquivo único".
 
 > ✅ **Modos de leitura no player** (auto-scroll opcional + Modo Página) concluídos
 > nas v0.14.0–v0.15.0 — ver `PLANO-modos-leitura.md`.
@@ -211,7 +215,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > ajustou o **aviso de link longo** (apps de mensagem cortam a URL → mandar o arquivo).
 > ✅ **Aviso de título duplicado** ao importar na v0.22.0; **backup com rede de
 > segurança** (data, "mudanças desde então", lembrete, restaurar claro) na v0.23.0;
-> **"última vez que tocamos"** (recência via escalas confirmadas) na v0.24.0.
+> **"última vez que tocamos"** (recência via escalas confirmadas) na v0.24.0;
+> **diagramas de acorde** (pegada ao tocar, híbrido curado+motor) na v0.25.0 — fecha o Tema C.
 
 ---
 
@@ -231,4 +236,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.24.0.*
+*Última atualização deste roteiro: v0.25.0.*

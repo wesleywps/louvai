@@ -2,7 +2,22 @@
 
 > **Como retomar:** abra o Claude Code nesta pasta e peça
 > *"vamos executar o PLANO-diagramas-acorde.md"*.
-> **Status: DECISÕES TOMADAS — AGUARDANDO OK PRA EXECUTAR.** App na v0.24.0.
+> **Status: ✅ IMPLEMENTADO na v0.25.0** (commit/tag `v0.25.0`).
+>
+> **Entregue:** motor híbrido (`OPEN` curado + `TPL_E`/`TPL_A` móveis via `placeTemplate`),
+> `chordIntervals`/`qualityFamily`, `fingering` (→ "sem diagrama" honesto), `chordSvg` (SVG
+> tema-aware) e popover `showChordDiagram` (gatilho no `pointerup` do `#p-body`, toque parado
+> no `.chord`, prioridade sobre virar-página). Capo-aware (usa a forma já exibida). **132
+> verificações** — incluindo a **validação por notas** de todas as formas (curadas + geradas).
+>
+> **Armadilhas/decisões registradas:**
+> - `7M` em pt-BR = **sétima maior** (não dominante) — tratado no `chordIntervals`.
+> - Virar-página é `pointerup` (não `click`): o toque no acorde é resolvido **dentro** do
+>   `pointerup` (antes do `goPage`), senão a página viraria junto.
+> - O motor cobre só qualidades com forma móvel **confiável** (maj/m/7/m7/maj7/sus4/sus2);
+>   `dim`/`aug`/`m7b5`/`6` ficam por `OPEN` ou "sem diagrama" — melhor que pegada errada.
+>
+> *(Histórico do plano abaixo; decisões originais mantidas.)* App estava na v0.24.0 ao planejar.
 
 ## Decisões confirmadas com o dono (2026-06)
 - **Híbrido:** tabela **curada** das formas comuns (ficam idênticas ao que o violonista

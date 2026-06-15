@@ -8,6 +8,32 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.25.0 — Diagramas de acorde (pegada ao tocar no acorde)
+**Recurso (qualidade da cifra).** Tocar num acorde no player abre um **popover com a pegada**
+no violão — fecha o Tema C. Aliado ao princípio "uma pegada errada é pior que nenhuma".
+- **Híbrido (decisão do dono):** formas abertas **curadas e verificadas à mão** (C, A, G, E, D,
+  Am, Em, Dm, os 7/m7/7M/sus comuns e slashes como C/E, D/F#, G/B) + um **motor de templates
+  móveis** (pestanas E-shape/A-shape) que cobre maj/m/7/m7/maj7/sus4/sus2 nos 12 tons. O que o
+  motor não voiceia com segurança → **"sem diagrama"** honesto.
+- **Reusa a fonte da verdade:** `parseChord` (raiz/qualidade/baixo) e `NOTE_IDX`. No player o
+  texto do acorde já é a **forma com capô** (`ctxShape`), então o diagrama mostra a pegada que
+  a pessoa **realmente faz** — sem recalcular capô.
+- **`7M` = sétima maior (pt-BR):** o `chordIntervals` trata `7M`/`M7`/`maj7` como sétima maior
+  e `7` sozinho como dominante.
+- **Render SVG** tema-aware (claro/escuro): grade 6×5, bolinhas, `x`/`o`, **pestana** e número
+  da casa-base. **Toque no acorde** abre o popover (na rolagem e na página, sem virar página);
+  tocar fora fecha.
+- **Validação por NOTAS (o teste forte):** o teste **calcula as notas que cada forma gera** e
+  confere que são só notas do acorde e contêm a raiz — para as 12 raízes × qualidades **e para
+  todas as formas curadas**. Pegada com nota errada **não passa no CI**.
+- **Limites honestos (MVP):** uma posição por acorde; `dim`/`aug`/`m7b5`/`6` só quando há forma
+  curada (senão "sem diagrama"); slash exótico mostra a forma base; só violão padrão. Outras
+  posições, cavaco/ukulele e afinações ficam pra incrementos futuros (ver `PLANO-diagramas-acorde.md`).
+- **Por dentro:** `OPEN`, `chordIntervals`, `qualityFamily`, `TPL_E`/`TPL_A`, `placeTemplate`,
+  `fingering`, `chordSvg`, `showChordDiagram`. **132 verificações**, zero erro de JS.
+
+---
+
 ## v0.24.0 — "Última vez que tocamos" (derivado das escalas confirmadas)
 **Recurso (repertório / uso ao vivo).** Mostra, em cada cifra, **quando foi tocada pela
 última vez** — pra não repetir a mesma música todo domingo e dar vez às esquecidas.

@@ -668,6 +668,59 @@ const tog = await page.evaluate(() => {
 ok(tog.before === false && tog.after === true, "Botão 'Culto realizado' confirma a escala");
 ok(/realizado/i.test(tog.label), "Botão reflete o estado confirmado (✓ Culto realizado)");
 
+// ===== v0.25.0 — diagramas de acorde =====
+const dia = await page.evaluate(() => {
+  const iv = q => chordIntervals(q).join(",");
+  // pegada por NOTAS: a forma só pode soar notas DO acorde e tem que conter a raiz
+  function soundsOf(fr){ const s = new Set(); fr.forEach((f, i) => { if (f >= 0) s.add((STR_PC[i] + f) % 12); }); return s; }
+  function check(name){
+    const fg = fingering(name); if (!fg) return { name, none: true };
+    const pc = parseChord(name), root = NOTE_IDX[pc.root];
+    const need = new Set(chordIntervals(pc.suffix).map(x => (root + x) % 12));
+    const got = soundsOf(fg.frets);
+    let subset = true; got.forEach(p => { if (!need.has(p)) subset = false; });
+    return { name, subset, hasRoot: got.has(root) };
+  }
+  const names = [];
+  ["C", "D", "E", "F", "G", "A", "B", "C#", "Eb", "F#", "Ab", "Bb"].forEach(r =>
+    ["", "m", "7", "m7", "7M", "sus4"].forEach(q => names.push(r + q)));
+  Object.keys(OPEN).forEach(k => names.push(k));   // valida TODAS as formas curadas por notas
+  const results = names.map(check);
+  return {
+    maj: iv(""), m: iv("m"), m7: iv("m7"), maj7: iv("7M"), dom7: iv("7"),
+    sus4: iv("sus4"), m7b5: iv("m7b5"), dim: iv("dim"),
+    results, none: fingering("Cxyz9") === null, openC: JSON.stringify(fingering("C").frets),
+    barreF: fingering("F") && fingering("F").barre ? fingering("F").barre.fret : null,
+  };
+});
+ok(dia.maj === "0,4,7" && dia.m === "0,3,7" && dia.m7 === "0,3,7,10" && dia.maj7 === "0,4,7,11" && dia.dom7 === "0,4,7,10",
+   "chordIntervals: tríades e sétimas (incl. 7M = sétima maior pt-BR)");
+ok(dia.sus4 === "0,5,7" && dia.m7b5 === "0,3,6,10" && dia.dim === "0,3,6", "chordIntervals: sus4 / m7b5 / dim");
+const bad = dia.results.filter(r => !r.none && (!r.subset || !r.hasRoot)).map(r => r.name);
+ok(bad.length === 0, "Toda pegada (curada + gerada) só soa notas do acorde e tem a raiz" + (bad.length ? ": " + bad.join(",") : ""));
+ok(dia.openC === "[-1,3,2,0,1,0]", "Forma aberta de C confere (x32010)");
+ok(dia.barreF === 1, "F vira pestana na 1ª casa (E-shape móvel)");
+ok(dia.none === true, "Acorde sem forma confiável → fingering null (sem diagrama honesto)");
+// toque no acorde abre o diagrama; tocar fora fecha
+await page.evaluate(() => {
+  songs.length = 0;
+  songs.push({ id: "dx", title: "Diag", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C  G  Am  F\nletra de teste" });
+  saveSongs(); openPlayer("dx");
+});
+await page.waitForTimeout(200);
+await page.locator("#p-body .chord").first().click();
+await page.waitForTimeout(150);
+const shown = await page.evaluate(() => ({
+  open: !document.getElementById("chorddiag").classList.contains("hidden"),
+  name: (document.querySelector("#chorddiag .cd-name") || {}).textContent,
+  svg: !!document.querySelector("#chorddiag svg"),
+}));
+ok(shown.open && shown.svg, "Tocar no acorde abre o diagrama (SVG)");
+ok(shown.name === "C", "Diagrama mostra o acorde tocado (C)");
+await page.evaluate(() => document.getElementById("chorddiagbg").click());
+await page.waitForTimeout(100);
+ok(await page.evaluate(() => document.getElementById("chorddiag").classList.contains("hidden")), "Tocar fora fecha o diagrama");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

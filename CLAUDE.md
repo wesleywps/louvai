@@ -102,7 +102,7 @@ PLANO atualizado se aplicável · `npm test` verde.
     **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`) e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~123 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~132 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -119,8 +119,8 @@ PLANO atualizado se aplicável · `npm test` verde.
   **concluídos** (registro histórico; status no topo de cada um).
 - `PLANO-compartilhar-link.md` — plano de compartilhar por link auto-importável
   (serverless) + hospedar no GitHub Pages — **implementado na v0.21.0** (resta hospedar).
-- `PLANO-diagramas-acorde.md` — plano **decidido, aguardando OK pra executar**: diagramas
-  de acorde (híbrido curado + motor de templates; violão 6 cordas; toque no acorde → popover).
+- `PLANO-diagramas-acorde.md` — diagramas de acorde (híbrido curado + motor de templates;
+  violão 6 cordas; toque no acorde → popover) — **implementado na v0.25.0**.
 - `.gitignore` — ignora `node_modules/`, as cópias `louvai-v*.html` e o
   `COMMIT_MSG_tmp.txt`.
 - `CLAUDE.md` — este guia.
@@ -136,6 +136,12 @@ PLANO atualizado se aplicável · `npm test` verde.
 - **Render:** `renderCifra(body, semis, showChords, ctx, hideTabs)` — `ctx` é o
   contexto de grafia (`spellCtx`); trata seção sozinha, `[Seção] + acordes` na mesma
   linha, linha de acordes, letra com `[C]` inline, e ocultação de tablatura.
+- **Diagramas de acorde (v0.25.0):** reusa `parseChord`/`NOTE_IDX`. `chordIntervals(suffix)`
+  (qualidade→intervalos; `7M`=sétima maior), `qualityFamily` (assinatura→família de template),
+  `OPEN` (formas curadas), `TPL_E`/`TPL_A`+`placeTemplate` (pestanas móveis), `fingering(nome)`
+  (curada → template → null/"sem diagrama"), `chordSvg` (grade 6×5 SVG tema-aware) e
+  `showChordDiagram` (popover). Gatilho: `pointerup` no `#p-body` com `.chord` (toque parado,
+  prioridade sobre virar-página). No player o acorde já é a **forma com capô** (`ctxShape`).
 - **Corretor do editor:** `lintCifra` + `runLint`.
 - **Importar texto colado:** `parseImport` e `isMeta` (regras de limpeza do
   Cifra Club: remove `Tom:`, `Capotraste`, `Cifra:`, `Favoritar`, URLs…).
@@ -199,14 +205,14 @@ PLANO atualizado se aplicável · `npm test` verde.
 
 ## Próximos passos
 Já entregues: redesign visual (v0.10.0–v0.13.x), grafia dos acordes (v0.16.0–v0.17.0),
-modos de leitura (v0.14.0–v0.15.x), Apresentação enxuta + "livro" (v0.18.0–v0.19.0) e
-**compartilhar por link** auto-importável (v0.21.0 — ver `PLANO-compartilhar-link.md`).
+modos de leitura (v0.14.0–v0.15.x), Apresentação enxuta + "livro" (v0.18.0–v0.19.0),
+**compartilhar por link** (v0.21.0), aviso de duplicado + **backup com rede de segurança**
+(v0.22.0–v0.23.0), **"última vez que tocamos"** (v0.24.0) e **diagramas de acorde** (v0.25.0).
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). Ordem sugerida agora:
 1. **Hospedar + validar o link em campo** (tarefa do dono): publicar no GitHub Pages
    (passo a passo no `README` / `PLANO-compartilhar-link.md`) e testar o link entre celulares.
-2. **Validação visual no celular** (dark/light) — redesign, Modo Página e a barra
-   compacta da Apresentação só se confirmam de verdade na tela do palco.
-3. **PWA instalável + backup seguro** (ícone, 100% offline; data do último backup,
-   tela de restaurar) — fecha o offline do app hospedado.
-4. **"Última vez que tocamos"** (derivado das escalas) e **transferência por QR Code**.
-5. **Diagramas de acorde** (pegada ao tocar no acorde) — fecha o Tema C.
+2. **Validação visual no celular** (dark/light) — redesign, Modo Página, barra compacta da
+   Apresentação e o popover do diagrama de acorde só se confirmam de verdade na tela do palco.
+3. **Ordenar por menos tocadas** (usa a recência da v0.24.0) e **QR Code**.
+4. **PWA instalável** (ícone, 100% offline) — fecha o offline do app hospedado e **encerra a
+   regra "arquivo único"** (ver seção "Horizonte").

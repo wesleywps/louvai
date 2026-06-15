@@ -384,6 +384,20 @@ input,textarea,select{font-family:inherit}
 .sheetitem:active{background:var(--panel2)}
 .sheetitem .ic{font-size:19px;width:24px;text-align:center}
 .sheetitem.danger{color:var(--danger)}
+/* diagrama de acorde (toque no acorde → popover com a pegada) */
+#chorddiagbg{position:fixed;inset:0;z-index:60}
+.chorddiag{position:fixed;z-index:61;background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;padding:9px 11px 7px;box-shadow:0 16px 44px -10px rgba(0,0,0,.55);
+  display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text)}
+.chorddiag .cd-name{font-weight:700;font-size:15px;letter-spacing:-.2px}
+.chorddiag .cd-none{font-size:13px;color:var(--muted);padding:8px 6px}
+.chorddiag svg{display:block}
+.chorddiag svg .grid{stroke:var(--line);stroke-width:1}
+.chorddiag svg .nut{fill:var(--text)}
+.chorddiag svg .dot{fill:var(--accent)}
+.chorddiag svg .barre{fill:var(--accent)}
+.chorddiag svg .mk{fill:var(--muted);font:700 11px system-ui,sans-serif}
+.chorddiag svg .lbl{fill:var(--muted);font:600 10px system-ui,sans-serif}
 /* respeita o "Reduzir movimento" do sistema: sem fade entre telas, sem slide do
    sheet, sem bounce no toque — útil no palco e p/ sensibilidade vestibular */
 @media (prefers-reduced-motion: reduce){
@@ -572,6 +586,9 @@ input,textarea,select{font-family:inherit}
   <div id="sheet-note" class="sheetnote hidden"></div>
   <div id="sheet-body"></div>
 </div>
+<!-- Diagrama de acorde (pegada) — abre ao tocar num acorde no player -->
+<div id="chorddiagbg" class="hidden"></div>
+<div id="chorddiag" class="chorddiag hidden" aria-live="polite"></div>
 <!-- Seletor de música (para montar a escala) -->
 <div class="sheetbg" id="pickbg"></div>
 <div class="sheet" id="picksheet">
@@ -638,7 +655,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.24.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.25.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -714,6 +731,105 @@ function parseChord(raw){
   const root = rm[1], suffix = rm[2];
   if(!QUAL_RX.test(suffix)) return null;                // valida a qualidade
   return { root, suffix, bass };
+}
+
+/* ===== Diagramas de acorde (violão 6 cordas, afinação padrão E-A-D-G-B-E) =====
+   Híbrido: formas abertas CURADAS (idiomáticas) + motor de templates móveis
+   (pestanas E-shape/A-shape) pro resto. Reaproveita parseChord/NOTE_IDX. No player
+   o texto do acorde já é a FORMA (capo-aware), então o diagrama usa o que está escrito.
+   O que o motor não voiceia com segurança → "sem diagrama" (melhor que pegada errada). */
+const STR_PC=[4,9,2,7,11,4];   // classe de altura das cordas soltas, 6ª→1ª (mi lá ré sol si mi)
+// formas abertas verificadas à mão: [s6..s1], -1 = corda muda, 0 = solta
+const OPEN={
+  "C":[-1,3,2,0,1,0],"Cmaj7":[-1,3,2,0,0,0],"C7M":[-1,3,2,0,0,0],"C7":[-1,3,2,3,1,0],"Cadd9":[-1,3,2,0,3,0],
+  "A":[-1,0,2,2,2,0],"Am":[-1,0,2,2,1,0],"A7":[-1,0,2,0,2,0],"Am7":[-1,0,2,0,1,0],"Amaj7":[-1,0,2,1,2,0],"A7M":[-1,0,2,1,2,0],"Asus4":[-1,0,2,2,3,0],"Asus2":[-1,0,2,2,0,0],
+  "G":[3,2,0,0,0,3],"G7":[3,2,0,0,0,1],"Gmaj7":[3,2,0,0,0,2],"G7M":[3,2,0,0,0,2],
+  "E":[0,2,2,1,0,0],"Em":[0,2,2,0,0,0],"E7":[0,2,0,1,0,0],"Em7":[0,2,0,0,0,0],"Emaj7":[0,2,1,1,0,0],"E7M":[0,2,1,1,0,0],"Esus4":[0,2,2,2,0,0],
+  "D":[-1,-1,0,2,3,2],"Dm":[-1,-1,0,2,3,1],"D7":[-1,-1,0,2,1,2],"Dmaj7":[-1,-1,0,2,2,2],"D7M":[-1,-1,0,2,2,2],"Dm7":[-1,-1,0,2,1,1],"Dsus4":[-1,-1,0,2,3,3],"Dsus2":[-1,-1,0,2,3,0],
+  "C/E":[0,3,2,0,1,0],"C/G":[3,3,2,0,1,0],"D/F#":[2,-1,0,2,3,2],"G/B":[-1,2,0,0,0,3]
+};
+// qualidade (suffix do parseChord) → intervalos em semitons. Generosa: na dúvida, tríade.
+function chordIntervals(suffix){
+  let s=String(suffix||"").replace(/[()\s]/g,"")
+        .replace(/°|º/g,"dim").replace(/ø|∅/g,"m7b5").replace(/Δ/g,"maj7");
+  let third=4, fifth=7;
+  if(/^min/.test(s)){ third=3; s=s.slice(3); }
+  else if(/^-/.test(s)){ third=3; s=s.slice(1); }
+  else if(/^m(?!aj)/.test(s)){ third=3; s=s.slice(1); }   // 'm' minúsculo = menor; 'M'/'maj' = maior
+  const isAdd=/add/.test(s);
+  if(/sus2/.test(s)) third=2; else if(/sus/.test(s)) third=5;
+  if(/dim/.test(s)){ third=3; fifth=6; }
+  if(/aug|\+|#5/.test(s)) fifth=8;
+  if(/b5/.test(s)) fifth=6;
+  const iv=new Set([0,third,fifth]);
+  if(/dim7/.test(s)) iv.add(9);
+  else if(/(maj7|M7|7M|maj9|maj13)/.test(s)) iv.add(11);     // 7M / M7 / maj7 = sétima MAIOR (pt-BR)
+  else if(!isAdd && /(7|9|11|13)/.test(s)) iv.add(10);        // 7 sozinho = sétima menor (dominante)
+  else if(/6/.test(s)) iv.add(9);
+  if(/9/.test(s)) iv.add(2);
+  if(/(add4|11)/.test(s)) iv.add(5);
+  return [...iv].sort((a,b)=>a-b);
+}
+// família de template pela assinatura de intervalos (só as que temos forma móvel confiável)
+const FAM_SIG={"0,4,7":"maj","0,3,7":"m","0,4,7,10":"7","0,3,7,10":"m7","0,4,7,11":"maj7","0,5,7":"sus4","0,2,7":"sus2"};
+function qualityFamily(suffix){ return FAM_SIG[chordIntervals(suffix).join(",")]||null; }
+// templates móveis (pestana): E-shape (raiz na 6ª corda) e A-shape (raiz na 5ª)
+const TPL_E={maj:[0,2,2,1,0,0],m:[0,2,2,0,0,0],"7":[0,2,0,1,0,0],m7:[0,2,0,0,0,0],maj7:[0,2,1,1,0,0],sus4:[0,2,2,2,0,0]};
+const TPL_A={maj:[-1,0,2,2,2,0],m:[-1,0,2,2,1,0],"7":[-1,0,2,0,2,0],m7:[-1,0,2,0,1,0],maj7:[-1,0,2,1,2,0],sus4:[-1,0,2,2,3,0],sus2:[-1,0,2,2,0,0]};
+function placeTemplate(fam,rootPc,name){
+  const rE=(rootPc-STR_PC[0]+12)%12, rA=(rootPc-STR_PC[1]+12)%12;   // casa da raiz na 6ª e na 5ª corda
+  let useE = !!TPL_E[fam] && (!TPL_A[fam] || rE<=rA);               // escolhe a posição mais baixa
+  if(fam==="sus2") useE=false;                                     // sus2 só tem forma A confiável
+  const tpl=useE?TPL_E[fam]:TPL_A[fam]; if(!tpl) return null;
+  const r=useE?rE:rA;
+  const frets=tpl.map(o=> o<0?-1:o+r);
+  let barre=null;
+  if(r>0){ const at=frets.map((f,i)=>f===r?i:-1).filter(i=>i>=0); if(at.length>=2) barre={fret:r,from:at[0],to:5}; }
+  return {frets,name,barre};
+}
+// pegada de um acorde: forma curada se houver, senão template; senão null (sem diagrama)
+function fingering(name){
+  name=String(name||"").trim();
+  if(OPEN[name]) return {frets:OPEN[name],name,barre:null};
+  const pc=parseChord(name); if(!pc) return null;
+  const rootPc=NOTE_IDX[pc.root]; if(rootPc==null) return null;
+  const fam=qualityFamily(pc.suffix); if(!fam) return null;
+  return placeTemplate(fam,rootPc,name);
+}
+// desenha a grade 6×5 (SVG, tema-aware): bolinhas, x/o, pestana, número da casa-base
+function chordSvg(fg){
+  const f=fg.frets, pos=f.filter(x=>x>0);
+  const maxF=pos.length?Math.max(...pos):0, minF=pos.length?Math.min(...pos):0;
+  const ROWS=5, start = maxF<=5?1:minF;
+  const W=104,H=128,L=16,T=26,R=16,B=14, cols=6;
+  const gw=(W-L-R)/(cols-1), gh=(H-T-B)/ROWS, X=i=>L+i*gw, Y=j=>T+j*gh;
+  let p="";
+  for(let i=0;i<cols;i++) p+=`<line class="grid" x1="${X(i)}" y1="${T}" x2="${X(i)}" y2="${T+ROWS*gh}"/>`;
+  for(let j=0;j<=ROWS;j++) p+=`<line class="grid" x1="${L}" y1="${Y(j)}" x2="${W-R}" y2="${Y(j)}"/>`;
+  if(start===1) p+=`<rect class="nut" x="${L-1}" y="${T-3}" width="${W-L-R+2}" height="3"/>`;
+  else p+=`<text class="lbl" x="${L-5}" y="${T+gh*0.72}" text-anchor="end">${start}ª</text>`;
+  for(let i=0;i<cols;i++){ const v=f[i];
+    if(v===0) p+=`<text class="mk" x="${X(i)}" y="${T-8}" text-anchor="middle">o</text>`;
+    else if(v<0) p+=`<text class="mk" x="${X(i)}" y="${T-8}" text-anchor="middle">×</text>`; }
+  if(fg.barre && fg.barre.fret>=start && fg.barre.fret<start+ROWS){
+    const row=fg.barre.fret-start, y=Y(row)+gh/2;
+    p+=`<rect class="barre" x="${X(fg.barre.from)-4}" y="${y-6}" width="${X(fg.barre.to)-X(fg.barre.from)+8}" height="12" rx="6"/>`;
+  }
+  for(let i=0;i<cols;i++){ const v=f[i];
+    if(v>0 && v>=start && v<start+ROWS) p+=`<circle class="dot" cx="${X(i)}" cy="${Y(v-start)+gh/2}" r="5.5"/>`; }
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${p}</svg>`;
+}
+function hideChordDiagram(){ $("#chorddiag").classList.add("hidden"); $("#chorddiagbg").classList.add("hidden"); }
+function showChordDiagram(name, anchor){
+  const fg=fingering(name), box=$("#chorddiag");
+  box.innerHTML='<div class="cd-name">'+esc(name)+'</div>'+(fg?chordSvg(fg):'<div class="cd-none">sem diagrama 🙂</div>');
+  $("#chorddiagbg").classList.remove("hidden"); box.classList.remove("hidden");
+  // posiciona perto do acorde tocado, clampado na viewport (mede com o tamanho real)
+  box.style.left="0px"; box.style.top="0px";
+  const r=anchor.getBoundingClientRect(), bw=box.offsetWidth, bh=box.offsetHeight;
+  let left=r.left+r.width/2-bw/2; left=Math.max(8,Math.min(window.innerWidth-bw-8,left));
+  let top=r.bottom+8; if(top+bh>window.innerHeight-8) top=r.top-bh-8;
+  box.style.left=left+"px"; box.style.top=Math.max(8,top)+"px";
 }
 
 /* Transpõe uma nota preservando o intervalo. `ctx` = {letterStep, destFlat}.
@@ -1105,6 +1221,8 @@ $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings
 $("#scrollbar-toggle").onclick=()=>{settings.showScrollbar=!settings.showScrollbar;saveSettings();const b=$("#scrollbar-toggle");b.classList.toggle("on",!!settings.showScrollbar);b.setAttribute("aria-pressed",String(!!settings.showScrollbar));applyScrollbar();};
 function exitPlayer(){   // voltar do player — usado pelo ← normal E pelo ← da barra compacta
   stopScroll();
+  hideChordDiagram();   // não deixa um diagrama de acorde aberto sobre a lista
+
   $("#view-player").classList.remove("present");   // desliga o layout compacto da Apresentação
   const b=$("#p-body");   // ao sair, limpa o estado de página (não deixa DOM paginado órfão na view escondida)
   b.classList.remove("paged"); b.style.removeProperty("--page-h"); b.innerHTML=""; delete b.dataset.page; delete b.dataset.pages;
@@ -1292,12 +1410,18 @@ function goPage(d){
 let pgDownX=0,pgDownY=0,pgDownT=0;
 $("#p-body").addEventListener("pointerdown",e=>{ pgDownX=e.clientX; pgDownY=e.clientY; pgDownT=Date.now(); });
 $("#p-body").addEventListener("pointerup",e=>{
-  if(!isPageMode()) return;
-  // só ignora se foi ARRASTE (mexeu) — um toque parado, mesmo demorado, ainda vira página;
+  // só ignora se foi ARRASTE (mexeu) — um toque parado, mesmo demorado, ainda conta;
   // limiar de 16px acomoda o tremor natural do dedo no palco.
-  if(Math.abs(e.clientX-pgDownX)>16 || Math.abs(e.clientY-pgDownY)>16 || Date.now()-pgDownT>900) return;
+  const moved = Math.abs(e.clientX-pgDownX)>16 || Math.abs(e.clientY-pgDownY)>16;
+  // toque PARADO em cima de um acorde abre o diagrama (vale na rolagem e na página),
+  // e não vira a página — tem prioridade sobre o virar-página.
+  const ch = !moved && e.target.closest && e.target.closest(".chord");
+  if(ch){ showChordDiagram(ch.textContent, ch); return; }
+  if(!isPageMode()) return;
+  if(moved || Date.now()-pgDownT>900) return;
   goPage(e.clientX < window.innerWidth/2 ? -1 : 1);
 });
+$("#chorddiagbg").onclick=hideChordDiagram;
 /* DESLIZAR nativo (scroll-snap) atualiza o índice quando a rolagem assenta */
 let pgScrollT=null;
 $("#p-body").addEventListener("scroll",()=>{
