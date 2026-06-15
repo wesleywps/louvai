@@ -123,6 +123,8 @@ PLANO atualizado se aplicável · `npm test` verde.
   violão 6 cordas; toque no acorde → popover) — **implementado na v0.25.0**.
 - `PLANO-repertorio-link.md` — repertório + escalas num snapshot único (`louvai.json`)
   hospedado, com "Atualizar do link" (pull, mão única) — **implementado na v0.26.0**.
+- `PLANO-publicar-nuvem.md` — plano **decidido, aguardando OK pra executar**: "Publicar na
+  nuvem" (escrever o `louvai.json` do celular via token fino do GitHub + API Contents).
 - `.gitignore` — ignora `node_modules/`, as cópias `louvai-v*.html` e o
   `COMMIT_MSG_tmp.txt`.
 - `CLAUDE.md` — este guia.
