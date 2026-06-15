@@ -774,7 +774,7 @@ ok(gh.bad === null, "ghRepoFromUrl: URL não-GitHub → null");
 // base64 padrão (o que a API do GitHub espera)
 const b64 = await page.evaluate(() => ({ s: bytesToB64(new TextEncoder().encode("Louvai")), dec: atob(bytesToB64(new TextEncoder().encode("Louvai"))) }));
 ok(b64.s === btoa("Louvai") && b64.dec === "Louvai", "bytesToB64 produz base64 padrão (decodifica de volta)");
-// publishRepo: busca o conteúdo atual (GET), mostra o diff numa confirmação, e só então escreve
+// publishRepo (fluxo real): abrir a folha da nuvem → tocar Publicar → ela FECHA e abre a confirmação
 await page.evaluate(async () => {
   songs.length = 0; escalas.length = 0;
   songs.push({ id: "pubx", title: "Pub", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });
@@ -788,16 +788,20 @@ await page.evaluate(async () => {
     return ((opts && opts.method) === "PUT")
       ? { ok: true, status: 200, json: async () => ({ content: {} }) }
       : { ok: true, status: 200, json: async () => ({ sha: "deadbeef", content: b64 }) }; };
-  await publishRepo();   // abre a confirmação com o diff (não publica ainda)
+  openRepoSheet();                                   // abre a folha "Repertório na nuvem"
 });
-await page.waitForTimeout(180);
+await page.waitForTimeout(150);                       // deixa a folha abrir de fato (fiel ao uso real)
+await page.evaluate(() => document.getElementById("repo-publish").click());   // toca "Publicar na nuvem"
+await page.waitForTimeout(220);
 const conf = await page.evaluate(() => ({
+  repoOpen: document.getElementById("reposheet").classList.contains("show"),
   shown: document.getElementById("sheet").classList.contains("show"),
   title: document.getElementById("sheet-title").textContent,
   note: document.getElementById("sheet-note").textContent,
   items: [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent).join("|"),
   published: !!settings.repoPublishedAt,
 }));
+ok(!conf.repoOpen, "A folha 'Repertório na nuvem' fecha ao abrir a confirmação (não empilha por cima)");
 ok(conf.shown && /Publicar na nuvem\?/.test(conf.title), "Publicar abre confirmação ANTES de escrever");
 ok(/\+1/.test(conf.items) && /−1/.test(conf.note), "Diff mostra +1 cifra nova e −1 removida (rede de segurança)");
 ok(/REMOVER/.test(conf.note), "Aviso de remoção aparece quando o diff tira itens da nuvem");
@@ -820,6 +824,7 @@ ok(pub.get && pub.put, "Confirmar publica: busca o sha (GET) e escreve (PUT)");
 ok(pub.auth === "Bearer tok123", "PUT vai com Authorization: Bearer <token>");
 ok(pub.hasSha && /"type":"louvai-full"/.test(pub.content), "PUT envia o snapshot (louvai-full) em base64, com o sha");
 ok(pub.at, "Publicar registra a data da última publicação");
+ok(/Publicado/.test(await page.locator("#toast").textContent()), "Toast confirma o envio (Publicado na nuvem ✓)");
 // sem token / URL não-GitHub: avisa sem tocar a rede
 await page.evaluate(async () => { settings.ghToken = ""; settings.repoUrl = "https://wesleywps.github.io/louvai/louvai.json"; await publishRepo(); });
 await page.waitForTimeout(80);

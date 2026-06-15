@@ -8,6 +8,20 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.27.3 — Correção: folha de publicar empilhava e o "publicado" não aparecia
+**Bugfix (nuvem/UI).** Ao tocar "Publicar na nuvem", a confirmação (e os detalhes) abriam
+**atrás** da folha "Repertório na nuvem" — porque a folha **não era fechada** antes. Como o
+`#reposheet` vem depois do `#sheet` no HTML (mesmo `z-index`), ele **pintava por cima** da
+confirmação; e a folha aberta deixava o **toast "Publicado ✓"** passar despercebido.
+- **Correção:** `publishRepo` agora **fecha a folha da nuvem** (`closeRepoSheet`) **antes** de
+  abrir a confirmação — sem empilhamento. O toast de sucesso ficou explícito: **"Publicado na
+  nuvem ✓ (+N −M cifras)"**, agora visível.
+- **Regressão:** teste cobre o fluxo real (abrir a folha → tocar Publicar) e verifica que a folha
+  **fecha** ao abrir a confirmação e que o **toast de envio** aparece após confirmar.
+  **157 verificações**, zero erro de JS.
+
+---
+
 ## v0.27.2 — "Ver detalhes" no diff de publicação (nomes que entram/saem)
 **Recurso (nuvem).** A confirmação de publicar (v0.27.1) mostrava só **contagens**. Agora tem
 **"Ver detalhes (nomes)"**: uma folha rolável listando os **títulos** das cifras/escalas que vão

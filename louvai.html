@@ -679,7 +679,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.27.2";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.27.3";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1821,6 +1821,7 @@ async function publishRepo(){
   if(cur==="__err__"){ toast("Não consegui acessar o repositório"); return; }
   // mostra o diff (e protege contra publicar de um aparelho desatualizado: "−40 cifras" = pare)
   const d=diffRepo(cur.data, fullEnvelope());
+  closeRepoSheet();   // fecha a folha da nuvem ANTES da confirmação (senão empilha por cima dela)
   openSheet(d.first?"Publicar pela 1ª vez?":"Publicar na nuvem?",[
     {ic:"☁",label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,cur.sha,d); }},
     {ic:"👁",label:"Ver detalhes (nomes)",fn:()=>{ closeSheet(); showPublishDetails(api,headers,cur.sha,d); }},
@@ -1849,7 +1850,7 @@ async function doPublish(api, headers, sha, d){
     if(typeof cur2==="string"){ toast("Mudou na nuvem — atualize e tente de novo"); return; }
     try{ res=await put(cur2.sha); }catch(e){ toast("Não consegui publicar — sem internet?"); return; }
   }
-  if(res.ok){ settings.repoPublishedAt=Date.now(); saveSettings(); toast("Publicado ✓"+diffLabel(d)); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
+  if(res.ok){ settings.repoPublishedAt=Date.now(); saveSettings(); toast("Publicado na nuvem ✓"+diffLabel(d)); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
   else if(res.status===401||res.status===403) toast("Token inválido ou sem permissão");
   else if(res.status===409) toast("Mudou na nuvem — atualize e tente de novo");
   else toast("Não consegui publicar (erro "+res.status+")");

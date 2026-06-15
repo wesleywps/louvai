@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.27.2**.
+seguir. Atualizado até a **v0.27.3**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -85,6 +85,7 @@ instalação complexa.
 | **v0.27.0** | recurso | **Publicar na nuvem:** o líder edita no celular e escreve o `louvai.json` direto, via API do GitHub (token fino, só no aparelho). 1ª publicação cria o arquivo; conflito (sha) tratado. Fecha o ciclo editar→Publicar / equipe→Atualizar, sem backend nosso. |
 | **v0.27.1** | recurso | **Diff ao publicar:** antes de escrever, mostra **+/− cifras e escalas** (comparado à nuvem) numa confirmação — feedback e **rede de segurança** (publicar de um aparelho desatualizado mostra "−N" e avisa antes de remover itens da nuvem). |
 | **v0.27.2** | recurso | **"Ver detalhes" no diff:** folha rolável com os **nomes** das cifras/escalas que entram (+) e saem (−, em vermelho) antes de publicar. |
+| **v0.27.3** | correção | **Folha de publicar empilhava:** a confirmação abria atrás da folha "Repertório na nuvem" e o toast "Publicado" não aparecia. Agora a folha fecha antes da confirmação e o toast de sucesso fica visível. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -251,4 +252,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.27.2.*
+*Última atualização deste roteiro: v0.27.3.*
