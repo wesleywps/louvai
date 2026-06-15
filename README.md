@@ -11,7 +11,7 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.27.1)
+## Recursos (v0.27.2)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
 - Repertório com busca e tags; criar/editar cifras; **importar colando do Cifra Club**.
@@ -24,8 +24,8 @@ para ter um ícone e abrir como app.
   no GitHub Pages e a equipe puxa com **"Atualizar do link"** — celular novo pega tudo de um
   link. O líder pode **"Publicar na nuvem"** direto do celular (escreve o `louvai.json` via API
   do GitHub, com um token fino que fica só no aparelho). Antes de publicar, mostra o **diff**
-  (quantas cifras/escalas vão entrar/sair) — feedback e rede de segurança. Mão única (líder
-  publica, equipe puxa), sem backend.
+  (quantas cifras/escalas vão entrar/sair, com **"ver detalhes"** mostrando os nomes) — feedback
+  e rede de segurança. Mão única (líder publica, equipe puxa), sem backend.
 - Player em **barra de uma linha** (prioriza a cifra): transposição com **grafia fiel
   ao tom** — preserva o que você escreveu e, ao subir/abaixar, escolhe ♯/♭ sozinho
   pelo tom de destino (Bb nunca vira A#, mesmo em acordes emprestados), capo, fonte,

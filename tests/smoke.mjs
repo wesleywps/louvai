@@ -801,8 +801,14 @@ const conf = await page.evaluate(() => ({
 ok(conf.shown && /Publicar na nuvem\?/.test(conf.title), "Publicar abre confirmação ANTES de escrever");
 ok(/\+1/.test(conf.items) && /−1/.test(conf.note), "Diff mostra +1 cifra nova e −1 removida (rede de segurança)");
 ok(/REMOVER/.test(conf.note), "Aviso de remoção aparece quando o diff tira itens da nuvem");
+ok(/detalhes/i.test(conf.items), "Confirmação oferece 'Ver detalhes (nomes)'");
 ok(conf.published === false, "Nada é publicado antes de confirmar");
-// confirma → escreve (PUT com Authorization + snapshot em base64 + sha)
+// "Ver detalhes" (2º item) → folha com os NOMES (Pub adicionada, Velha removida)
+await page.locator("#sheet-body .sheetitem").nth(1).click();
+await page.waitForTimeout(160);
+const det = await page.evaluate(() => [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent).join("|"));
+ok(/Pub/.test(det) && /Velha/.test(det), "Detalhes listam os nomes que entram (Pub) e saem (Velha)");
+// confirma a partir dos detalhes → escreve (PUT com Authorization + snapshot em base64 + sha)
 await page.locator("#sheet-body .sheetitem").first().click();
 await page.waitForTimeout(150);
 const pub = await page.evaluate(() => { const calls = window.__calls; window.fetch = window.__real;

@@ -8,6 +8,19 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.27.2 — "Ver detalhes" no diff de publicação (nomes que entram/saem)
+**Recurso (nuvem).** A confirmação de publicar (v0.27.1) mostrava só **contagens**. Agora tem
+**"Ver detalhes (nomes)"**: uma folha rolável listando os **títulos** das cifras/escalas que vão
+**entrar (+)** e **sair (−, em vermelho)** — dá pra conferir item a item antes de gravar (e
+publicar dali mesmo). Reforça a rede de segurança: você vê exatamente *quais* músicas sairiam da
+nuvem se publicasse de um aparelho desatualizado.
+- **Por dentro:** `diffRepo` agora devolve os **nomes** (`sAddN`/`sRemN`/`eAddN`/`eRemN`, não só
+  contagens); `showPublishDetails` monta a folha (cap de 60 por lista; removidas com `.danger`).
+- **Testes:** confirmação oferece "Ver detalhes"; a folha lista o nome que entra e o que sai.
+  **155 verificações**, zero erro de JS.
+
+---
+
 ## v0.27.1 — Diff ao publicar (quantas cifras +/− e confirmação)
 **Recurso/segurança (nuvem).** Publicar agora **mostra o que vai mudar** antes de escrever — e
 isso é também uma **rede de segurança**.

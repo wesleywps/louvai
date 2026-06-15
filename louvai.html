@@ -679,7 +679,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.27.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.27.2";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1785,14 +1785,16 @@ async function ghGetCurrent(api, headers){
     return {sha:j.sha||null, data};
   }catch(e){ return "__net__"; }
 }
-// diff por id entre o que está na nuvem (old) e o que vai (new): quantas cifras/escalas +/−
+// diff por id entre o que está na nuvem (old) e o que vai (new): contagens E nomes (+/−)
 function diffRepo(oldData, newData){
-  const ids=arr=>new Set((arr||[]).filter(x=>x&&x.id).map(x=>x.id));
-  const so=ids(oldData&&oldData.songs), sn=ids(newData.songs), eo=ids(oldData&&oldData.escalas), en=ids(newData.escalas);
-  let sAdd=0,sRem=0,eAdd=0,eRem=0;
-  sn.forEach(id=>{ if(!so.has(id)) sAdd++; }); so.forEach(id=>{ if(!sn.has(id)) sRem++; });
-  en.forEach(id=>{ if(!eo.has(id)) eAdd++; }); eo.forEach(id=>{ if(!en.has(id)) eRem++; });
-  return {first:!oldData, sAdd, sRem, eAdd, eRem, sTotal:(newData.songs||[]).length, eTotal:(newData.escalas||[]).length};
+  const map=arr=>{ const m=new Map(); (arr||[]).forEach(x=>{ if(x&&x.id) m.set(x.id, String(x.title||"(sem título)")); }); return m; };
+  const so=map(oldData&&oldData.songs), sn=map(newData.songs), eo=map(oldData&&oldData.escalas), en=map(newData.escalas);
+  const sAddN=[],sRemN=[],eAddN=[],eRemN=[];
+  sn.forEach((t,id)=>{ if(!so.has(id)) sAddN.push(t); }); so.forEach((t,id)=>{ if(!sn.has(id)) sRemN.push(t); });
+  en.forEach((t,id)=>{ if(!eo.has(id)) eAddN.push(t); }); eo.forEach((t,id)=>{ if(!en.has(id)) eRemN.push(t); });
+  return {first:!oldData, sAddN, sRemN, eAddN, eRemN,
+          sAdd:sAddN.length, sRem:sRemN.length, eAdd:eAddN.length, eRem:eRemN.length,
+          sTotal:(newData.songs||[]).length, eTotal:(newData.escalas||[]).length};
 }
 function diffLabel(d){
   if(d.first) return " ("+d.sTotal+" cifras, "+d.eTotal+" escalas)";
@@ -1821,8 +1823,21 @@ async function publishRepo(){
   const d=diffRepo(cur.data, fullEnvelope());
   openSheet(d.first?"Publicar pela 1ª vez?":"Publicar na nuvem?",[
     {ic:"☁",label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,cur.sha,d); }},
+    {ic:"👁",label:"Ver detalhes (nomes)",fn:()=>{ closeSheet(); showPublishDetails(api,headers,cur.sha,d); }},
     {ic:"✕",label:"Cancelar",fn:closeSheet},
   ], diffNote(d));
+}
+// folha rolável com os NOMES que entram (+) e saem (−, em vermelho); ainda dá pra publicar dali
+function showPublishDetails(api, headers, sha, d){
+  const rows=[
+    {ic:"☁",label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,sha,d); }},
+    {ic:"✕",label:"Cancelar",fn:closeSheet},
+  ];
+  const CAP=60, push=(arr,sign,pre)=>arr.slice(0,CAP).forEach(t=>rows.push({ic:sign,label:(pre||"")+t,danger:sign==="−"}));
+  push(d.sAddN,"+"); push(d.sRemN,"−");
+  push(d.eAddN,"+","escala: "); push(d.eRemN,"−","escala: ");
+  if(rows.length===2) rows.push({ic:"·",label:"Sem itens novos/removidos (só atualizações)."});
+  openSheet("O que vai mudar"+diffLabel(d), rows);
 }
 async function doPublish(api, headers, sha, d){
   const content=bytesToB64(new TextEncoder().encode(JSON.stringify(fullEnvelope())));
