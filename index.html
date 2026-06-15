@@ -376,6 +376,8 @@ input,textarea,select{font-family:inherit}
 .sheet .grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:6px auto 14px}
 .sheet h3{margin:0 6px 10px;font-size:17px;font-weight:700;letter-spacing:-.2px}
 .sheetnote{margin:-4px 6px 12px;font-size:13px;color:var(--muted);line-height:1.4}
+.repo-div{margin:16px 2px 8px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
 /* pontinho de "backup devido" no botão ↥ (rede de segurança) */
 #backupBtn{position:relative}
 #backupBtn.due::after{content:"";position:absolute;top:7px;right:7px;width:9px;height:9px;
@@ -615,6 +617,28 @@ input,textarea,select{font-family:inherit}
     font-size:13px;line-height:1.6;white-space:pre;outline:none"></textarea>
   <button class="btn primary" id="paste-go" style="width:100%;margin-top:10px">Reconhecer e preencher</button>
 </div>
+<!-- Repertório na nuvem: puxa um snapshot (cifras + escalas) publicado num link -->
+<div class="sheetbg" id="repobg"></div>
+<div class="sheet" id="reposheet">
+  <div class="grip"></div>
+  <h3>Repertório na nuvem</h3>
+  <div class="hint" style="margin:0 2px 8px">
+    Cole o link de um repertório publicado (ex.: no GitHub Pages). “Atualizar” baixa as
+    cifras e escalas e mescla no aparelho — mão única: você baixa, não escreve de volta.
+  </div>
+  <input id="repo-url" class="search" inputmode="url" placeholder="https://…/louvai.json" style="width:100%;margin-bottom:8px">
+  <div id="repo-status" class="sheetnote" style="margin:0 2px 12px"></div>
+  <button class="btn primary" id="repo-pull" style="width:100%">↓ Atualizar do link</button>
+  <button class="btn" id="repo-export" style="width:100%;margin-top:8px">↥ Exportar tudo (pra publicar)</button>
+  <div class="repo-div">Publicar (líder)</div>
+  <div class="hint" style="margin:0 2px 8px">
+    Cole um <b>token fino</b> do GitHub (Contents: escrever). Ele fica <b>só neste aparelho</b>
+    e só conversa direto com o GitHub. Você pode revogá-lo no GitHub quando quiser.
+  </div>
+  <input id="gh-token" class="search" type="password" autocomplete="off" placeholder="github_pat_… (token)" style="width:100%;margin-bottom:8px">
+  <button class="btn primary" id="repo-publish" style="width:100%">☁ Publicar na nuvem</button>
+  <button class="btn" id="repo-forget" style="width:100%;margin-top:8px">Remover token deste aparelho</button>
+</div>
 <!-- Ajustes do player (capo, fonte, só-letra, tabs, ♯/♭) — IDs preservados -->
 <div class="sheetbg" id="playerbg"></div>
 <div class="sheet" id="playersheet">
@@ -655,7 +679,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.25.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.27.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1596,12 +1620,13 @@ const slug=s=>(s||"cifra").normalize("NFD").replace(/[\u0300-\u036f]/g,"").repla
    (gzip quando h\u00e1 suporte) e em base64url no FRAGMENTO (#) da URL. O # nunca vai
    ao servidor, cabe payload grande e decodifica 100% no cliente (offline ao
    receber). Tudo vanilla \u2014 sem depend\u00eancia, mant\u00e9m o arquivo \u00fanico. */
-function bytesToB64url(bytes){
+function bytesToB64(bytes){
   // converte em blocos: String.fromCharCode.apply estoura a pilha com arrays grandes
   let bin=""; const CH=0x8000;
   for(let i=0;i<bytes.length;i+=CH) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH));
-  return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  return btoa(bin);                                   // base64 padrão (ex.: API do GitHub)
 }
+function bytesToB64url(bytes){ return bytesToB64(bytes).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
 function b64urlToBytes(s){
   s=String(s).replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4) s+="=";
   const bin=atob(s), out=new Uint8Array(bin.length);   // atob lan\u00e7a em base64 inv\u00e1lido (link corrompido) \u2014 quem chama trata
@@ -1697,9 +1722,106 @@ $("#backupBtn").onclick=()=>{
       shareLink(env,"Repertório Louvai",sendFile);
     }},
     {ic:"↧",label:"Restaurar de um arquivo (.json)",fn:()=>{closeSheet();$("#fileInput").click();}},
+    {ic:"☁",label:"Repertório na nuvem (link)…",fn:()=>{closeSheet();openRepoSheet();}},
   ],backupNote());
 };
 $("#importBtn").onclick=()=>$("#fileInput").click();
+
+/* ---------- Repertório na nuvem (pull de um snapshot publicado, mão única) ----------
+   Um arquivo louvai.json {songs, escalas} hospedado (GitHub Pages). A app BAIXA e mescla
+   (reusa importJSON). Escrever de volta exige login → fase online (fora de escopo). */
+function fullEnvelope(){ return {type:"louvai-full",version:1,app:APP_VERSION,songs,escalas}; }
+function exportFull(){
+  shareFile("louvai.json",JSON.stringify(fullEnvelope()),"Louvai — repertório + escalas");
+  recordBackup();   // snapshot completo também é um backup (o mais completo)
+}
+async function pullRepo(){
+  const url=(settings.repoUrl||"").trim();
+  if(!url){ toast("Cole o link do repertório primeiro"); return; }
+  let txt;
+  try{
+    // fura-cache só em http(s) (data:/blob: não aceitam query); no-store reforça
+    const u = /^https?:/i.test(url) ? url+(url.includes("?")?"&":"?")+"t="+Date.now() : url;
+    const res = await fetch(u,{cache:"no-store"});
+    if(!res.ok) throw new Error("http "+res.status);
+    txt = await res.text();
+  }catch(e){ toast("Não consegui buscar — sem internet?"); return; }
+  let data; try{ data=JSON.parse(txt); }catch(e){ toast("O link não tem um repertório válido"); return; }
+  const tp=String(data.type||"").replace(/^levita-/,"louvai-");
+  if(!/^louvai-(full|library|escala|song)$/.test(tp) && !Array.isArray(data) && !(data.title&&data.body)){
+    toast("O link não tem um repertório válido"); return;
+  }
+  settings.repoPulledAt=Date.now(); saveSettings();
+  importJSON(txt);   // reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
+}
+function repoStatus(){
+  const a=settings.repoPulledAt?"baixou "+fmtAgo(settings.repoPulledAt):"";
+  const b=settings.repoPublishedAt?"publicou "+fmtAgo(settings.repoPublishedAt):"";
+  return [a,b].filter(Boolean).join(" · ") || "Sem atividade ainda.";
+}
+// deriva owner/repo/path da URL de pull (GitHub Pages). Site de projeto: /REPO/PATH;
+// site de usuário (OWNER.github.io/PATH): repo = OWNER.github.io.
+function ghRepoFromUrl(url){
+  let u; try{ u=new URL(url); }catch(e){ return null; }
+  const m=u.hostname.match(/^([\w-]+)\.github\.io$/i); if(!m) return null;
+  const parts=u.pathname.replace(/^\/+/,"").split("/").filter(Boolean); if(!parts.length) return null;
+  if(parts.length>=2) return {owner:m[1], repo:parts[0], path:parts.slice(1).join("/")};
+  return {owner:m[1], repo:m[1]+".github.io", path:parts[0]};
+}
+// escreve o snapshot no louvai.json via API Contents do GitHub (token fino, do aparelho)
+async function publishRepo(){
+  const token=(settings.ghToken||"").trim();
+  if(!token){ toast("Cole um token do GitHub primeiro"); return; }
+  const r=ghRepoFromUrl((settings.repoUrl||"").trim());
+  if(!r){ toast("Publicar só funciona com URL do GitHub Pages"); return; }
+  const api="https://api.github.com/repos/"+r.owner+"/"+r.repo+"/contents/"+r.path;
+  const headers={Authorization:"Bearer "+token, Accept:"application/vnd.github+json"};
+  const content=bytesToB64(new TextEncoder().encode(JSON.stringify(fullEnvelope())));
+  const getSha=async()=>{
+    try{
+      const res=await fetch(api,{headers,cache:"no-store"});
+      if(res.status===404) return null;                       // 1ª publicação: cria o arquivo
+      if(res.status===401||res.status===403) return "__auth__";
+      if(!res.ok) return "__err__";
+      return (await res.json()).sha||null;
+    }catch(e){ return "__net__"; }
+  };
+  const put=sha=>{ const body={message:"atualiza louvai.json (v"+APP_VERSION+")",content}; if(sha) body.sha=sha;
+    return fetch(api,{method:"PUT",headers,body:JSON.stringify(body)}); };
+  let sha=await getSha();
+  if(sha==="__auth__"){ toast("Token inválido ou sem permissão"); return; }
+  if(sha==="__net__"){ toast("Não consegui publicar — sem internet?"); return; }
+  if(sha==="__err__"){ toast("Não consegui acessar o repositório"); return; }
+  let res; try{ res=await put(sha); }catch(e){ toast("Não consegui publicar — sem internet?"); return; }
+  if(res.status===409){                                       // sha velho (mudou na nuvem): rebusca e tenta 1x
+    const fresh=await getSha();
+    if(typeof fresh==="string" && fresh.startsWith("__")){ toast("Mudou na nuvem — atualize e tente de novo"); return; }
+    try{ res=await put(fresh); }catch(e){ toast("Não consegui publicar — sem internet?"); return; }
+  }
+  if(res.ok){ settings.repoPublishedAt=Date.now(); saveSettings(); toast("Publicado na nuvem ✓"); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
+  else if(res.status===401||res.status===403) toast("Token inválido ou sem permissão");
+  else if(res.status===409) toast("Mudou na nuvem — atualize e tente de novo");
+  else toast("Não consegui publicar (erro "+res.status+")");
+}
+function openRepoSheet(){
+  $("#repo-url").value=settings.repoUrl||"";
+  $("#gh-token").value=settings.ghToken||"";
+  $("#repo-status").textContent=repoStatus();
+  openS("#repobg","#reposheet","#repo-url");
+}
+function closeRepoSheet(){ closeS("#repobg","#reposheet"); }
+$("#repobg").onclick=closeRepoSheet;
+$("#repo-pull").onclick=()=>{
+  settings.repoUrl=$("#repo-url").value.trim(); saveSettings();
+  closeRepoSheet(); pullRepo();
+};
+$("#repo-export").onclick=()=>{ closeRepoSheet(); exportFull(); };
+$("#repo-publish").onclick=()=>{
+  settings.repoUrl=$("#repo-url").value.trim(); settings.ghToken=$("#gh-token").value.trim(); saveSettings();
+  publishRepo();   // mantém a folha aberta: mostra "Publicado ✓"/erro e permite reenviar no conflito
+};
+$("#repo-forget").onclick=()=>{ settings.ghToken=""; saveSettings(); $("#gh-token").value=""; toast("Token removido deste aparelho"); };
+
 $("#fileInput").onchange=e=>{
   const f=e.target.files[0]; if(!f)return;
   const r=new FileReader();
@@ -1751,6 +1873,7 @@ function importJSON(text){
   // descobre QUAIS cifras chegam (sem mexer em nada ainda) p/ detectar título repetido
   let incoming;
   if(tp==="louvai-escala"&&data.escala) incoming=data.songs||[];
+  else if(tp==="louvai-full") incoming=Array.isArray(data.songs)?data.songs:[];   // snapshot da nuvem
   else if(tp==="louvai-song"&&data.song) incoming=[data.song];
   else if(tp==="louvai-library"&&Array.isArray(data.songs)) incoming=data.songs;
   else if(Array.isArray(data)) incoming=data;
@@ -1772,23 +1895,35 @@ function importJSON(text){
   }
   doImport(data,tp,incoming,"both");   // sem conflito: comportamento de sempre
 }
+// funde UMA escala (dedup por id; só sobrescreve com updatedAt ≥). `remap` reescreve as
+// referências de cifra quando o usuário escolheu "manter as minhas". Retorna true se ADICIONOU.
+function mergeEscala(inc, remap){
+  if(!inc) return false;
+  inc.updatedAt=inc.updatedAt||Date.now();
+  if(Array.isArray(inc.items)) inc.items.forEach(it=>{ if(it&&it.songId&&remap&&remap[it.songId]) it.songId=remap[it.songId]; });
+  const ix=inc.id?escalas.findIndex(x=>x.id===inc.id):-1;
+  if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)) escalas[ix]=inc; return false; }
+  if(!inc.id||escalas.some(x=>x.id===inc.id)) inc.id=uid();
+  escalas.push(inc); return true;
+}
 function doImport(data,tp,incoming,policy){
-  // Escala (traz as cifras junto)
+  // Escala avulsa (traz as cifras junto)
   if(tp==="louvai-escala"&&data.escala){
     const {added,remap}=mergeSongs(incoming,policy);
-    // dedup por id como em mergeSongs: re-importar a mesma escala (ou uma versão
-    // corrigida) ATUALIZA a existente em vez de empilhar duplicatas na lista.
-    const inc=data.escala; inc.updatedAt=inc.updatedAt||Date.now();
-    // se o usuário escolheu "manter as minhas", a escala apontava p/ a cifra que NÃO
-    // entrou — remapeia a referência p/ a cifra equivalente que já existia no aparelho.
-    if(Array.isArray(inc.items)) inc.items.forEach(it=>{ if(it&&it.songId&&remap[it.songId]) it.songId=remap[it.songId]; });
-    const ix=inc.id?escalas.findIndex(x=>x.id===inc.id):-1;
-    if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)) escalas[ix]=inc; }   // só sobrescreve com versão igual/mais nova
-    else{ if(!inc.id||escalas.some(x=>x.id===inc.id)) inc.id=uid(); escalas.push(inc); }
+    mergeEscala(data.escala, remap);
     saveSongs(); saveEscalas();
     renderLibrary();            // cifras agregadas pela escala já aparecem na aba Cifras
     switchTab("escalas"); renderEscalas();
     toast("Escala importada"+(added?` (+${added} cifra(s))`:""));
+    return;
+  }
+  // Snapshot da nuvem: repertório + escalas juntos
+  if(tp==="louvai-full"){
+    const {added,updated,remap}=mergeSongs(incoming,policy);
+    let escAdd=0;
+    (data.escalas||[]).forEach(e=>{ if(mergeEscala(e, remap)) escAdd++; });
+    saveSongs(); saveEscalas(); renderLibrary(); renderEscalas();
+    toast("Atualizado: "+added+" cifra(s)"+(updated?", "+updated+" atual.":"")+(escAdd?", "+escAdd+" escala(s)":""));
     return;
   }
   const {added,updated}=mergeSongs(incoming,policy);
