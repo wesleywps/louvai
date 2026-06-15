@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.27.0**.
+seguir. Atualizado até a **v0.27.1**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -83,6 +83,7 @@ instalação complexa.
 | **v0.25.0** | recurso | **Diagramas de acorde:** tocar num acorde no player abre a pegada no violão (popover SVG). Híbrido — formas abertas curadas + motor de pestanas móveis (E/A-shape) pros 12 tons; "sem diagrama" honesto pro resto. Capo-aware (mostra a forma). Validado por notas no CI. |
 | **v0.26.0** | recurso | **Repertório + escalas por link (pull):** o líder publica um snapshot único `louvai.json` (cifras + escalas) no GitHub Pages; a equipe puxa com "Atualizar do link" e mescla (dedup por id/updatedAt). Mão única, sem backend. Complementa o link de WhatsApp da v0.21.0. |
 | **v0.27.0** | recurso | **Publicar na nuvem:** o líder edita no celular e escreve o `louvai.json` direto, via API do GitHub (token fino, só no aparelho). 1ª publicação cria o arquivo; conflito (sha) tratado. Fecha o ciclo editar→Publicar / equipe→Atualizar, sem backend nosso. |
+| **v0.27.1** | recurso | **Diff ao publicar:** antes de escrever, mostra **+/− cifras e escalas** (comparado à nuvem) numa confirmação — feedback e **rede de segurança** (publicar de um aparelho desatualizado mostra "−N" e avisa antes de remover itens da nuvem). |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -188,7 +189,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   `louvai.json` hospedado (GitHub Pages, CORS ok; o Drive não serve). Mão única (líder publica,
   equipe puxa). *(entregue na v0.26.0 — ver `PLANO-repertorio-link.md`)*
 - [x] **Publicar na nuvem do celular** — o líder escreve o `louvai.json` direto via API do
-  GitHub (token fino, só no aparelho); 1ª publicação cria o arquivo. *(entregue na v0.27.0 —
+  GitHub (token fino, só no aparelho); 1ª publicação cria o arquivo; **diff +/− cifras com
+  confirmação** antes de escrever (rede de segurança). *(entregue na v0.27.0–v0.27.1 —
   ver `PLANO-publicar-nuvem.md`)*
   - [ ] *Evolução (fase online):* sync de duas vias com login/OAuth e merge de conflito real.
 - [ ] **Compartilhar escala como texto formatado** para WhatsApp (além do `.json`).
@@ -227,7 +229,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > **"última vez que tocamos"** (recência via escalas confirmadas) na v0.24.0;
 > **diagramas de acorde** (pegada ao tocar, híbrido curado+motor) na v0.25.0 — fecha o Tema C;
 > **repertório + escalas por link** (pull de um snapshot do GitHub Pages) na v0.26.0;
-> **publicar na nuvem** (escrever o snapshot do celular via token do GitHub) na v0.27.0.
+> **publicar na nuvem** (escrever o snapshot do celular via token do GitHub) na v0.27.0,
+> com **diff +/− e confirmação** ao publicar na v0.27.1.
 
 ---
 
@@ -247,4 +250,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.27.0.*
+*Última atualização deste roteiro: v0.27.1.*

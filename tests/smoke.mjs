@@ -774,25 +774,43 @@ ok(gh.bad === null, "ghRepoFromUrl: URL não-GitHub → null");
 // base64 padrão (o que a API do GitHub espera)
 const b64 = await page.evaluate(() => ({ s: bytesToB64(new TextEncoder().encode("Louvai")), dec: atob(bytesToB64(new TextEncoder().encode("Louvai"))) }));
 ok(b64.s === btoa("Louvai") && b64.dec === "Louvai", "bytesToB64 produz base64 padrão (decodifica de volta)");
-// publishRepo com fetch stubado: busca o sha (GET) e escreve (PUT) com Authorization + base64
-const pub = await page.evaluate(async () => {
+// publishRepo: busca o conteúdo atual (GET), mostra o diff numa confirmação, e só então escreve
+await page.evaluate(async () => {
   songs.length = 0; escalas.length = 0;
   songs.push({ id: "pubx", title: "Pub", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });
   settings.repoUrl = "https://wesleywps.github.io/louvai/louvai.json"; settings.ghToken = "tok123";
   delete settings.repoPublishedAt;
-  const calls = [], real = window.fetch;
-  window.fetch = async (url, opts) => { calls.push({ url: String(url), opts: opts || {} });
+  // a nuvem tem 1 cifra ("old1") que NÃO existe local → diff esperado: +1 (pubx) / −1 (old1)
+  const cloud = { type: "louvai-full", songs: [{ id: "old1", title: "Velha", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" }], escalas: [] };
+  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(cloud))));
+  window.__calls = []; window.__real = window.fetch;
+  window.fetch = async (url, opts) => { window.__calls.push({ url: String(url), opts: opts || {} });
     return ((opts && opts.method) === "PUT")
       ? { ok: true, status: 200, json: async () => ({ content: {} }) }
-      : { ok: true, status: 200, json: async () => ({ sha: "deadbeef" }) }; };
-  try { await publishRepo(); } finally { window.fetch = real; }
-  const put = calls.find(c => c.opts.method === "PUT");
-  let body = {}; try { body = JSON.parse(put.opts.body); } catch (e) {}
+      : { ok: true, status: 200, json: async () => ({ sha: "deadbeef", content: b64 }) }; };
+  await publishRepo();   // abre a confirmação com o diff (não publica ainda)
+});
+await page.waitForTimeout(180);
+const conf = await page.evaluate(() => ({
+  shown: document.getElementById("sheet").classList.contains("show"),
+  title: document.getElementById("sheet-title").textContent,
+  note: document.getElementById("sheet-note").textContent,
+  items: [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent).join("|"),
+  published: !!settings.repoPublishedAt,
+}));
+ok(conf.shown && /Publicar na nuvem\?/.test(conf.title), "Publicar abre confirmação ANTES de escrever");
+ok(/\+1/.test(conf.items) && /−1/.test(conf.note), "Diff mostra +1 cifra nova e −1 removida (rede de segurança)");
+ok(/REMOVER/.test(conf.note), "Aviso de remoção aparece quando o diff tira itens da nuvem");
+ok(conf.published === false, "Nada é publicado antes de confirmar");
+// confirma → escreve (PUT com Authorization + snapshot em base64 + sha)
+await page.locator("#sheet-body .sheetitem").first().click();
+await page.waitForTimeout(150);
+const pub = await page.evaluate(() => { const calls = window.__calls; window.fetch = window.__real;
+  const put = calls.find(c => c.opts.method === "PUT"); let body = {}; try { body = JSON.parse(put.opts.body); } catch (e) {}
   return { get: calls.some(c => !c.opts.method || c.opts.method === "GET"), put: !!put,
     auth: put && put.opts.headers.Authorization, hasSha: !!body.sha,
-    content: body.content ? atob(body.content) : "", at: !!settings.repoPublishedAt };
-});
-ok(pub.get && pub.put, "publishRepo busca o sha (GET) e escreve (PUT)");
+    content: body.content ? atob(body.content) : "", at: !!settings.repoPublishedAt }; });
+ok(pub.get && pub.put, "Confirmar publica: busca o sha (GET) e escreve (PUT)");
 ok(pub.auth === "Bearer tok123", "PUT vai com Authorization: Bearer <token>");
 ok(pub.hasSha && /"type":"louvai-full"/.test(pub.content), "PUT envia o snapshot (louvai-full) em base64, com o sha");
 ok(pub.at, "Publicar registra a data da última publicação");

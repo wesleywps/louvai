@@ -102,7 +102,7 @@ PLANO atualizado se aplicável · `npm test` verde.
     **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`) e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~149 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~153 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -179,7 +179,10 @@ PLANO atualizado se aplicável · `npm test` verde.
   GitHub**. `ghRepoFromUrl` deriva `owner/repo/path` da `settings.repoUrl`; `publishRepo` faz
   GET sha → PUT (snapshot em `bytesToB64` base64 padrão; 404 cria; 409 rebusca+retry); token
   fino em `settings.ghToken` (**só no aparelho**; "Remover token" / revogável no GitHub).
-  `repoStatus` mostra baixou…/publicou… **Mão única** (equipe só pull).
+  `repoStatus` mostra baixou…/publicou… **Mão única** (equipe só pull). **Diff ao publicar
+  (v0.27.1):** `ghGetCurrent` lê `{sha,data}` da nuvem; `diffRepo`/`diffLabel`/`diffNote` contam
+  +/− cifras/escalas por `id`; `publishRepo` abre **confirmação** com o diff (rede de segurança
+  contra publicar de aparelho desatualizado) e `doPublish` faz o PUT.
 - **Player (barra de uma linha, v0.20.0):** `.controls` é uma linha só
   `← · #p-title · ☰ · ⚙` priorizando a cifra; **Tom, Editar (`#p-edit`),
   Compartilhar (`#p-share`), capo, fonte, só-letra, tabs e auto-scroll moram no

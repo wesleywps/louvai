@@ -679,7 +679,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.27.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.27.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1768,6 +1768,43 @@ function ghRepoFromUrl(url){
   if(parts.length>=2) return {owner:m[1], repo:parts[0], path:parts.slice(1).join("/")};
   return {owner:m[1], repo:m[1]+".github.io", path:parts[0]};
 }
+// lê o arquivo atual da nuvem: {sha, data} (data=snapshot parseado) | null (404, 1ª vez) | erro
+async function ghGetCurrent(api, headers){
+  try{
+    const res=await fetch(api,{headers,cache:"no-store"});
+    if(res.status===404) return {sha:null, data:null};
+    if(res.status===401||res.status===403) return "__auth__";
+    if(!res.ok) return "__err__";
+    const j=await res.json();
+    let data=null;
+    try{                                                       // content vem base64 (com quebras de linha)
+      const bin=atob(String(j.content||"").replace(/\s/g,"")); const b=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) b[i]=bin.charCodeAt(i);
+      data=JSON.parse(new TextDecoder().decode(b));
+    }catch(e){ data=null; }                                    // arquivo ilegível: sem diff (não bloqueia)
+    return {sha:j.sha||null, data};
+  }catch(e){ return "__net__"; }
+}
+// diff por id entre o que está na nuvem (old) e o que vai (new): quantas cifras/escalas +/−
+function diffRepo(oldData, newData){
+  const ids=arr=>new Set((arr||[]).filter(x=>x&&x.id).map(x=>x.id));
+  const so=ids(oldData&&oldData.songs), sn=ids(newData.songs), eo=ids(oldData&&oldData.escalas), en=ids(newData.escalas);
+  let sAdd=0,sRem=0,eAdd=0,eRem=0;
+  sn.forEach(id=>{ if(!so.has(id)) sAdd++; }); so.forEach(id=>{ if(!sn.has(id)) sRem++; });
+  en.forEach(id=>{ if(!eo.has(id)) eAdd++; }); eo.forEach(id=>{ if(!en.has(id)) eRem++; });
+  return {first:!oldData, sAdd, sRem, eAdd, eRem, sTotal:(newData.songs||[]).length, eTotal:(newData.escalas||[]).length};
+}
+function diffLabel(d){
+  if(d.first) return " ("+d.sTotal+" cifras, "+d.eTotal+" escalas)";
+  const p=[]; if(d.sAdd) p.push("+"+d.sAdd); if(d.sRem) p.push("−"+d.sRem);
+  return p.length ? " ("+p.join(" ")+" cifras)" : " (cifras iguais)";
+}
+function diffNote(d){
+  if(d.first) return "Primeira publicação: "+d.sTotal+" cifra(s) e "+d.eTotal+" escala(s) vão pra nuvem.";
+  let n="Cifras: +"+d.sAdd+" / −"+d.sRem+" · Escalas: +"+d.eAdd+" / −"+d.eRem;
+  if(d.sRem>0||d.eRem>0) n+=" — vai REMOVER itens da nuvem. Você atualizou do link antes?";
+  return n;
+}
 // escreve o snapshot no louvai.json via API Contents do GitHub (token fino, do aparelho)
 async function publishRepo(){
   const token=(settings.ghToken||"").trim();
@@ -1776,29 +1813,28 @@ async function publishRepo(){
   if(!r){ toast("Publicar só funciona com URL do GitHub Pages"); return; }
   const api="https://api.github.com/repos/"+r.owner+"/"+r.repo+"/contents/"+r.path;
   const headers={Authorization:"Bearer "+token, Accept:"application/vnd.github+json"};
+  const cur=await ghGetCurrent(api,headers);
+  if(cur==="__auth__"){ toast("Token inválido ou sem permissão"); return; }
+  if(cur==="__net__"){ toast("Não consegui publicar — sem internet?"); return; }
+  if(cur==="__err__"){ toast("Não consegui acessar o repositório"); return; }
+  // mostra o diff (e protege contra publicar de um aparelho desatualizado: "−40 cifras" = pare)
+  const d=diffRepo(cur.data, fullEnvelope());
+  openSheet(d.first?"Publicar pela 1ª vez?":"Publicar na nuvem?",[
+    {ic:"☁",label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,cur.sha,d); }},
+    {ic:"✕",label:"Cancelar",fn:closeSheet},
+  ], diffNote(d));
+}
+async function doPublish(api, headers, sha, d){
   const content=bytesToB64(new TextEncoder().encode(JSON.stringify(fullEnvelope())));
-  const getSha=async()=>{
-    try{
-      const res=await fetch(api,{headers,cache:"no-store"});
-      if(res.status===404) return null;                       // 1ª publicação: cria o arquivo
-      if(res.status===401||res.status===403) return "__auth__";
-      if(!res.ok) return "__err__";
-      return (await res.json()).sha||null;
-    }catch(e){ return "__net__"; }
-  };
-  const put=sha=>{ const body={message:"atualiza louvai.json (v"+APP_VERSION+")",content}; if(sha) body.sha=sha;
+  const put=s=>{ const body={message:"atualiza louvai.json (v"+APP_VERSION+")",content}; if(s) body.sha=s;
     return fetch(api,{method:"PUT",headers,body:JSON.stringify(body)}); };
-  let sha=await getSha();
-  if(sha==="__auth__"){ toast("Token inválido ou sem permissão"); return; }
-  if(sha==="__net__"){ toast("Não consegui publicar — sem internet?"); return; }
-  if(sha==="__err__"){ toast("Não consegui acessar o repositório"); return; }
   let res; try{ res=await put(sha); }catch(e){ toast("Não consegui publicar — sem internet?"); return; }
-  if(res.status===409){                                       // sha velho (mudou na nuvem): rebusca e tenta 1x
-    const fresh=await getSha();
-    if(typeof fresh==="string" && fresh.startsWith("__")){ toast("Mudou na nuvem — atualize e tente de novo"); return; }
-    try{ res=await put(fresh); }catch(e){ toast("Não consegui publicar — sem internet?"); return; }
+  if(res.status===409){                                       // mudou na nuvem: rebusca o sha e tenta 1x
+    const cur2=await ghGetCurrent(api,headers);
+    if(typeof cur2==="string"){ toast("Mudou na nuvem — atualize e tente de novo"); return; }
+    try{ res=await put(cur2.sha); }catch(e){ toast("Não consegui publicar — sem internet?"); return; }
   }
-  if(res.ok){ settings.repoPublishedAt=Date.now(); saveSettings(); toast("Publicado na nuvem ✓"); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
+  if(res.ok){ settings.repoPublishedAt=Date.now(); saveSettings(); toast("Publicado ✓"+diffLabel(d)); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
   else if(res.status===401||res.status===403) toast("Token inválido ou sem permissão");
   else if(res.status===409) toast("Mudou na nuvem — atualize e tente de novo");
   else toast("Não consegui publicar (erro "+res.status+")");

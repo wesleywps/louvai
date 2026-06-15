@@ -17,6 +17,11 @@
 > - 1ª publicação: GET dá **404** → publica **sem `sha`** (cria o arquivo). Depois, sempre manda o `sha`.
 > - Token **só no `localStorage`** do aparelho, **fora do código público**; "Remover token" + revogar no GitHub.
 >
+> **Evolução v0.27.1 — diff ao publicar:** antes de escrever, o app lê o arquivo atual
+> (`ghGetCurrent`) e mostra **+/− cifras/escalas** (`diffRepo`) numa **confirmação** — feedback e
+> **rede de segurança** (publicar de aparelho desatualizado mostra "−N" e avisa antes de remover).
+> `doPublish` separado da confirmação. **153 verificações**.
+>
 > *(Plano original abaixo; decisões mantidas.)* App estava na v0.26.0 ao planejar.
 
 ## O que é

@@ -8,6 +8,26 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.27.1 — Diff ao publicar (quantas cifras +/− e confirmação)
+**Recurso/segurança (nuvem).** Publicar agora **mostra o que vai mudar** antes de escrever — e
+isso é também uma **rede de segurança**.
+- **Antes de escrever:** o app busca o arquivo atual da nuvem (o mesmo GET que pega o `sha` traz
+  o **conteúdo**) e **compara por `id`** com o que vai enviar. Abre uma **confirmação** com o diff:
+  *"Publicar na nuvem? **(+3 −1 cifras)**"* + nota *"Cifras: +3 / −1 · Escalas: +1 / −0"*.
+- **Proteção real:** se você publicar de um aparelho **desatualizado** (esqueceu de "Atualizar do
+  link"), o diff mostra **"−40 cifras"** e o aviso **"vai REMOVER itens da nuvem — você atualizou
+  antes?"** → dá pra **cancelar** antes de sobrescrever o repertório da nuvem com menos do que ele
+  tinha. "Nada salvo no escuro" aplicado à publicação.
+- **1ª publicação:** "Publicar pela 1ª vez? (N cifras, M escalas)". Sucesso → toast
+  *"Publicado ✓ (+3 −1 cifras)"*.
+- **Por dentro:** `ghGetCurrent` (lê `{sha, data}` decodificando o base64 do GitHub), `diffRepo`
+  (conta +/− de cifras e escalas por `id`), `diffLabel`/`diffNote`, e `doPublish` (PUT + retry no
+  409) separado da confirmação. Erros de token/rede seguem tratados.
+- **Testes:** confirmação aparece **antes** de escrever; diff +1/−1 e o aviso de remoção; nada é
+  publicado sem confirmar; confirmar dispara o PUT com `Authorization` + snapshot. **153 verificações**.
+
+---
+
 ## v0.27.0 — Publicar na nuvem (editar no celular → escrever no louvai.json)
 **Recurso (compartilhar, sem backend nosso).** Fecha o ciclo da nuvem: a v0.26.0 **puxava**;
 agora o líder **publica** o `louvai.json` **direto do aparelho**, via **API do GitHub** (que
