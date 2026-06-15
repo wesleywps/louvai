@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.23.0**.
+seguir. Atualizado até a **v0.24.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -79,6 +79,7 @@ instalação complexa.
 | **v0.21.1** | correção | **Aviso de link longo:** apps de mensagem (WhatsApp) cortam URLs longas → "Link inválido" no destino. O aviso agora aparece **antes** de compartilhar (não só no clipboard) e com limite realista (~4 KB), oferecendo **mandar o arquivo** (sem o corte). Descoberto em campo com o repertório inteiro. |
 | **v0.22.0** | recurso | **Aviso de título repetido ao importar:** quando a mesma música nasce em aparelhos diferentes (id distinto), importar avisa antes de mesclar — manter as minhas (sem duplicar, remapeando a escala) / importar como cópias / cancelar. Título inédito entra direto. |
 | **v0.23.0** | recurso | **Backup com rede de segurança:** registra a data do último backup, marca "há mudanças desde então", cutuca quando está atrasado (pontinho no ↥ + toast leve ao abrir) e deixa o "restaurar de arquivo" claro. Tudo local (nuvem é fase online). |
+| **v0.24.0** | recurso | **"Última vez que tocamos":** cada cifra mostra a recência (tocada há X / nunca tocada), na lista e no seletor de escala. Derivado só de escalas marcadas **"Culto realizado"** — porque a escala é plano, e o que rola se confirma no culto (não infla a recência). |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -97,7 +98,8 @@ instalação complexa.
   leitura** (rolagem com auto-scroll opcional **ou** página), navegação por
   estrutura (☰) e tela sempre acesa (Wake Lock).
 - **Escalas:** montar o culto (músicas + itens), tom por escala, equipe, tempo
-  total, modo Apresentar (música a música no tom do culto, com **barra compacta**
+  total, **"Culto realizado"** (confirma a escala → alimenta a recência "última vez que
+  tocamos" nas cifras), modo Apresentar (música a música no tom do culto, com **barra compacta**
   que dá mais cifra na tela e **virar página como um livro** entre as músicas),
   compartilhar.
 - **Compartilhar:** por **arquivo `.json`** (cifra, escala ou repertório) e por
@@ -160,9 +162,11 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 - [ ] **Resolver o modelo de capotraste** (cifra do Cifra Club já vem nas formas com capo).
 
 ### Tema D — Repertório e escalas
-- [ ] **"Última vez que tocamos"** (derivado das escalas, evita repetir música).
+- [x] **"Última vez que tocamos"** (derivado das escalas **confirmadas** — "Culto realizado").
+  *(entregue na v0.24.0 — recência na lista e no seletor; só conta culto confirmado)*
+- [ ] **Ordenar por menos tocadas / mais recentes** (usa a recência da v0.24.0).
 - [ ] **Duplicar escala** e **modelos de culto**.
-- [ ] **Campos extras na música:** BPM, tema/categoria, andamento; ordenar por mais tocadas/recentes.
+- [ ] **Campos extras na música:** BPM, tema/categoria, andamento.
 - [ ] **Itens não-musicais no modo Apresentar** (mostrar o card de aviso/oração na sequência).
 
 ### Tema E — Importar e compartilhar (sem servidor)
@@ -193,7 +197,7 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 3. **PWA instalável** — fecha o offline 100% do app hospedado (manifest + service worker)
    e destrava "Abrir com Louvai" pra importar arquivo em 1 toque. **Encerra a regra
    "arquivo único"** (ver `CLAUDE.md`, seção "Horizonte").
-4. **"Última vez que tocamos"** e **QR Code** — alto valor percebido.
+4. **Ordenar por menos tocadas** (usa a recência da v0.24.0) e **QR Code** — alto valor percebido.
 5. **Diagramas de acorde** (pegada ao tocar no acorde) — fecha o Tema C de qualidade.
 
 > ✅ **Modos de leitura no player** (auto-scroll opcional + Modo Página) concluídos
@@ -206,7 +210,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > ver `PLANO-compartilhar-link.md` (resta a tarefa operacional de hospedar). A v0.21.1
 > ajustou o **aviso de link longo** (apps de mensagem cortam a URL → mandar o arquivo).
 > ✅ **Aviso de título duplicado** ao importar na v0.22.0; **backup com rede de
-> segurança** (data, "mudanças desde então", lembrete, restaurar claro) na v0.23.0.
+> segurança** (data, "mudanças desde então", lembrete, restaurar claro) na v0.23.0;
+> **"última vez que tocamos"** (recência via escalas confirmadas) na v0.24.0.
 
 ---
 
@@ -226,4 +231,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.23.0.*
+*Última atualização deste roteiro: v0.24.0.*

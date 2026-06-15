@@ -11,7 +11,7 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.23.0)
+## Recursos (v0.24.0)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
 - Repertório com busca e tags; criar/editar cifras; **importar colando do Cifra Club**.
@@ -26,9 +26,12 @@ para ter um ícone e abrir como app.
   modo escuro/claro, só-letra, ocultar tablaturas (tudo no ⚙ Ajustes), **modos de
   leitura** (rolagem com auto-scroll opcional **ou** página, virando com
   toque/deslize), **navegação por estrutura** (☰) e **tela sempre acesa** (Wake Lock).
-- **Escalas/Setlists**: ordem do culto, tom por escala, equipe, tempo total e
-  **modo Apresentar** com **barra compacta** (mais cifra na tela ao vivo) e
-  **virar de página como um livro** entre as músicas.
+- **Escalas/Setlists**: ordem do culto, tom por escala, equipe, tempo total,
+  **"Culto realizado"** (confirma a escala) e **modo Apresentar** com **barra compacta**
+  (mais cifra na tela ao vivo) e **virar de página como um livro** entre as músicas.
+- **"Última vez que tocamos"**: cada cifra mostra a recência ("tocada há 2 semanas" /
+  "nunca tocada"), na lista e ao montar a escala — pra não repetir música. Conta só
+  escalas marcadas como **realizadas** (a escala é plano; o que rola se confirma no culto).
 - **Compartilhar** por **arquivo `.json`** e por **link auto-importável** (`…/#imp=…`,
   sem servidor): a pessoa só **toca o link** e o app abre oferecendo importar (com
   confirmação antes de salvar). Link longo (repertório/escala grande) avisa e oferece

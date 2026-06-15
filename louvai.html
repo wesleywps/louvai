@@ -119,6 +119,8 @@ input,textarea,select{font-family:inherit}
 .songcard .sub{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;margin-top:2px}
 .songcard .tags{font-size:11.5px;color:var(--section);margin-top:3px}
+.songcard .played{font-size:11.5px;color:var(--muted);margin-top:3px}
+.songcard .played.never{color:var(--accent-soft)}   /* nunca tocada: leve destaque (boa pra dar vez) */
 .empty{text-align:center;padding:84px 24px;color:var(--muted);line-height:1.6}
 .empty::before{content:"♪";display:block;font-size:34px;color:var(--accent);
   opacity:.85;margin-bottom:14px;text-shadow:0 0 24px var(--accent-glow)}
@@ -131,6 +133,12 @@ input,textarea,select{font-family:inherit}
 .btn:active{transform:scale(.97)}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;
   box-shadow:0 10px 30px -10px var(--accent-glow)}
+/* "Culto realizado": confirma a escala → suas músicas contam como tocadas (recência) */
+.es-done-btn{width:100%;margin-top:8px;padding:13px;border-radius:15px;font-size:14.5px;
+  font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);transition:var(--dur)}
+.es-done-btn:active{transform:scale(.97)}
+.es-done-btn.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 /* FAB "+" único, contextual (Cifras → nova cifra; Escalas → nova escala) */
 .fab{position:fixed;right:18px;bottom:calc(82px + env(safe-area-inset-bottom));z-index:27}
 .fabbtn{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;
@@ -505,6 +513,7 @@ input,textarea,select{font-family:inherit}
         <div class="es-meta" id="es-meta"></div>
       </div>
       <button class="btn primary present-btn" id="es-present">▶ Apresentar</button>
+      <button class="es-done-btn" id="es-done">Marcar culto como realizado</button>
       <div id="es-team"></div>
       <div class="es-order-h" id="es-order-h">Ordem do culto</div>
       <div id="es-order"></div>
@@ -629,7 +638,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.23.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.24.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -989,6 +998,7 @@ function renderLibrary(){
       'Toque em <b>＋ Nova cifra</b> para começar, ou <b>↧</b> para importar um arquivo do grupo.</div>';
     return;
   }
+  const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
   list.forEach(s=>{
     const card=document.createElement("div");
     card.className="songcard";
@@ -997,7 +1007,8 @@ function renderLibrary(){
       '<div class="keytag">'+esc(s.key||"?")+'</div>'+
       '<div class="meta"><div class="ttl">'+esc(s.title)+'</div>'+
       (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+
-      (tags?'<div class="tags">'+esc(tags)+'</div>':'')+'</div>';
+      (tags?'<div class="tags">'+esc(tags)+'</div>':'')+
+      playedLine(s.id,played,anyDone)+'</div>';
     card.onclick=()=>openPlayer(s.id);
     box.appendChild(card);
   });
@@ -1718,6 +1729,38 @@ function escTotalMin(e){ return (e.items||[]).reduce((a,it)=>a+(+it.dur||0),0); 
 function fmtDur(min){ if(!min)return ""; const h=Math.floor(min/60),m=min%60; return h?`${h}h${String(m).padStart(2,"0")}`:`${m} min`; }
 function songItems(e){ return (e.items||[]).filter(it=>it.kind==="song" && songById(it.songId)); }
 
+/* ---- "última vez que tocamos" (derivado das escalas CONFIRMADAS) ----
+   A escala é um plano; o que rola de verdade se ajusta no ensaio. Por isso só conta
+   como "tocada" a música que está numa escala marcada "Culto realizado" (e.done). */
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function buildLastPlayed(){
+  const map={};
+  escalas.forEach(e=>{
+    if(!e.done || !e.date) return;                 // só culto confirmado, e com data (o "quando")
+    (e.items||[]).forEach(it=>{
+      if(it && it.kind==="song" && it.songId && (!map[it.songId] || e.date>map[it.songId]))
+        map[it.songId]=e.date;
+    });
+  });
+  return map;
+}
+function fmtPlayed(iso){
+  if(!iso) return "nunca tocada";
+  const d=Math.floor((Date.now()-new Date(iso+"T00:00:00").getTime())/864e5);
+  if(d<=0) return "tocada hoje";
+  if(d===1) return "tocada ontem";
+  if(d<7) return "tocada há "+d+" dias";
+  if(d<31){ const w=Math.floor(d/7); return "tocada há "+w+(w===1?" semana":" semanas"); }
+  if(d<365){ const m=Math.floor(d/30); return "tocada há "+m+(m===1?" mês":" meses"); }
+  return "tocada há mais de um ano";
+}
+// linha pro card: "tocada há…" / "nunca tocada" (só quando há escala confirmada, p/ não poluir)
+function playedLine(songId, map, anyDone){
+  const iso=map[songId];
+  const txt=iso?fmtPlayed(iso):(anyDone?"nunca tocada":"");
+  return txt ? '<div class="played'+(iso?'':' never')+'">'+esc(txt)+'</div>' : '';
+}
+
 /* ---- lista de escalas ---- */
 function renderEscalas(){
   const list=escalas.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
@@ -1750,6 +1793,11 @@ function openEscala(id){
   currentEscalaId=id;
   $("#es-title").textContent=e.title||"(sem título)";
   $("#es-meta").textContent=[fmtDate(e.date),e.time,e.type].filter(Boolean).join("  ·  ");
+
+  // "Culto realizado": confirma a escala (suas músicas passam a contar na recência)
+  const doneBtn=$("#es-done");
+  doneBtn.classList.toggle("on",!!e.done);
+  doneBtn.textContent=e.done?"✓ Culto realizado":"Marcar culto como realizado";
 
   // equipe
   const teamBox=$("#es-team");
@@ -1794,6 +1842,15 @@ function openEscala(id){
   show("escala");
 }
 $("#es-back").onclick=()=>{switchTab("escalas");show("lib");renderEscalas();};
+$("#es-done").onclick=()=>{
+  const e=escalas.find(x=>x.id===currentEscalaId); if(!e)return;
+  e.done=!e.done;
+  if(e.done && !e.date) e.date=todayISO();   // precisa de uma data pra saber "quando tocou"
+  e.updatedAt=Date.now(); saveEscalas();
+  openEscala(currentEscalaId);               // atualiza o botão
+  renderLibrary();                           // a recência muda na aba Cifras
+  toast(e.done?"Culto marcado como realizado ✓":"Desmarcado");
+};
 $("#es-edit").onclick=()=>openEscalaEditor(currentEscalaId);
 $("#es-present").onclick=()=>{
   const e=escalas.find(x=>x.id===currentEscalaId);
@@ -1914,10 +1971,12 @@ function renderPicker(q){
   if(q) list=list.filter(s=>(s.title+" "+(s.artist||"")).toLowerCase().includes(q));
   const box=$("#picklist"); box.innerHTML="";
   if(!list.length){ box.innerHTML='<div class="hint" style="padding:10px">Nenhuma cifra encontrada.</div>'; return; }
+  const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
   list.forEach(s=>{
     const c=document.createElement("div"); c.className="songcard";
     c.innerHTML='<div class="keytag">'+esc(s.key||"?")+'</div><div class="meta"><div class="ttl">'+esc(s.title)+'</div>'+
-      (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+'</div>';
+      (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+
+      playedLine(s.id,played,anyDone)+'</div>';
     c.onclick=()=>{
       editEscala.items.push({kind:"song",songId:s.id,key:"",capo:0,momento:"",dur:0,note:""});
       closePicker(); renderItemsEditor(); toast("“"+s.title+"” adicionada");

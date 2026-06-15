@@ -8,6 +8,31 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.24.0 — "Última vez que tocamos" (derivado das escalas confirmadas)
+**Recurso (repertório / uso ao vivo).** Mostra, em cada cifra, **quando foi tocada pela
+última vez** — pra não repetir a mesma música todo domingo e dar vez às esquecidas.
+- **A sutileza que faz a diferença (apontada pelo dono):** a **escala é um plano, não um
+  registro**. O ministro monta pro ensaio; se uma música não engata, troca por outra. Contar
+  "tocou" só porque estava na escala **inflaria** a recência. Então só conta como tocada a
+  música que está numa escala marcada **"Culto realizado"** — porque os ajustes acontecem no
+  ensaio e o que permanece na escala é o que vai ao culto.
+- **Confirmar:** botão **"Marcar culto como realizado"** no detalhe da escala (vira
+  "✓ Culto realizado"); guarda `e.done`. Só escalas confirmadas com data entram na conta.
+- **Onde aparece:** na **lista de cifras** e no **seletor ao montar a escala** (onde "evitar
+  repetir" mais ajuda): "tocada hoje / há 3 dias / há 2 semanas / há 4 meses…" ou
+  **"nunca tocada"** (com leve destaque). "Nunca tocada" só aparece quando **já existe alguma
+  escala confirmada** — sem isso, não polui.
+- **100% derivado, sem migração:** a fonte é escala + data + `done`. `e.done` viaja no
+  exportar/importar (escala antiga sem o campo = não confirmada, não conta até você marcar).
+- **Fora de escopo (próximo):** **ordenar** por menos tocadas (Tema D) — aqui é só mostrar.
+- **Por dentro:** `buildLastPlayed()` (mapa songId→data, só `done`), `fmtPlayed`, `playedLine`,
+  `todayISO`; botão `#es-done`.
+- **Testes:** escala não confirmada não conta; confirmar faz contar (data da escala); música
+  fora não conta; card mostra "tocada há…"/"nunca tocada"; botão alterna o estado. **123
+  verificações**, zero erro de JS.
+
+---
+
 ## v0.23.0 — Backup com rede de segurança
 **Recurso (segurança dos dados).** O Louvai guarda tudo **só no aparelho** — se você troca,
 perde ou limpa o celular sem ter exportado, o repertório vai junto. O backup já existia, mas

@@ -102,7 +102,7 @@ PLANO atualizado se aplicável · `npm test` verde.
     **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`) e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~116 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~123 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -165,6 +165,11 @@ PLANO atualizado se aplicável · `npm test` verde.
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`).
+- **"Última vez que tocamos" (v0.24.0):** recência derivada **só de escalas confirmadas**
+  (`e.done`, botão `#es-done` "Culto realizado" — a escala é plano, ajustes no ensaio).
+  `buildLastPlayed()` → mapa `songId→data` das escalas `done` com data; `fmtPlayed`/`playedLine`
+  renderizam "tocada há…"/"nunca tocada" (só com alguma escala `done`, p/ não poluir) no
+  card (`renderLibrary`) e no seletor (`renderPicker`). Sem dado novo além de `e.done`.
 - **Apresentação compacta (v0.18.0/0.18.1):** classe `.present` em `#view-player`
   (ligada por `updatePresentBar` quando há `escalaCtx`) esconde a `.controls` grande
   e usa o `#presentbar` como barra fina de **uma linha** (`.pb-nav`: ← ‹ título·2/5 › ⚙).

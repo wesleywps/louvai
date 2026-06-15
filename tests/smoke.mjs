@@ -633,6 +633,41 @@ await pageBk.waitForTimeout(1200);   // espera o lembrete do boot (700ms) + folg
 ok(/backup/i.test(await pageBk.locator("#toast").textContent()), "Ao abrir com backup atrasado, cutuca por backup (lembrete ativo)");
 await ctxBk.close();
 
+// ===== v0.24.0 — "última vez que tocamos" (só escalas confirmadas) =====
+const lp = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id: "sA", title: "Cantai ao Senhor", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });
+  songs.push({ id: "sB", title: "Aleluia", key: "G", capo: 0, tags: [], updatedAt: 1, body: "G" });
+  // escala PLANEJADA (não confirmada) com a música A
+  escalas.push({ id: "e1", title: "Plano", date: "2026-01-04", type: "Culto", team: [], items: [{ kind: "song", songId: "sA" }], updatedAt: 1 });
+  saveSongs(); saveEscalas();
+  const before = buildLastPlayed().sA || null;
+  escalas[0].done = true; saveEscalas();          // confirma o culto
+  const m = buildLastPlayed();
+  return { before, afterA: m.sA || null, afterB: m.sB || null };
+});
+ok(lp.before === null, "Escala planejada (não confirmada) NÃO conta como tocada");
+ok(lp.afterA === "2026-01-04", "Confirmar 'Culto realizado' faz a música contar (data da escala)");
+ok(lp.afterB === null, "Música fora da escala confirmada não fica marcada como tocada");
+// a lista de cifras mostra a recência e "nunca tocada" nas demais (há escala confirmada)
+await page.evaluate(() => { switchTab("songs"); renderLibrary(); });
+await page.waitForTimeout(100);
+const cards = await page.evaluate(() => [...document.querySelectorAll("#songlist .songcard")].map(c => ({
+  t: c.querySelector(".ttl").textContent, p: (c.querySelector(".played") || {}).textContent || "" })));
+ok(/tocada/.test((cards.find(c => c.t === "Cantai ao Senhor") || {}).p), "Card mostra 'tocada há…' na música tocada");
+ok(/nunca tocada/.test((cards.find(c => c.t === "Aleluia") || {}).p), "Card mostra 'nunca tocada' na que não tocou");
+// botão "Culto realizado" no detalhe alterna o estado e atualiza
+const tog = await page.evaluate(() => {
+  escalas.length = 0;
+  escalas.push({ id: "e2", title: "Domingo", date: "2026-02-01", type: "Culto", team: [], items: [{ kind: "song", songId: "sA" }], updatedAt: 1 });
+  saveEscalas(); openEscala("e2");
+  const before = !!escalas.find(e => e.id === "e2").done;
+  document.getElementById("es-done").click();
+  return { before, after: !!escalas.find(e => e.id === "e2").done, label: document.getElementById("es-done").textContent };
+});
+ok(tog.before === false && tog.after === true, "Botão 'Culto realizado' confirma a escala");
+ok(/realizado/i.test(tog.label), "Botão reflete o estado confirmado (✓ Culto realizado)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 
