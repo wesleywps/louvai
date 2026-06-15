@@ -119,6 +119,8 @@ input,textarea,select{font-family:inherit}
 .songcard .sub{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;margin-top:2px}
 .songcard .tags{font-size:11.5px;color:var(--section);margin-top:3px}
+.songcard .played{font-size:11.5px;color:var(--muted);margin-top:3px}
+.songcard .played.never{color:var(--accent-soft)}   /* nunca tocada: leve destaque (boa pra dar vez) */
 .empty{text-align:center;padding:84px 24px;color:var(--muted);line-height:1.6}
 .empty::before{content:"♪";display:block;font-size:34px;color:var(--accent);
   opacity:.85;margin-bottom:14px;text-shadow:0 0 24px var(--accent-glow)}
@@ -131,6 +133,12 @@ input,textarea,select{font-family:inherit}
 .btn:active{transform:scale(.97)}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;
   box-shadow:0 10px 30px -10px var(--accent-glow)}
+/* "Culto realizado": confirma a escala → suas músicas contam como tocadas (recência) */
+.es-done-btn{width:100%;margin-top:8px;padding:13px;border-radius:15px;font-size:14.5px;
+  font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);transition:var(--dur)}
+.es-done-btn:active{transform:scale(.97)}
+.es-done-btn.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 /* FAB "+" único, contextual (Cifras → nova cifra; Escalas → nova escala) */
 .fab{position:fixed;right:18px;bottom:calc(82px + env(safe-area-inset-bottom));z-index:27}
 .fabbtn{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;
@@ -367,10 +375,29 @@ input,textarea,select{font-family:inherit}
 #sheet-body{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .sheet .grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:6px auto 14px}
 .sheet h3{margin:0 6px 10px;font-size:17px;font-weight:700;letter-spacing:-.2px}
+.sheetnote{margin:-4px 6px 12px;font-size:13px;color:var(--muted);line-height:1.4}
+/* pontinho de "backup devido" no botão ↥ (rede de segurança) */
+#backupBtn{position:relative}
+#backupBtn.due::after{content:"";position:absolute;top:7px;right:7px;width:9px;height:9px;
+  border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--bg),0 0 8px var(--accent-glow)}
 .sheetitem{display:flex;align-items:center;gap:14px;padding:15px 12px;border-radius:13px;font-size:16px}
 .sheetitem:active{background:var(--panel2)}
 .sheetitem .ic{font-size:19px;width:24px;text-align:center}
 .sheetitem.danger{color:var(--danger)}
+/* diagrama de acorde (toque no acorde → popover com a pegada) */
+#chorddiagbg{position:fixed;inset:0;z-index:60}
+.chorddiag{position:fixed;z-index:61;background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;padding:9px 11px 7px;box-shadow:0 16px 44px -10px rgba(0,0,0,.55);
+  display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text)}
+.chorddiag .cd-name{font-weight:700;font-size:15px;letter-spacing:-.2px}
+.chorddiag .cd-none{font-size:13px;color:var(--muted);padding:8px 6px}
+.chorddiag svg{display:block}
+.chorddiag svg .grid{stroke:var(--line);stroke-width:1}
+.chorddiag svg .nut{fill:var(--text)}
+.chorddiag svg .dot{fill:var(--accent)}
+.chorddiag svg .barre{fill:var(--accent)}
+.chorddiag svg .mk{fill:var(--muted);font:700 11px system-ui,sans-serif}
+.chorddiag svg .lbl{fill:var(--muted);font:600 10px system-ui,sans-serif}
 /* respeita o "Reduzir movimento" do sistema: sem fade entre telas, sem slide do
    sheet, sem bounce no toque — útil no palco e p/ sensibilidade vestibular */
 @media (prefers-reduced-motion: reduce){
@@ -500,6 +527,7 @@ input,textarea,select{font-family:inherit}
         <div class="es-meta" id="es-meta"></div>
       </div>
       <button class="btn primary present-btn" id="es-present">▶ Apresentar</button>
+      <button class="es-done-btn" id="es-done">Marcar culto como realizado</button>
       <div id="es-team"></div>
       <div class="es-order-h" id="es-order-h">Ordem do culto</div>
       <div id="es-order"></div>
@@ -555,8 +583,12 @@ input,textarea,select{font-family:inherit}
 <div class="sheet" id="sheet">
   <div class="grip"></div>
   <h3 id="sheet-title">Compartilhar</h3>
+  <div id="sheet-note" class="sheetnote hidden"></div>
   <div id="sheet-body"></div>
 </div>
+<!-- Diagrama de acorde (pegada) — abre ao tocar num acorde no player -->
+<div id="chorddiagbg" class="hidden"></div>
+<div id="chorddiag" class="chorddiag hidden" aria-live="polite"></div>
 <!-- Seletor de música (para montar a escala) -->
 <div class="sheetbg" id="pickbg"></div>
 <div class="sheet" id="picksheet">
@@ -623,7 +655,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.22.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.25.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -699,6 +731,105 @@ function parseChord(raw){
   const root = rm[1], suffix = rm[2];
   if(!QUAL_RX.test(suffix)) return null;                // valida a qualidade
   return { root, suffix, bass };
+}
+
+/* ===== Diagramas de acorde (violão 6 cordas, afinação padrão E-A-D-G-B-E) =====
+   Híbrido: formas abertas CURADAS (idiomáticas) + motor de templates móveis
+   (pestanas E-shape/A-shape) pro resto. Reaproveita parseChord/NOTE_IDX. No player
+   o texto do acorde já é a FORMA (capo-aware), então o diagrama usa o que está escrito.
+   O que o motor não voiceia com segurança → "sem diagrama" (melhor que pegada errada). */
+const STR_PC=[4,9,2,7,11,4];   // classe de altura das cordas soltas, 6ª→1ª (mi lá ré sol si mi)
+// formas abertas verificadas à mão: [s6..s1], -1 = corda muda, 0 = solta
+const OPEN={
+  "C":[-1,3,2,0,1,0],"Cmaj7":[-1,3,2,0,0,0],"C7M":[-1,3,2,0,0,0],"C7":[-1,3,2,3,1,0],"Cadd9":[-1,3,2,0,3,0],
+  "A":[-1,0,2,2,2,0],"Am":[-1,0,2,2,1,0],"A7":[-1,0,2,0,2,0],"Am7":[-1,0,2,0,1,0],"Amaj7":[-1,0,2,1,2,0],"A7M":[-1,0,2,1,2,0],"Asus4":[-1,0,2,2,3,0],"Asus2":[-1,0,2,2,0,0],
+  "G":[3,2,0,0,0,3],"G7":[3,2,0,0,0,1],"Gmaj7":[3,2,0,0,0,2],"G7M":[3,2,0,0,0,2],
+  "E":[0,2,2,1,0,0],"Em":[0,2,2,0,0,0],"E7":[0,2,0,1,0,0],"Em7":[0,2,0,0,0,0],"Emaj7":[0,2,1,1,0,0],"E7M":[0,2,1,1,0,0],"Esus4":[0,2,2,2,0,0],
+  "D":[-1,-1,0,2,3,2],"Dm":[-1,-1,0,2,3,1],"D7":[-1,-1,0,2,1,2],"Dmaj7":[-1,-1,0,2,2,2],"D7M":[-1,-1,0,2,2,2],"Dm7":[-1,-1,0,2,1,1],"Dsus4":[-1,-1,0,2,3,3],"Dsus2":[-1,-1,0,2,3,0],
+  "C/E":[0,3,2,0,1,0],"C/G":[3,3,2,0,1,0],"D/F#":[2,-1,0,2,3,2],"G/B":[-1,2,0,0,0,3]
+};
+// qualidade (suffix do parseChord) → intervalos em semitons. Generosa: na dúvida, tríade.
+function chordIntervals(suffix){
+  let s=String(suffix||"").replace(/[()\s]/g,"")
+        .replace(/°|º/g,"dim").replace(/ø|∅/g,"m7b5").replace(/Δ/g,"maj7");
+  let third=4, fifth=7;
+  if(/^min/.test(s)){ third=3; s=s.slice(3); }
+  else if(/^-/.test(s)){ third=3; s=s.slice(1); }
+  else if(/^m(?!aj)/.test(s)){ third=3; s=s.slice(1); }   // 'm' minúsculo = menor; 'M'/'maj' = maior
+  const isAdd=/add/.test(s);
+  if(/sus2/.test(s)) third=2; else if(/sus/.test(s)) third=5;
+  if(/dim/.test(s)){ third=3; fifth=6; }
+  if(/aug|\+|#5/.test(s)) fifth=8;
+  if(/b5/.test(s)) fifth=6;
+  const iv=new Set([0,third,fifth]);
+  if(/dim7/.test(s)) iv.add(9);
+  else if(/(maj7|M7|7M|maj9|maj13)/.test(s)) iv.add(11);     // 7M / M7 / maj7 = sétima MAIOR (pt-BR)
+  else if(!isAdd && /(7|9|11|13)/.test(s)) iv.add(10);        // 7 sozinho = sétima menor (dominante)
+  else if(/6/.test(s)) iv.add(9);
+  if(/9/.test(s)) iv.add(2);
+  if(/(add4|11)/.test(s)) iv.add(5);
+  return [...iv].sort((a,b)=>a-b);
+}
+// família de template pela assinatura de intervalos (só as que temos forma móvel confiável)
+const FAM_SIG={"0,4,7":"maj","0,3,7":"m","0,4,7,10":"7","0,3,7,10":"m7","0,4,7,11":"maj7","0,5,7":"sus4","0,2,7":"sus2"};
+function qualityFamily(suffix){ return FAM_SIG[chordIntervals(suffix).join(",")]||null; }
+// templates móveis (pestana): E-shape (raiz na 6ª corda) e A-shape (raiz na 5ª)
+const TPL_E={maj:[0,2,2,1,0,0],m:[0,2,2,0,0,0],"7":[0,2,0,1,0,0],m7:[0,2,0,0,0,0],maj7:[0,2,1,1,0,0],sus4:[0,2,2,2,0,0]};
+const TPL_A={maj:[-1,0,2,2,2,0],m:[-1,0,2,2,1,0],"7":[-1,0,2,0,2,0],m7:[-1,0,2,0,1,0],maj7:[-1,0,2,1,2,0],sus4:[-1,0,2,2,3,0],sus2:[-1,0,2,2,0,0]};
+function placeTemplate(fam,rootPc,name){
+  const rE=(rootPc-STR_PC[0]+12)%12, rA=(rootPc-STR_PC[1]+12)%12;   // casa da raiz na 6ª e na 5ª corda
+  let useE = !!TPL_E[fam] && (!TPL_A[fam] || rE<=rA);               // escolhe a posição mais baixa
+  if(fam==="sus2") useE=false;                                     // sus2 só tem forma A confiável
+  const tpl=useE?TPL_E[fam]:TPL_A[fam]; if(!tpl) return null;
+  const r=useE?rE:rA;
+  const frets=tpl.map(o=> o<0?-1:o+r);
+  let barre=null;
+  if(r>0){ const at=frets.map((f,i)=>f===r?i:-1).filter(i=>i>=0); if(at.length>=2) barre={fret:r,from:at[0],to:5}; }
+  return {frets,name,barre};
+}
+// pegada de um acorde: forma curada se houver, senão template; senão null (sem diagrama)
+function fingering(name){
+  name=String(name||"").trim();
+  if(OPEN[name]) return {frets:OPEN[name],name,barre:null};
+  const pc=parseChord(name); if(!pc) return null;
+  const rootPc=NOTE_IDX[pc.root]; if(rootPc==null) return null;
+  const fam=qualityFamily(pc.suffix); if(!fam) return null;
+  return placeTemplate(fam,rootPc,name);
+}
+// desenha a grade 6×5 (SVG, tema-aware): bolinhas, x/o, pestana, número da casa-base
+function chordSvg(fg){
+  const f=fg.frets, pos=f.filter(x=>x>0);
+  const maxF=pos.length?Math.max(...pos):0, minF=pos.length?Math.min(...pos):0;
+  const ROWS=5, start = maxF<=5?1:minF;
+  const W=104,H=128,L=16,T=26,R=16,B=14, cols=6;
+  const gw=(W-L-R)/(cols-1), gh=(H-T-B)/ROWS, X=i=>L+i*gw, Y=j=>T+j*gh;
+  let p="";
+  for(let i=0;i<cols;i++) p+=`<line class="grid" x1="${X(i)}" y1="${T}" x2="${X(i)}" y2="${T+ROWS*gh}"/>`;
+  for(let j=0;j<=ROWS;j++) p+=`<line class="grid" x1="${L}" y1="${Y(j)}" x2="${W-R}" y2="${Y(j)}"/>`;
+  if(start===1) p+=`<rect class="nut" x="${L-1}" y="${T-3}" width="${W-L-R+2}" height="3"/>`;
+  else p+=`<text class="lbl" x="${L-5}" y="${T+gh*0.72}" text-anchor="end">${start}ª</text>`;
+  for(let i=0;i<cols;i++){ const v=f[i];
+    if(v===0) p+=`<text class="mk" x="${X(i)}" y="${T-8}" text-anchor="middle">o</text>`;
+    else if(v<0) p+=`<text class="mk" x="${X(i)}" y="${T-8}" text-anchor="middle">×</text>`; }
+  if(fg.barre && fg.barre.fret>=start && fg.barre.fret<start+ROWS){
+    const row=fg.barre.fret-start, y=Y(row)+gh/2;
+    p+=`<rect class="barre" x="${X(fg.barre.from)-4}" y="${y-6}" width="${X(fg.barre.to)-X(fg.barre.from)+8}" height="12" rx="6"/>`;
+  }
+  for(let i=0;i<cols;i++){ const v=f[i];
+    if(v>0 && v>=start && v<start+ROWS) p+=`<circle class="dot" cx="${X(i)}" cy="${Y(v-start)+gh/2}" r="5.5"/>`; }
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${p}</svg>`;
+}
+function hideChordDiagram(){ $("#chorddiag").classList.add("hidden"); $("#chorddiagbg").classList.add("hidden"); }
+function showChordDiagram(name, anchor){
+  const fg=fingering(name), box=$("#chorddiag");
+  box.innerHTML='<div class="cd-name">'+esc(name)+'</div>'+(fg?chordSvg(fg):'<div class="cd-none">sem diagrama 🙂</div>');
+  $("#chorddiagbg").classList.remove("hidden"); box.classList.remove("hidden");
+  // posiciona perto do acorde tocado, clampado na viewport (mede com o tamanho real)
+  box.style.left="0px"; box.style.top="0px";
+  const r=anchor.getBoundingClientRect(), bw=box.offsetWidth, bh=box.offsetHeight;
+  let left=r.left+r.width/2-bw/2; left=Math.max(8,Math.min(window.innerWidth-bw-8,left));
+  let top=r.bottom+8; if(top+bh>window.innerHeight-8) top=r.top-bh-8;
+  box.style.left=left+"px"; box.style.top=Math.max(8,top)+"px";
 }
 
 /* Transpõe uma nota preservando o intervalo. `ctx` = {letterStep, destFlat}.
@@ -856,9 +987,36 @@ function load(){
     settings.seeded=true; saveSettings();
   }
 }
-function saveSongs(){ try{localStorage.setItem(LS_SONGS, JSON.stringify(songs));}catch(e){console.warn("Sem armazenamento local:",e);} }
+function saveSongs(){ try{localStorage.setItem(LS_SONGS, JSON.stringify(songs));}catch(e){console.warn("Sem armazenamento local:",e);} markDirty(); }
 function saveSettings(){ try{localStorage.setItem(LS_SET, JSON.stringify(settings));}catch(e){} }
-function saveEscalas(){ try{localStorage.setItem(LS_ESC, JSON.stringify(escalas));}catch(e){console.warn("Sem armazenamento local:",e);} }
+function saveEscalas(){ try{localStorage.setItem(LS_ESC, JSON.stringify(escalas));}catch(e){console.warn("Sem armazenamento local:",e);} markDirty(); }
+
+/* ---------- Rede de segurança do backup (local, sem nuvem) ---------- */
+// Dados moram só no aparelho: se trocar/limpar o celular sem exportar, perde tudo.
+// Aqui o app registra o último backup, marca quando há mudanças desde então e cutuca.
+function fmtAgo(ts){
+  if(!ts) return "nunca";
+  const d=Math.floor((Date.now()-ts)/864e5);
+  if(d<=0) return "hoje"; if(d===1) return "ontem";
+  if(d<7) return "há "+d+" dias";
+  if(d<30) return "há "+Math.floor(d/7)+" semana(s)";
+  return "há mais de um mês";
+}
+function hasRealContent(){ return songs.length>1 || escalas.length>0; }   // demo sozinho não conta (não enche o saco)
+function backupDue(){
+  if(!hasRealContent()) return false;
+  if(!settings.lastBackup) return true;                                    // tem conteúdo e nunca exportou
+  return !!settings.dirtySinceBackup && (Date.now()-settings.lastBackup)>=7*864e5;  // mudou e faz ≥7 dias
+}
+function updateBackupBadge(){ const b=$("#backupBtn"); if(b) b.classList.toggle("due",backupDue()); }
+function markDirty(){ if(settings && !settings.dirtySinceBackup){ settings.dirtySinceBackup=true; saveSettings(); updateBackupBadge(); } }
+function recordBackup(){ settings.lastBackup=Date.now(); settings.dirtySinceBackup=false; saveSettings(); updateBackupBadge(); }
+function backupNote(){
+  let s="Último backup: "+fmtAgo(settings.lastBackup);
+  if(!settings.lastBackup) s+=" — exporte pra não perder o repertório se trocar de celular";
+  else if(settings.dirtySinceBackup) s+=" · há mudanças desde então";
+  return s;
+}
 function uid(){ return "s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
 function demoSong(){
@@ -956,6 +1114,7 @@ function renderLibrary(){
       'Toque em <b>＋ Nova cifra</b> para começar, ou <b>↧</b> para importar um arquivo do grupo.</div>';
     return;
   }
+  const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
   list.forEach(s=>{
     const card=document.createElement("div");
     card.className="songcard";
@@ -964,7 +1123,8 @@ function renderLibrary(){
       '<div class="keytag">'+esc(s.key||"?")+'</div>'+
       '<div class="meta"><div class="ttl">'+esc(s.title)+'</div>'+
       (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+
-      (tags?'<div class="tags">'+esc(tags)+'</div>':'')+'</div>';
+      (tags?'<div class="tags">'+esc(tags)+'</div>':'')+
+      playedLine(s.id,played,anyDone)+'</div>';
     card.onclick=()=>openPlayer(s.id);
     box.appendChild(card);
   });
@@ -1061,6 +1221,8 @@ $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings
 $("#scrollbar-toggle").onclick=()=>{settings.showScrollbar=!settings.showScrollbar;saveSettings();const b=$("#scrollbar-toggle");b.classList.toggle("on",!!settings.showScrollbar);b.setAttribute("aria-pressed",String(!!settings.showScrollbar));applyScrollbar();};
 function exitPlayer(){   // voltar do player — usado pelo ← normal E pelo ← da barra compacta
   stopScroll();
+  hideChordDiagram();   // não deixa um diagrama de acorde aberto sobre a lista
+
   $("#view-player").classList.remove("present");   // desliga o layout compacto da Apresentação
   const b=$("#p-body");   // ao sair, limpa o estado de página (não deixa DOM paginado órfão na view escondida)
   b.classList.remove("paged"); b.style.removeProperty("--page-h"); b.innerHTML=""; delete b.dataset.page; delete b.dataset.pages;
@@ -1248,12 +1410,18 @@ function goPage(d){
 let pgDownX=0,pgDownY=0,pgDownT=0;
 $("#p-body").addEventListener("pointerdown",e=>{ pgDownX=e.clientX; pgDownY=e.clientY; pgDownT=Date.now(); });
 $("#p-body").addEventListener("pointerup",e=>{
-  if(!isPageMode()) return;
-  // só ignora se foi ARRASTE (mexeu) — um toque parado, mesmo demorado, ainda vira página;
+  // só ignora se foi ARRASTE (mexeu) — um toque parado, mesmo demorado, ainda conta;
   // limiar de 16px acomoda o tremor natural do dedo no palco.
-  if(Math.abs(e.clientX-pgDownX)>16 || Math.abs(e.clientY-pgDownY)>16 || Date.now()-pgDownT>900) return;
+  const moved = Math.abs(e.clientX-pgDownX)>16 || Math.abs(e.clientY-pgDownY)>16;
+  // toque PARADO em cima de um acorde abre o diagrama (vale na rolagem e na página),
+  // e não vira a página — tem prioridade sobre o virar-página.
+  const ch = !moved && e.target.closest && e.target.closest(".chord");
+  if(ch){ showChordDiagram(ch.textContent, ch); return; }
+  if(!isPageMode()) return;
+  if(moved || Date.now()-pgDownT>900) return;
   goPage(e.clientX < window.innerWidth/2 ? -1 : 1);
 });
+$("#chorddiagbg").onclick=hideChordDiagram;
 /* DESLIZAR nativo (scroll-snap) atualiza o índice quando a rolagem assenta */
 let pgScrollT=null;
 $("#p-body").addEventListener("scroll",()=>{
@@ -1521,15 +1689,15 @@ $("#backupBtn").onclick=()=>{
   const env={type:"louvai-library",version:1,app:APP_VERSION,songs};
   const sendFile=()=>shareFile("repertorio-louvai.json",JSON.stringify(env),"Repertório Louvai");
   openSheet("Backup e compartilhamento",[
-    {ic:"↥",label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); closeSheet(); }},
+    {ic:"↥",label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); recordBackup(); closeSheet(); }},
     {ic:"🔗",label:"Enviar link do repertório",fn:()=>{
       // repertório inteiro quase sempre passa do limite: o shareLink vai oferecer o
       // arquivo (caminho primário do repertório) em vez de um link fadado a ser cortado.
       closeSheet();
       shareLink(env,"Repertório Louvai",sendFile);
     }},
-    {ic:"↧",label:"Importar arquivo (cifra ou repertório)",fn:()=>{closeSheet();$("#fileInput").click();}},
-  ]);
+    {ic:"↧",label:"Restaurar de um arquivo (.json)",fn:()=>{closeSheet();$("#fileInput").click();}},
+  ],backupNote());
 };
 $("#importBtn").onclick=()=>$("#fileInput").click();
 $("#fileInput").onchange=e=>{
@@ -1685,6 +1853,38 @@ function escTotalMin(e){ return (e.items||[]).reduce((a,it)=>a+(+it.dur||0),0); 
 function fmtDur(min){ if(!min)return ""; const h=Math.floor(min/60),m=min%60; return h?`${h}h${String(m).padStart(2,"0")}`:`${m} min`; }
 function songItems(e){ return (e.items||[]).filter(it=>it.kind==="song" && songById(it.songId)); }
 
+/* ---- "última vez que tocamos" (derivado das escalas CONFIRMADAS) ----
+   A escala é um plano; o que rola de verdade se ajusta no ensaio. Por isso só conta
+   como "tocada" a música que está numa escala marcada "Culto realizado" (e.done). */
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function buildLastPlayed(){
+  const map={};
+  escalas.forEach(e=>{
+    if(!e.done || !e.date) return;                 // só culto confirmado, e com data (o "quando")
+    (e.items||[]).forEach(it=>{
+      if(it && it.kind==="song" && it.songId && (!map[it.songId] || e.date>map[it.songId]))
+        map[it.songId]=e.date;
+    });
+  });
+  return map;
+}
+function fmtPlayed(iso){
+  if(!iso) return "nunca tocada";
+  const d=Math.floor((Date.now()-new Date(iso+"T00:00:00").getTime())/864e5);
+  if(d<=0) return "tocada hoje";
+  if(d===1) return "tocada ontem";
+  if(d<7) return "tocada há "+d+" dias";
+  if(d<31){ const w=Math.floor(d/7); return "tocada há "+w+(w===1?" semana":" semanas"); }
+  if(d<365){ const m=Math.floor(d/30); return "tocada há "+m+(m===1?" mês":" meses"); }
+  return "tocada há mais de um ano";
+}
+// linha pro card: "tocada há…" / "nunca tocada" (só quando há escala confirmada, p/ não poluir)
+function playedLine(songId, map, anyDone){
+  const iso=map[songId];
+  const txt=iso?fmtPlayed(iso):(anyDone?"nunca tocada":"");
+  return txt ? '<div class="played'+(iso?'':' never')+'">'+esc(txt)+'</div>' : '';
+}
+
 /* ---- lista de escalas ---- */
 function renderEscalas(){
   const list=escalas.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
@@ -1717,6 +1917,11 @@ function openEscala(id){
   currentEscalaId=id;
   $("#es-title").textContent=e.title||"(sem título)";
   $("#es-meta").textContent=[fmtDate(e.date),e.time,e.type].filter(Boolean).join("  ·  ");
+
+  // "Culto realizado": confirma a escala (suas músicas passam a contar na recência)
+  const doneBtn=$("#es-done");
+  doneBtn.classList.toggle("on",!!e.done);
+  doneBtn.textContent=e.done?"✓ Culto realizado":"Marcar culto como realizado";
 
   // equipe
   const teamBox=$("#es-team");
@@ -1761,6 +1966,15 @@ function openEscala(id){
   show("escala");
 }
 $("#es-back").onclick=()=>{switchTab("escalas");show("lib");renderEscalas();};
+$("#es-done").onclick=()=>{
+  const e=escalas.find(x=>x.id===currentEscalaId); if(!e)return;
+  e.done=!e.done;
+  if(e.done && !e.date) e.date=todayISO();   // precisa de uma data pra saber "quando tocou"
+  e.updatedAt=Date.now(); saveEscalas();
+  openEscala(currentEscalaId);               // atualiza o botão
+  renderLibrary();                           // a recência muda na aba Cifras
+  toast(e.done?"Culto marcado como realizado ✓":"Desmarcado");
+};
 $("#es-edit").onclick=()=>openEscalaEditor(currentEscalaId);
 $("#es-present").onclick=()=>{
   const e=escalas.find(x=>x.id===currentEscalaId);
@@ -1881,10 +2095,12 @@ function renderPicker(q){
   if(q) list=list.filter(s=>(s.title+" "+(s.artist||"")).toLowerCase().includes(q));
   const box=$("#picklist"); box.innerHTML="";
   if(!list.length){ box.innerHTML='<div class="hint" style="padding:10px">Nenhuma cifra encontrada.</div>'; return; }
+  const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
   list.forEach(s=>{
     const c=document.createElement("div"); c.className="songcard";
     c.innerHTML='<div class="keytag">'+esc(s.key||"?")+'</div><div class="meta"><div class="ttl">'+esc(s.title)+'</div>'+
-      (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+'</div>';
+      (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+
+      playedLine(s.id,played,anyDone)+'</div>';
     c.onclick=()=>{
       editEscala.items.push({kind:"song",songId:s.id,key:"",capo:0,momento:"",dur:0,note:""});
       closePicker(); renderItemsEditor(); toast("“"+s.title+"” adicionada");
@@ -1935,8 +2151,9 @@ function openS(bgSel,sheetSel,focusSel){
   if(focusSel) setTimeout(()=>$(focusSel).focus(),200);
 }
 function closeS(bgSel,sheetSel){ $(sheetSel).classList.remove("show"); $(bgSel).classList.remove("show"); }
-function openSheet(title,items){
+function openSheet(title,items,note){
   $("#sheet-title").textContent=title;
+  const n=$("#sheet-note"); if(n){ n.textContent=note||""; n.classList.toggle("hidden",!note); }
   const b=$("#sheet-body"); b.innerHTML="";
   items.forEach(it=>{
     const el=document.createElement("div");
@@ -1972,6 +2189,11 @@ load(); applyTheme(); renderLibrary(); show("lib");
 // link auto-importável: após carregar/render, trata #imp= do boot e de links tocados depois
 handleImportLink();
 window.addEventListener("hashchange",handleImportLink);
+// rede de segurança: pontinho no ↥ e, se o backup está atrasado, um lembrete leve ao abrir
+// (não atropela uma importação por link em andamento, que usa o mesmo toast).
+updateBackupBadge();
+if(backupDue() && location.hash.indexOf("#imp=")!==0)
+  setTimeout(()=>{ if(backupDue()) toast("Faça backup do repertório ↥"); },700);
 </script>
 </body>
 </html>
