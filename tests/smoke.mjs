@@ -721,6 +721,45 @@ await page.evaluate(() => document.getElementById("chorddiagbg").click());
 await page.waitForTimeout(100);
 ok(await page.evaluate(() => document.getElementById("chorddiag").classList.contains("hidden")), "Tocar fora fecha o diagrama");
 
+// ===== v0.26.0 — repertório + escalas por link (pull do GitHub Pages) =====
+// "Exportar tudo" gera um snapshot louvai-full com songs E escalas
+const fullEnv = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id: "fs1", title: "Snapshot", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });
+  escalas.push({ id: "fe1", title: "Culto", date: "2026-03-01", type: "Culto", team: [], items: [{ kind: "song", songId: "fs1" }], updatedAt: 1 });
+  const env = fullEnvelope();
+  return { type: env.type, hasSongs: Array.isArray(env.songs) && env.songs.length === 1, hasEscalas: Array.isArray(env.escalas) && env.escalas.length === 1 };
+});
+ok(fullEnv.type === "louvai-full" && fullEnv.hasSongs && fullEnv.hasEscalas, "Exportar tudo gera snapshot louvai-full com cifras E escalas");
+// importJSON entende louvai-full e mescla cifras + escalas
+const fullImp = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  const snap = { type: "louvai-full", version: 1, app: "x",
+    songs: [{ id: "ns1", title: "Nuvem 1", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" }],
+    escalas: [{ id: "ne1", title: "Culto Nuvem", date: "2026-03-08", type: "Culto", team: [{ role: "Vocal", name: "Ana" }], items: [{ kind: "song", songId: "ns1" }], updatedAt: 1 }] };
+  importJSON(JSON.stringify(snap));
+  return { song: songs.some(s => s.id === "ns1"), esc: escalas.some(e => e.id === "ne1"),
+           team: (escalas.find(e => e.id === "ne1") || {}).team?.[0]?.name };
+});
+ok(fullImp.song && fullImp.esc, "importJSON louvai-full mescla cifras E escalas");
+ok(fullImp.team === "Ana", "Snapshot leva a equipe junto (campo team)");
+// pullRepo busca de uma data: URL e mescla (fura-cache desligado p/ data:)
+const pull = await page.evaluate(async () => {
+  songs.length = 0; escalas.length = 0;
+  const snap = { type: "louvai-full", version: 1, app: "x",
+    songs: [{ id: "p1", title: "Puxada", key: "G", capo: 0, tags: [], updatedAt: 1, body: "G" }],
+    escalas: [{ id: "pe1", title: "Culto Link", date: "2026-03-15", type: "Culto", team: [], items: [{ kind: "song", songId: "p1" }], updatedAt: 1 }] };
+  settings.repoUrl = "data:application/json," + encodeURIComponent(JSON.stringify(snap));
+  await pullRepo();
+  return { song: songs.some(s => s.id === "p1"), esc: escalas.some(e => e.id === "pe1"), at: !!settings.repoPulledAt };
+});
+ok(pull.song && pull.esc, "Atualizar do link (pullRepo) baixa e mescla cifras + escalas");
+ok(pull.at, "Pull registra a data da última atualização do link");
+// erro tratado: link sem JSON válido → toast de erro, sem exceção
+await page.evaluate(async () => { settings.repoUrl = "data:text/plain,isto-nao-eh-json"; await pullRepo(); });
+await page.waitForTimeout(120);
+ok(/válido/.test(await page.locator("#toast").textContent()), "Link inválido no pull mostra erro (sem quebrar)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

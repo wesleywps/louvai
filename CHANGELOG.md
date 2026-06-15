@@ -8,6 +8,36 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.26.0 — Repertório + escalas por link (pull do GitHub Pages)
+**Recurso (importar/compartilhar, sem backend).** Um **retrato completo** do ministério —
+cifras **e** escalas — publicado num arquivo só, que a equipe **puxa** por um link. Celular
+novo pega tudo de uma vez; a equipe atualiza de tempos em tempos. **Mão única:** o líder
+**publica**, a equipe **baixa** (escrever de volta exige login → fase online).
+- **Snapshot único `louvai.json`:** novo **"Exportar tudo (pra publicar)"** gera o envelope
+  `louvai-full` = `{songs, escalas}` (cifras uma vez; escalas referenciam por `id` → arquivo
+  compacto). O líder sobe esse arquivo no GitHub Pages (ao lado do `index.html`); o git
+  **versiona** o repertório de graça.
+- **"Atualizar do link":** nova folha **"Repertório na nuvem"** (no Backup) com o campo da URL,
+  "Atualizar agora" e "Exportar tudo". `pullRepo()` faz `fetch` com **fura-cache** (CDN não
+  serve versão velha) e joga no `importJSON` — que agora entende `louvai-full` e **mescla cifras
+  E escalas** (dedup por `id`/`updatedAt`, com o aviso de título duplicado da v0.22.0).
+- **Sinergia:** como o `done` ("Culto realizado") e a equipe (`team`) viajam no snapshot, a
+  recência **"última vez que tocamos"** (v0.24.0) fica igual pra equipe quando o líder publica.
+- **GitHub, não Drive:** o GitHub Pages serve com CORS liberado (o navegador lê); o Drive
+  bloqueia por CORS na leitura e exige OAuth pra escrever — por isso não serve pro pull.
+- **Complementar ao link de WhatsApp (v0.21.0):** aquele empurra *a escala de hoje agora*;
+  este puxa *o retrato completo* (novo aparelho / refresh).
+- **Erros honestos:** sem internet → "Não consegui buscar — sem internet?"; conteúdo que não é
+  repertório → "O link não tem um repertório válido". Nada quebra.
+- **Limites (MVP):** mão única (pull); publicar é manual; **apagar não propaga** (mescla só
+  adiciona/atualiza); arquivo público **com os nomes da equipe** (escolha do dono); funciona
+  melhor se a equipe **partir do snapshot do líder** (ids alinhados). Ver `PLANO-repertorio-link.md`.
+- **Por dentro:** `fullEnvelope`/`exportFull`, `pullRepo` (+`settings.repoUrl`/`repoPulledAt`),
+  `openRepoSheet`, `mergeEscala` (extraído) e o ramo `louvai-full` no `importJSON`/`doImport`.
+  **138 verificações**, zero erro de JS.
+
+---
+
 ## v0.25.0 — Diagramas de acorde (pegada ao tocar no acorde)
 **Recurso (qualidade da cifra).** Tocar num acorde no player abre um **popover com a pegada**
 no violão — fecha o Tema C. Aliado ao princípio "uma pegada errada é pior que nenhuma".

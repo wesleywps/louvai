@@ -615,6 +615,20 @@ input,textarea,select{font-family:inherit}
     font-size:13px;line-height:1.6;white-space:pre;outline:none"></textarea>
   <button class="btn primary" id="paste-go" style="width:100%;margin-top:10px">Reconhecer e preencher</button>
 </div>
+<!-- Repertório na nuvem: puxa um snapshot (cifras + escalas) publicado num link -->
+<div class="sheetbg" id="repobg"></div>
+<div class="sheet" id="reposheet">
+  <div class="grip"></div>
+  <h3>Repertório na nuvem</h3>
+  <div class="hint" style="margin:0 2px 8px">
+    Cole o link de um repertório publicado (ex.: no GitHub Pages). “Atualizar” baixa as
+    cifras e escalas e mescla no aparelho — mão única: você baixa, não escreve de volta.
+  </div>
+  <input id="repo-url" class="search" inputmode="url" placeholder="https://…/louvai.json" style="width:100%;margin-bottom:8px">
+  <div id="repo-status" class="sheetnote" style="margin:0 2px 12px"></div>
+  <button class="btn primary" id="repo-pull" style="width:100%">↓ Atualizar do link</button>
+  <button class="btn" id="repo-export" style="width:100%;margin-top:8px">↥ Exportar tudo (pra publicar)</button>
+</div>
 <!-- Ajustes do player (capo, fonte, só-letra, tabs, ♯/♭) — IDs preservados -->
 <div class="sheetbg" id="playerbg"></div>
 <div class="sheet" id="playersheet">
@@ -655,7 +669,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.25.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.26.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1697,9 +1711,54 @@ $("#backupBtn").onclick=()=>{
       shareLink(env,"Repertório Louvai",sendFile);
     }},
     {ic:"↧",label:"Restaurar de um arquivo (.json)",fn:()=>{closeSheet();$("#fileInput").click();}},
+    {ic:"☁",label:"Repertório na nuvem (link)…",fn:()=>{closeSheet();openRepoSheet();}},
   ],backupNote());
 };
 $("#importBtn").onclick=()=>$("#fileInput").click();
+
+/* ---------- Repertório na nuvem (pull de um snapshot publicado, mão única) ----------
+   Um arquivo louvai.json {songs, escalas} hospedado (GitHub Pages). A app BAIXA e mescla
+   (reusa importJSON). Escrever de volta exige login → fase online (fora de escopo). */
+function fullEnvelope(){ return {type:"louvai-full",version:1,app:APP_VERSION,songs,escalas}; }
+function exportFull(){
+  shareFile("louvai.json",JSON.stringify(fullEnvelope()),"Louvai — repertório + escalas");
+  recordBackup();   // snapshot completo também é um backup (o mais completo)
+}
+async function pullRepo(){
+  const url=(settings.repoUrl||"").trim();
+  if(!url){ toast("Cole o link do repertório primeiro"); return; }
+  let txt;
+  try{
+    // fura-cache só em http(s) (data:/blob: não aceitam query); no-store reforça
+    const u = /^https?:/i.test(url) ? url+(url.includes("?")?"&":"?")+"t="+Date.now() : url;
+    const res = await fetch(u,{cache:"no-store"});
+    if(!res.ok) throw new Error("http "+res.status);
+    txt = await res.text();
+  }catch(e){ toast("Não consegui buscar — sem internet?"); return; }
+  let data; try{ data=JSON.parse(txt); }catch(e){ toast("O link não tem um repertório válido"); return; }
+  const tp=String(data.type||"").replace(/^levita-/,"louvai-");
+  if(!/^louvai-(full|library|escala|song)$/.test(tp) && !Array.isArray(data) && !(data.title&&data.body)){
+    toast("O link não tem um repertório válido"); return;
+  }
+  settings.repoPulledAt=Date.now(); saveSettings();
+  importJSON(txt);   // reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
+}
+function repoStatus(){
+  return settings.repoPulledAt ? "Última atualização do link: "+fmtAgo(settings.repoPulledAt) : "Nunca atualizado por aqui.";
+}
+function openRepoSheet(){
+  $("#repo-url").value=settings.repoUrl||"";
+  $("#repo-status").textContent=repoStatus();
+  openS("#repobg","#reposheet","#repo-url");
+}
+function closeRepoSheet(){ closeS("#repobg","#reposheet"); }
+$("#repobg").onclick=closeRepoSheet;
+$("#repo-pull").onclick=()=>{
+  settings.repoUrl=$("#repo-url").value.trim(); saveSettings();
+  closeRepoSheet(); pullRepo();
+};
+$("#repo-export").onclick=()=>{ closeRepoSheet(); exportFull(); };
+
 $("#fileInput").onchange=e=>{
   const f=e.target.files[0]; if(!f)return;
   const r=new FileReader();
@@ -1751,6 +1810,7 @@ function importJSON(text){
   // descobre QUAIS cifras chegam (sem mexer em nada ainda) p/ detectar título repetido
   let incoming;
   if(tp==="louvai-escala"&&data.escala) incoming=data.songs||[];
+  else if(tp==="louvai-full") incoming=Array.isArray(data.songs)?data.songs:[];   // snapshot da nuvem
   else if(tp==="louvai-song"&&data.song) incoming=[data.song];
   else if(tp==="louvai-library"&&Array.isArray(data.songs)) incoming=data.songs;
   else if(Array.isArray(data)) incoming=data;
@@ -1772,23 +1832,35 @@ function importJSON(text){
   }
   doImport(data,tp,incoming,"both");   // sem conflito: comportamento de sempre
 }
+// funde UMA escala (dedup por id; só sobrescreve com updatedAt ≥). `remap` reescreve as
+// referências de cifra quando o usuário escolheu "manter as minhas". Retorna true se ADICIONOU.
+function mergeEscala(inc, remap){
+  if(!inc) return false;
+  inc.updatedAt=inc.updatedAt||Date.now();
+  if(Array.isArray(inc.items)) inc.items.forEach(it=>{ if(it&&it.songId&&remap&&remap[it.songId]) it.songId=remap[it.songId]; });
+  const ix=inc.id?escalas.findIndex(x=>x.id===inc.id):-1;
+  if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)) escalas[ix]=inc; return false; }
+  if(!inc.id||escalas.some(x=>x.id===inc.id)) inc.id=uid();
+  escalas.push(inc); return true;
+}
 function doImport(data,tp,incoming,policy){
-  // Escala (traz as cifras junto)
+  // Escala avulsa (traz as cifras junto)
   if(tp==="louvai-escala"&&data.escala){
     const {added,remap}=mergeSongs(incoming,policy);
-    // dedup por id como em mergeSongs: re-importar a mesma escala (ou uma versão
-    // corrigida) ATUALIZA a existente em vez de empilhar duplicatas na lista.
-    const inc=data.escala; inc.updatedAt=inc.updatedAt||Date.now();
-    // se o usuário escolheu "manter as minhas", a escala apontava p/ a cifra que NÃO
-    // entrou — remapeia a referência p/ a cifra equivalente que já existia no aparelho.
-    if(Array.isArray(inc.items)) inc.items.forEach(it=>{ if(it&&it.songId&&remap[it.songId]) it.songId=remap[it.songId]; });
-    const ix=inc.id?escalas.findIndex(x=>x.id===inc.id):-1;
-    if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)) escalas[ix]=inc; }   // só sobrescreve com versão igual/mais nova
-    else{ if(!inc.id||escalas.some(x=>x.id===inc.id)) inc.id=uid(); escalas.push(inc); }
+    mergeEscala(data.escala, remap);
     saveSongs(); saveEscalas();
     renderLibrary();            // cifras agregadas pela escala já aparecem na aba Cifras
     switchTab("escalas"); renderEscalas();
     toast("Escala importada"+(added?` (+${added} cifra(s))`:""));
+    return;
+  }
+  // Snapshot da nuvem: repertório + escalas juntos
+  if(tp==="louvai-full"){
+    const {added,updated,remap}=mergeSongs(incoming,policy);
+    let escAdd=0;
+    (data.escalas||[]).forEach(e=>{ if(mergeEscala(e, remap)) escAdd++; });
+    saveSongs(); saveEscalas(); renderLibrary(); renderEscalas();
+    toast("Atualizado: "+added+" cifra(s)"+(updated?", "+updated+" atual.":"")+(escAdd?", "+escAdd+" escala(s)":""));
     return;
   }
   const {added,updated}=mergeSongs(incoming,policy);

@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.25.0**.
+seguir. Atualizado até a **v0.26.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -81,6 +81,7 @@ instalação complexa.
 | **v0.23.0** | recurso | **Backup com rede de segurança:** registra a data do último backup, marca "há mudanças desde então", cutuca quando está atrasado (pontinho no ↥ + toast leve ao abrir) e deixa o "restaurar de arquivo" claro. Tudo local (nuvem é fase online). |
 | **v0.24.0** | recurso | **"Última vez que tocamos":** cada cifra mostra a recência (tocada há X / nunca tocada), na lista e no seletor de escala. Derivado só de escalas marcadas **"Culto realizado"** — porque a escala é plano, e o que rola se confirma no culto (não infla a recência). |
 | **v0.25.0** | recurso | **Diagramas de acorde:** tocar num acorde no player abre a pegada no violão (popover SVG). Híbrido — formas abertas curadas + motor de pestanas móveis (E/A-shape) pros 12 tons; "sem diagrama" honesto pro resto. Capo-aware (mostra a forma). Validado por notas no CI. |
+| **v0.26.0** | recurso | **Repertório + escalas por link (pull):** o líder publica um snapshot único `louvai.json` (cifras + escalas) no GitHub Pages; a equipe puxa com "Atualizar do link" e mescla (dedup por id/updatedAt). Mão única, sem backend. Complementa o link de WhatsApp da v0.21.0. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -104,9 +105,10 @@ instalação complexa.
   tocamos" nas cifras), modo Apresentar (música a música no tom do culto, com **barra compacta**
   que dá mais cifra na tela e **virar página como um livro** entre as músicas),
   compartilhar.
-- **Compartilhar:** por **arquivo `.json`** (cifra, escala ou repertório) e por
-  **link auto-importável** (`…/#imp=…`, sem servidor) — a pessoa toca o link e o app
-  abre oferecendo importar, com confirmação antes de salvar.
+- **Compartilhar:** por **arquivo `.json`** (cifra, escala ou repertório), por **link
+  auto-importável** (`…/#imp=…`, sem servidor — a pessoa toca e o app oferece importar) e por
+  **"Atualizar do link"** (puxa um snapshot `louvai.json` com cifras + escalas publicado no
+  GitHub Pages e mescla — mão única, ótimo pra celular novo / refresh da equipe).
 - **Offline:** tudo salvo no aparelho (localStorage); funciona sem internet. **Rede de
   segurança do backup:** registra a data do último backup, avisa quando há mudanças não
   salvas (pontinho no ↥ + lembrete ao abrir) e tem "Restaurar de um arquivo" claro.
@@ -180,8 +182,9 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   (GitHub Pages — passo a passo no `README` e no plano).
 - [ ] **Transferência por QR Code** entre celulares (do link curto / via Drive) — entra
   depois de validar o link em campo.
-- [ ] **Importar de URL (Drive/Dropbox/Gist)** — `fetch`+`importJSON`, para payloads
-  grandes por link curto (atenção a CORS).
+- [x] **Importar de URL (repertório + escalas)** — `pullRepo`+`importJSON` de um snapshot
+  `louvai.json` hospedado (GitHub Pages, CORS ok; o Drive não serve). Mão única (líder publica,
+  equipe puxa). *(entregue na v0.26.0 — ver `PLANO-repertorio-link.md`)*
 - [ ] **Compartilhar escala como texto formatado** para WhatsApp (além do `.json`).
 - [ ] **Refinar o colar** com mais exemplos reais; **exportar para ChordPro**.
 
@@ -216,7 +219,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > ✅ **Aviso de título duplicado** ao importar na v0.22.0; **backup com rede de
 > segurança** (data, "mudanças desde então", lembrete, restaurar claro) na v0.23.0;
 > **"última vez que tocamos"** (recência via escalas confirmadas) na v0.24.0;
-> **diagramas de acorde** (pegada ao tocar, híbrido curado+motor) na v0.25.0 — fecha o Tema C.
+> **diagramas de acorde** (pegada ao tocar, híbrido curado+motor) na v0.25.0 — fecha o Tema C;
+> **repertório + escalas por link** (pull de um snapshot do GitHub Pages) na v0.26.0.
 
 ---
 
@@ -236,4 +240,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.25.0.*
+*Última atualização deste roteiro: v0.26.0.*

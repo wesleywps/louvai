@@ -102,7 +102,7 @@ PLANO atualizado se aplicável · `npm test` verde.
     **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`) e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~132 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~138 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -121,8 +121,8 @@ PLANO atualizado se aplicável · `npm test` verde.
   (serverless) + hospedar no GitHub Pages — **implementado na v0.21.0** (resta hospedar).
 - `PLANO-diagramas-acorde.md` — diagramas de acorde (híbrido curado + motor de templates;
   violão 6 cordas; toque no acorde → popover) — **implementado na v0.25.0**.
-- `PLANO-repertorio-link.md` — plano **decidido, aguardando OK pra executar**: repertório +
-  escalas num snapshot único (`louvai.json`) hospedado, com "Atualizar do link" (pull, mão única).
+- `PLANO-repertorio-link.md` — repertório + escalas num snapshot único (`louvai.json`)
+  hospedado, com "Atualizar do link" (pull, mão única) — **implementado na v0.26.0**.
 - `.gitignore` — ignora `node_modules/`, as cópias `louvai-v*.html` e o
   `COMMIT_MSG_tmp.txt`.
 - `CLAUDE.md` — este guia.
@@ -165,6 +165,11 @@ PLANO atualizado se aplicável · `npm test` verde.
   Receber: `describeImport` +
   `handleImportLink` (confirma via `openSheet` antes de `importJSON` — "nada salvo no
   escuro" —, limpa o hash com `clearImpHash`), chamado no **boot** e no `hashchange`.
+- **Repertório na nuvem (v0.26.0):** snapshot único `louvai-full` = `{songs, escalas}`. Publicar:
+  `fullEnvelope`/`exportFull` ("Exportar tudo"). Puxar: `pullRepo` (`settings.repoUrl`, `fetch`
+  com fura-cache só em http(s), erros tratados) → `importJSON`, que agora trata `louvai-full` no
+  pré-check e no `doImport` (mescla cifras via `mergeSongs` + cada escala via `mergeEscala`,
+  extraído). Folha "Repertório na nuvem" (`openRepoSheet`, `#reposheet`). Mão única (pull).
 - **Player (barra de uma linha, v0.20.0):** `.controls` é uma linha só
   `← · #p-title · ☰ · ⚙` priorizando a cifra; **Tom, Editar (`#p-edit`),
   Compartilhar (`#p-share`), capo, fonte, só-letra, tabs e auto-scroll moram no
@@ -209,7 +214,8 @@ PLANO atualizado se aplicável · `npm test` verde.
 Já entregues: redesign visual (v0.10.0–v0.13.x), grafia dos acordes (v0.16.0–v0.17.0),
 modos de leitura (v0.14.0–v0.15.x), Apresentação enxuta + "livro" (v0.18.0–v0.19.0),
 **compartilhar por link** (v0.21.0), aviso de duplicado + **backup com rede de segurança**
-(v0.22.0–v0.23.0), **"última vez que tocamos"** (v0.24.0) e **diagramas de acorde** (v0.25.0).
+(v0.22.0–v0.23.0), **"última vez que tocamos"** (v0.24.0), **diagramas de acorde** (v0.25.0) e **repertório +
+escalas por link** (pull do GitHub Pages — v0.26.0, ver `PLANO-repertorio-link.md`).
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). Ordem sugerida agora:
 1. **Hospedar + validar o link em campo** (tarefa do dono): publicar no GitHub Pages
    (passo a passo no `README` / `PLANO-compartilhar-link.md`) e testar o link entre celulares.

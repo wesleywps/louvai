@@ -11,7 +11,7 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.25.0)
+## Recursos (v0.26.0)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
 - Repertório com busca e tags; criar/editar cifras; **importar colando do Cifra Club**.
@@ -20,6 +20,9 @@ para ter um ícone e abrir como app.
 - **Rede de segurança do backup:** registra a data do último backup, marca quando há
   mudanças desde então, **lembra de exportar** (pontinho no ↥ + aviso ao abrir quando
   atrasado) e tem **"Restaurar de um arquivo"** claro. Tudo local (sem nuvem).
+- **Repertório na nuvem (link):** o líder publica um snapshot `louvai.json` (cifras + escalas)
+  no GitHub Pages e a equipe puxa com **"Atualizar do link"** — celular novo pega tudo de um
+  link. Mão única (você baixa; escrever de volta é fase futura), sem backend.
 - Player em **barra de uma linha** (prioriza a cifra): transposição com **grafia fiel
   ao tom** — preserva o que você escreveu e, ao subir/abaixar, escolhe ♯/♭ sozinho
   pelo tom de destino (Bb nunca vira A#, mesmo em acordes emprestados), capo, fonte,
@@ -69,6 +72,24 @@ e commite — em ~1 min todos pegam a versão nova ao reabrir, sem reenviar arqu
 > instalável "de verdade" é o **próximo passo** (PWA: manifest + service worker).
 
 O passo a passo detalhado (com a conta do dono) está em `PLANO-compartilhar-link.md`.
+
+### Repertório na nuvem (a equipe puxa de um link)
+Depois de hospedar, dá pra ter um **repertório compartilhado** sem backend, **mão única**
+(o líder publica, a equipe baixa):
+
+1. **Líder publica:** no app, **↥ → Repertório na nuvem → "Exportar tudo (pra publicar)"**
+   gera um `louvai.json` (cifras **+** escalas). Suba esse arquivo no mesmo repositório do
+   app (Add file → Upload files → Commit) — ele vira `https://<seu-site>/louvai.json`.
+2. **Equipe configura uma vez:** **↥ → Repertório na nuvem**, cola o link e toca
+   **"Atualizar do link"**. Baixa o repertório e as escalas e **mescla** no aparelho
+   (cifras/escalas repetidas não duplicam; o app avisa se um título bater).
+3. **Atualizar depois:** o líder repete o passo 1 (sobe o `louvai.json` novo); a equipe toca
+   "Atualizar do link" de novo.
+
+> **Mão única:** escrever de volta (todos sincronizarem) exige login e é a fase futura.
+> O arquivo é público — inclui os nomes da equipe das escalas. Apagar uma cifra/escala no
+> arquivo **não** a remove dos aparelhos (a mescla só adiciona/atualiza). Detalhes e limites
+> em `PLANO-repertorio-link.md`.
 
 ## Desenvolver
 Requer [Node.js](https://nodejs.org) 18+.

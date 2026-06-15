@@ -2,7 +2,22 @@
 
 > **Como retomar:** abra o Claude Code nesta pasta e peça
 > *"vamos executar o PLANO-repertorio-link.md"*.
-> **Status: DECIDIDO — AGUARDANDO OK PRA EXECUTAR.** App na v0.25.0.
+> **Status: ✅ IMPLEMENTADO na v0.26.0** (commit/tag `v0.26.0`).
+>
+> **Entregue:** `fullEnvelope`/`exportFull` ("Exportar tudo" → `louvai-full`), `pullRepo`
+> (`settings.repoUrl`/`repoPulledAt`, fura-cache em http(s), erros tratados), folha
+> "Repertório na nuvem" (`openRepoSheet`/`#reposheet`), `mergeEscala` extraído e o ramo
+> `louvai-full` no `importJSON`/`doImport` (mescla cifras + escalas). README ganhou a
+> subseção "Repertório na nuvem". **138 verificações** (export-tudo, import full, pull por
+> `data:` URL, erro tratado).
+>
+> **Armadilhas/decisões registradas:**
+> - **Fura-cache só em http(s):** `data:`/`blob:` não aceitam query — o teste usa `data:` URL.
+> - `pullRepo` valida que o conteúdo é um tipo de repertório **antes** do `importJSON` (link
+>   que devolve HTML/lixo → "não tem um repertório válido", sem quebrar).
+> - `importJSON` reusa o **aviso de título duplicado** (v0.22.0) também no `louvai-full`.
+>
+> *(Plano original abaixo; decisões mantidas.)* App estava na v0.25.0 ao planejar.
 
 ## O que é
 Um **retrato completo** do ministério (cifras + escalas) publicado num **arquivo único**
