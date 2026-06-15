@@ -11,7 +11,7 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.26.0)
+## Recursos (v0.27.0)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
 - Repertório com busca e tags; criar/editar cifras; **importar colando do Cifra Club**.
@@ -22,7 +22,9 @@ para ter um ícone e abrir como app.
   atrasado) e tem **"Restaurar de um arquivo"** claro. Tudo local (sem nuvem).
 - **Repertório na nuvem (link):** o líder publica um snapshot `louvai.json` (cifras + escalas)
   no GitHub Pages e a equipe puxa com **"Atualizar do link"** — celular novo pega tudo de um
-  link. Mão única (você baixa; escrever de volta é fase futura), sem backend.
+  link. O líder pode **"Publicar na nuvem"** direto do celular (escreve o `louvai.json` via API
+  do GitHub, com um token fino que fica só no aparelho). Mão única (líder publica, equipe puxa),
+  sem backend.
 - Player em **barra de uma linha** (prioriza a cifra): transposição com **grafia fiel
   ao tom** — preserva o que você escreveu e, ao subir/abaixar, escolhe ♯/♭ sozinho
   pelo tom de destino (Bb nunca vira A#, mesmo em acordes emprestados), capo, fonte,
@@ -86,7 +88,15 @@ Depois de hospedar, dá pra ter um **repertório compartilhado** sem backend, **
 3. **Atualizar depois:** o líder repete o passo 1 (sobe o `louvai.json` novo); a equipe toca
    "Atualizar do link" de novo.
 
-> **Mão única:** escrever de volta (todos sincronizarem) exige login e é a fase futura.
+**Publicar do celular (líder):** em vez de subir o `louvai.json` à mão, o líder pode escrever
+direto pelo app. Uma vez, crie um **token fino** no GitHub:
+*Settings → Developer settings → **Fine-grained tokens** → Generate new token* → **Only select
+repositories** = o repo do app → **Permissions → Contents: Read and write** → defina uma
+validade → Generate → copie. No app: **↥ → Repertório na nuvem → cole o token → "Publicar na
+nuvem"** (a 1ª publicação cria o `louvai.json`). O token fica **só no aparelho** (dá pra
+**revogar** no GitHub quando quiser); a equipe continua só puxando.
+
+> **Mão única:** sincronização de duas vias (todos escreverem) exige login e é a fase futura.
 > O arquivo é público — inclui os nomes da equipe das escalas. Apagar uma cifra/escala no
 > arquivo **não** a remove dos aparelhos (a mescla só adiciona/atualiza). Detalhes e limites
 > em `PLANO-repertorio-link.md`.

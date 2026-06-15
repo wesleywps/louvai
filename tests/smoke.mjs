@@ -760,6 +760,53 @@ await page.evaluate(async () => { settings.repoUrl = "data:text/plain,isto-nao-e
 await page.waitForTimeout(120);
 ok(/válido/.test(await page.locator("#toast").textContent()), "Link inválido no pull mostra erro (sem quebrar)");
 
+// ===== v0.27.0 — Publicar na nuvem (token do GitHub + API Contents) =====
+// derivação owner/repo/path a partir da URL de pull
+const gh = await page.evaluate(() => ({
+  proj: ghRepoFromUrl("https://wesleywps.github.io/louvai/louvai.json"),
+  user: ghRepoFromUrl("https://wesleywps.github.io/louvai.json"),
+  bad: ghRepoFromUrl("https://example.com/x.json"),
+}));
+ok(gh.proj && gh.proj.owner === "wesleywps" && gh.proj.repo === "louvai" && gh.proj.path === "louvai.json",
+   "ghRepoFromUrl: site de projeto → owner/repo/path");
+ok(gh.user && gh.user.repo === "wesleywps.github.io" && gh.user.path === "louvai.json", "ghRepoFromUrl: site de usuário");
+ok(gh.bad === null, "ghRepoFromUrl: URL não-GitHub → null");
+// base64 padrão (o que a API do GitHub espera)
+const b64 = await page.evaluate(() => ({ s: bytesToB64(new TextEncoder().encode("Louvai")), dec: atob(bytesToB64(new TextEncoder().encode("Louvai"))) }));
+ok(b64.s === btoa("Louvai") && b64.dec === "Louvai", "bytesToB64 produz base64 padrão (decodifica de volta)");
+// publishRepo com fetch stubado: busca o sha (GET) e escreve (PUT) com Authorization + base64
+const pub = await page.evaluate(async () => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id: "pubx", title: "Pub", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });
+  settings.repoUrl = "https://wesleywps.github.io/louvai/louvai.json"; settings.ghToken = "tok123";
+  delete settings.repoPublishedAt;
+  const calls = [], real = window.fetch;
+  window.fetch = async (url, opts) => { calls.push({ url: String(url), opts: opts || {} });
+    return ((opts && opts.method) === "PUT")
+      ? { ok: true, status: 200, json: async () => ({ content: {} }) }
+      : { ok: true, status: 200, json: async () => ({ sha: "deadbeef" }) }; };
+  try { await publishRepo(); } finally { window.fetch = real; }
+  const put = calls.find(c => c.opts.method === "PUT");
+  let body = {}; try { body = JSON.parse(put.opts.body); } catch (e) {}
+  return { get: calls.some(c => !c.opts.method || c.opts.method === "GET"), put: !!put,
+    auth: put && put.opts.headers.Authorization, hasSha: !!body.sha,
+    content: body.content ? atob(body.content) : "", at: !!settings.repoPublishedAt };
+});
+ok(pub.get && pub.put, "publishRepo busca o sha (GET) e escreve (PUT)");
+ok(pub.auth === "Bearer tok123", "PUT vai com Authorization: Bearer <token>");
+ok(pub.hasSha && /"type":"louvai-full"/.test(pub.content), "PUT envia o snapshot (louvai-full) em base64, com o sha");
+ok(pub.at, "Publicar registra a data da última publicação");
+// sem token / URL não-GitHub: avisa sem tocar a rede
+await page.evaluate(async () => { settings.ghToken = ""; settings.repoUrl = "https://wesleywps.github.io/louvai/louvai.json"; await publishRepo(); });
+await page.waitForTimeout(80);
+ok(/token/i.test(await page.locator("#toast").textContent()), "Publicar sem token avisa pra colar o token");
+await page.evaluate(async () => { settings.ghToken = "t"; settings.repoUrl = "https://example.com/x.json"; await publishRepo(); });
+await page.waitForTimeout(80);
+ok(/GitHub Pages/.test(await page.locator("#toast").textContent()), "Publicar com URL não-GitHub avisa o limite");
+// "Remover token" limpa do aparelho
+ok(await page.evaluate(() => { settings.ghToken = "x"; saveSettings(); document.getElementById("repo-forget").click(); return !settings.ghToken; }),
+   "Remover token apaga o token do aparelho");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

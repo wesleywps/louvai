@@ -2,7 +2,22 @@
 
 > **Como retomar:** abra o Claude Code nesta pasta e peça
 > *"vamos executar o PLANO-publicar-nuvem.md"*.
-> **Status: DECIDIDO — AGUARDANDO OK PRA EXECUTAR.** App na v0.26.0.
+> **Status: ✅ IMPLEMENTADO na v0.27.0** (commit/tag `v0.27.0`).
+>
+> **Entregue:** `bytesToB64` (fatorado), `ghRepoFromUrl`, `publishRepo` (GET sha → PUT, 404 cria,
+> 409 rebusca+retry, erros tratados), `settings.ghToken`/`repoPublishedAt`, bloco "Publicar
+> (líder)" na folha da nuvem (token oculto + "Publicar na nuvem" + "Remover token") e
+> `repoStatus` mostrando baixou…/publicou… README ganhou o passo do token. **149 verificações**
+> (incl. `publishRepo` com `fetch` **stubado** — sem rede real no CI).
+>
+> **Armadilhas/decisões registradas:**
+> - GitHub quer **base64 padrão** (não url-safe) → `bytesToB64` separado do `bytesToB64url`.
+> - Testar publish sem tocar a rede: **stub do `window.fetch`** no contexto da página (restaurado
+>   num `finally`); sem-token / URL não-GitHub retornam **antes** do fetch.
+> - 1ª publicação: GET dá **404** → publica **sem `sha`** (cria o arquivo). Depois, sempre manda o `sha`.
+> - Token **só no `localStorage`** do aparelho, **fora do código público**; "Remover token" + revogar no GitHub.
+>
+> *(Plano original abaixo; decisões mantidas.)* App estava na v0.26.0 ao planejar.
 
 ## O que é
 Fecha o ciclo da nuvem: hoje a app **puxa** (v0.26.0). Aqui ela passa a **escrever** o

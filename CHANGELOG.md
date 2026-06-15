@@ -8,6 +8,32 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.27.0 — Publicar na nuvem (editar no celular → escrever no louvai.json)
+**Recurso (compartilhar, sem backend nosso).** Fecha o ciclo da nuvem: a v0.26.0 **puxava**;
+agora o líder **publica** o `louvai.json` **direto do aparelho**, via **API do GitHub** (que
+aceita escrita do navegador). O fluxo do líder vira **editar → Publicar**; a equipe segue puxando.
+- **Token fino, só no aparelho:** o líder cria um *fine-grained token* (escopo: o repo do app,
+  **Contents: escrever**) e cola no app. Fica no `localStorage` **do aparelho**, **nunca no
+  código** (que é público) — só conversa **direto com o GitHub** (HTTPS) ao publicar. Há
+  **"Remover token deste aparelho"**; e dá pra **revogar** no GitHub a qualquer momento.
+- **Publicar:** `publishRepo()` deriva `owner/repo/path` da própria URL de pull (`ghRepoFromUrl`),
+  pega o `sha` atual (GET) e escreve (PUT) o snapshot `louvai-full` em **base64 padrão**
+  (`bytesToB64`). A **1ª publicação cria** o arquivo (404 → cria), sem upload manual.
+- **Conflito tratado:** se o `sha` estiver velho (mudou na nuvem), rebusca e tenta de novo;
+  persistindo → "Mudou na nuvem — atualize e tente de novo". Sem internet / token inválido /
+  URL não-GitHub → toasts honestos, sem quebrar.
+- **Folha "Repertório na nuvem"** ganhou o bloco **Publicar (líder)**: campo do token (oculto),
+  "Publicar na nuvem", "Remover token", e a linha de status mostra *baixou…/publicou…*.
+- **Limites (MVP):** *last-write-wins* (com retry no 409); sem OAuth (é o PAT, simples pro caso
+  de **um** líder); a equipe **não** publica (só pull). Ver `PLANO-publicar-nuvem.md`.
+- **Segurança:** token **fino + single-repo + Contents only + com validade + revogável** — pior
+  caso se vazar: escrever naquele único repo (reversível). O app já escapa saída (`esc()`, v0.13.2).
+- **Testes (sem rede real):** `ghRepoFromUrl`, `bytesToB64`, e `publishRepo` com `fetch`
+  **stubado** (confere GET sha → PUT com `Authorization` + `content` base64), além de sem-token /
+  URL não-GitHub / remover token. **149 verificações**, zero erro de JS.
+
+---
+
 ## v0.26.0 — Repertório + escalas por link (pull do GitHub Pages)
 **Recurso (importar/compartilhar, sem backend).** Um **retrato completo** do ministério —
 cifras **e** escalas — publicado num arquivo só, que a equipe **puxa** por um link. Celular
