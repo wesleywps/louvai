@@ -8,6 +8,20 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.32.0 — Repertório na nuvem reorganizado (Onda 3 · M5)
+**Recurso (interface).** Terceiro item da Onda 3 (M5 de `ANALISE-ui.md`). O `#reposheet` era o sheet
+mais longo e denso do app: link, exportar, token e publicar empilhados num scroll só, sem hierarquia
+— intimidante pra equipe que só quer **baixar**.
+- **Dois cartões claros:** **"Baixar do link (equipe)"** (link + status + "Atualizar do link") e
+  **"Publicar (líder)"**.
+- **Publicar recolhido por padrão** (`<details>` nativo, acessível por teclado): a maioria da equipe
+  só baixa e não vê o fluxo de token. Abre **sozinho** quando já existe um token salvo (líder).
+- Dentro de Publicar: "Exportar tudo (arquivo .json)", o token e "Publicar na nuvem"/"Remover token".
+- Sem mudança de lógica — IDs e handlers preservados; só estrutura/hierarquia visual.
+- **178 verificações** (3 novas: cartões, recolhido sem token, aberto com token), zero erro de JS.
+
+---
+
 ## v0.31.0 — Linguagem de card unificada (Onda 3 · M4)
 **Recurso (interface).** Segundo item da Onda 3 (M4 de `ANALISE-ui.md`). A lista de cifras
 (`.songcard`) e a de escalas (`.escard`) eram **telas irmãs com gramáticas visuais diferentes**:

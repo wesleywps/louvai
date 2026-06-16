@@ -918,6 +918,23 @@ const m4 = await page.evaluate(() => {
 ok(m4.scOk, "songcard usa a gramática unificada (.c-ttl/.c-sub/.c-meta .pill.tag)");
 ok(m4.ecOk && m4.noEstag, "escard usa a MESMA gramática (.c-ttl/.c-sub/.c-meta .pill; sem .estag)");
 
+// ===== v0.32.0 — Onda 3 / M5: #reposheet em cartões (Baixar × Publicar recolhido) =====
+const m5 = await page.evaluate(() => {
+  settings.ghToken = ""; saveSettings(); openRepoSheet();
+  const pullCard = !!document.querySelector("#reposheet .repo-card .repo-h");
+  const pub = document.querySelector("#reposheet details.repo-pub");
+  const collapsedNoToken = !!(pub && !pub.open);
+  const idsInside = !!(pub && pub.querySelector("#repo-export") && pub.querySelector("#gh-token") && pub.querySelector("#repo-publish"));
+  closeRepoSheet();
+  settings.ghToken = "tok"; saveSettings(); openRepoSheet();
+  const openWithToken = document.querySelector("#reposheet details.repo-pub").open;
+  closeRepoSheet(); settings.ghToken = ""; saveSettings();
+  return { pullCard, collapsedNoToken, idsInside, openWithToken };
+});
+ok(m5.pullCard && m5.idsInside, "#reposheet tem cartão Baixar + bloco Publicar (export/token/publish dentro)");
+ok(m5.collapsedNoToken, "Publicar fica recolhido por padrão (equipe sem token)");
+ok(m5.openWithToken, "Publicar abre sozinho quando já há token salvo (líder)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

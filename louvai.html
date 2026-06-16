@@ -406,8 +406,19 @@ input,textarea,select{font-family:inherit}
 .sheet .grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:6px auto 14px}
 .sheet h3{margin:0 6px 10px;font-size:17px;font-weight:700;letter-spacing:-.2px}
 .sheetnote{margin:-4px 6px 12px;font-size:13px;color:var(--muted);line-height:1.4}
-.repo-div{margin:16px 2px 8px;padding-top:14px;border-top:1px solid var(--line);
-  font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+/* #reposheet em cartões claros: Baixar (equipe) × Publicar (líder, recolhido por padrão) — M5 */
+.repo-card{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:var(--sp-3);margin-bottom:var(--sp-3)}
+.repo-h{font-size:var(--fs-xs);font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--accent-soft);margin-bottom:var(--sp-2)}
+.repo-pub>summary{font-size:var(--fs-xs);font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--accent-soft);cursor:pointer;list-style:none;display:flex;align-items:center;
+  min-height:32px}
+.repo-pub>summary::-webkit-details-marker{display:none}
+.repo-pub>summary::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;transform:rotate(45deg);margin-left:auto;transition:transform var(--dur)}
+.repo-pub[open]>summary::after{transform:rotate(-135deg)}
+.repo-pub[open]>summary{margin-bottom:var(--sp-2)}
 /* pontinho de "backup devido" no botão ↥ (rede de segurança) */
 #backupBtn{position:relative}
 #backupBtn.due::after{content:"";position:absolute;top:7px;right:7px;width:9px;height:9px;
@@ -652,22 +663,32 @@ input,textarea,select{font-family:inherit}
 <div class="sheet" id="reposheet">
   <div class="grip"></div>
   <h3>Repertório na nuvem</h3>
-  <div class="hint" style="margin:0 2px 8px">
-    Cole o link de um repertório publicado (ex.: no GitHub Pages). “Atualizar” baixa as
-    cifras e escalas e mescla no aparelho — mão única: você baixa, não escreve de volta.
+
+  <!-- Baixar (equipe): mão única, só puxa do link -->
+  <div class="repo-card">
+    <div class="repo-h">Baixar do link (equipe)</div>
+    <div class="hint" style="margin:0 0 8px">
+      Cole o link de um repertório publicado (ex.: no GitHub Pages). “Atualizar” baixa as
+      cifras e escalas e mescla no aparelho — mão única: você baixa, não escreve de volta.
+    </div>
+    <input id="repo-url" class="search" inputmode="url" placeholder="https://…/louvai.json" style="width:100%;margin-bottom:8px">
+    <div id="repo-status" class="sheetnote" style="margin:0 0 10px"></div>
+    <button class="btn primary" id="repo-pull" style="width:100%">Atualizar do link</button>
   </div>
-  <input id="repo-url" class="search" inputmode="url" placeholder="https://…/louvai.json" style="width:100%;margin-bottom:8px">
-  <div id="repo-status" class="sheetnote" style="margin:0 2px 12px"></div>
-  <button class="btn primary" id="repo-pull" style="width:100%">Atualizar do link</button>
-  <button class="btn" id="repo-export" style="width:100%;margin-top:8px">Exportar tudo (pra publicar)</button>
-  <div class="repo-div">Publicar (líder)</div>
-  <div class="hint" style="margin:0 2px 8px">
-    Cole um <b>token fino</b> do GitHub (Contents: escrever). Ele fica <b>só neste aparelho</b>
-    e só conversa direto com o GitHub. Você pode revogá-lo no GitHub quando quiser.
-  </div>
-  <input id="gh-token" class="search" type="password" autocomplete="off" placeholder="github_pat_… (token)" style="width:100%;margin-bottom:8px">
-  <button class="btn primary" id="repo-publish" style="width:100%">Publicar na nuvem</button>
-  <button class="btn" id="repo-forget" style="width:100%;margin-top:8px">Remover token deste aparelho</button>
+
+  <!-- Publicar (líder): recolhido por padrão — a maioria da equipe só baixa -->
+  <details class="repo-card repo-pub">
+    <summary>Publicar (líder)</summary>
+    <div class="hint" style="margin:0 0 8px">
+      Salve o repertório (cifras + escalas) num arquivo, ou escreva direto na nuvem com um
+      <b>token fino</b> do GitHub (Contents: escrever). O token fica <b>só neste aparelho</b>
+      e só conversa direto com o GitHub — dá pra revogá-lo no GitHub quando quiser.
+    </div>
+    <button class="btn" id="repo-export" style="width:100%;margin-bottom:10px">Exportar tudo (arquivo .json)</button>
+    <input id="gh-token" class="search" type="password" autocomplete="off" placeholder="github_pat_… (token)" style="width:100%;margin-bottom:8px">
+    <button class="btn primary" id="repo-publish" style="width:100%">Publicar na nuvem</button>
+    <button class="btn" id="repo-forget" style="width:100%;margin-top:8px">Remover token deste aparelho</button>
+  </details>
 </div>
 <!-- Ajustes do player (capo, fonte, só-letra, tabs, ♯/♭) — IDs preservados -->
 <div class="sheetbg" id="playerbg"></div>
@@ -712,7 +733,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.31.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.32.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1958,6 +1979,7 @@ function openRepoSheet(){
   $("#repo-url").value=settings.repoUrl||"";
   $("#gh-token").value=settings.ghToken||"";
   $("#repo-status").textContent=repoStatus();
+  const pub=$("#reposheet .repo-pub"); if(pub) pub.open=!!settings.ghToken;  // líder (com token) abre; equipe fica recolhida
   openS("#repobg","#reposheet","#repo-url");
 }
 function closeRepoSheet(){ closeS("#repobg","#reposheet"); }
