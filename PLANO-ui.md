@@ -1,7 +1,8 @@
 # Plano — Polimento de UI + ícones ("cara de app pronto")
 
-> **Como retomar:** abra o Claude Code nesta pasta e peça *"vamos executar a Onda 3 do PLANO-ui.md"*.
-> **Status: ONDAS 1 e 2 ✅ ENTREGUES (v0.28.0 / v0.29.0). PRÓXIMA: ONDA 3 (um incremento por vez).**
+> **Como retomar:** o polimento em ondas está **concluído**. Próximo foco: validação visual no celular.
+> **Status: ONDAS 1, 2 e 3 ✅ CONCLUÍDAS (v0.28.0 → v0.36.0).** Onda 1 (v0.28.0), Onda 2 (v0.29.0),
+> Onda 3 = M2 (v0.30.0) · M4 (v0.31.0) · M5 (v0.32.0) · M3 (v0.33.0) · M7 (v0.34.0) · M8 (v0.35.0) · M6 (v0.36.0).
 > Insumo (decidido, não reabrir): `ANALISE-ui.md` (itens **G1–G12**, **M1–M8**) e
 > `ANALISE-icones.md` (inventário, abordagem, conjunto SVG). Este plano **prioriza e sequencia**.
 
@@ -64,8 +65,10 @@ Médio esforço; cada um vira sua própria versão.
 - **M5** ✅ **v0.32.0** — Reorganizar o `#reposheet` (Puxar × Publicar; token recolhido por padrão).
 - **M3** ✅ **v0.33.0** — Arrastar para fechar sheets (gesto no `.grip`, threshold, reduced-motion).
 - **M7** ✅ **v0.34.0** — Animação de entrada da lista (stagger sutil, 1ª pintura, reduced-motion).
-- **M8** ✅ **v0.35.0** — Indicador de progresso na Apresentação. · **M6** — Skeleton de cifra (cuidar p/ não
-  atrapalhar a medição do Modo Página).
+- **M8** ✅ **v0.35.0** — Indicador de progresso na Apresentação. · **M6** ✅ **v0.36.0** — Skeleton de
+  carregamento. **Decisão:** o player abre síncrono (sem espera) → o skeleton ficaria 0 frames e
+  arriscaria a medição do Modo Página; por isso ele mora no **"Atualizar do link"** (a operação que
+  de fato espera a rede), não na abertura do player.
 - **Acessibilidade contínua:** subir `--muted` no dark p/ folga a distância; `:focus-visible` em
   botões/cards; alvo da `.chip` da tagbar ≥44–48px.
 

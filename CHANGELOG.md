@@ -8,6 +8,22 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.36.0 — Skeleton de carregamento no "Atualizar do link" (Onda 3 · M6)
+**Recurso (interface).** Sétimo e último item da Onda 3 (M6 de `ANALISE-ui.md`). **Percepção de
+velocidade** onde existe espera de verdade: ao puxar o repertório de um link (rede).
+- **Placeholders pulsantes** (`.skel`/`.skel-card`) na lista enquanto o `pullRepo` busca a rede;
+  somem quando o repertório chega (e a lista é restaurada se a busca falha).
+- **Decisão honesta sobre o "ao abrir o player":** a abertura do player é **síncrona** (sem espera),
+  então um skeleton ali só piscaria 0 frames e arriscaria a **medição do Modo Página** — o aviso do
+  próprio plano. Por isso o skeleton fica no caminho que realmente espera (o pull), não no player.
+- **Respeita `prefers-reduced-motion`** (a pulsação some sob "reduzir movimento"; o placeholder
+  estático permanece).
+- **186 verificações** (2 novas: skeleton ao buscar, some ao chegar), zero erro de JS.
+- **Fecha a Onda 3** do `PLANO-ui.md` (M2·M4·M5·M3·M7·M8·M6) → encerra o polimento de UI em ondas
+  (1·2·3). Falta a validação visual no celular (palco, dark/light).
+
+---
+
 ## v0.35.0 — Progresso do culto na Apresentação (Onda 3 · M8)
 **Recurso (interface).** Sexto item da Onda 3 (M8 de `ANALISE-ui.md`). No modo Apresentar dava pra
 saber a posição só lendo "2 de 5". Agora uma **barra fininha de progresso** no topo da `#presentbar`

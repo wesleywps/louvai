@@ -980,6 +980,23 @@ const m7 = await page.evaluate(() => {
 ok(m7.firstAnimated && m7.hasDelay && m7.n === 2, "Lista anima na 1ª pintura (.card-in + animation-delay escalonado)");
 ok(!m7.reanimated, "Re-render (busca/filtro) não re-anima a lista");
 
+// ===== v0.36.0 — Onda 3 / M6: skeleton de carregamento no "Atualizar do link" =====
+const m6 = await page.evaluate(async () => {
+  const real = window.fetch;
+  let release;
+  window.fetch = () => new Promise(r => { release = () => r({ ok: true, status: 200, text: async () => JSON.stringify({ type: "louvai-full", songs: [], escalas: [] }) }); });
+  settings.repoUrl = "https://x.github.io/louvai/louvai.json"; saveSettings();
+  switchTab("songs");
+  const p = pullRepo();                                  // não await: a rede fica pendente
+  const hasSkel = !!document.querySelector("#songlist .skel .skel-card");
+  release(); await p;                                    // resolve a rede → repinta a lista
+  const skelGone = !document.querySelector("#songlist .skel");
+  window.fetch = real;
+  return { hasSkel, skelGone };
+});
+ok(m6.hasSkel, "Atualizar do link mostra skeleton de carregamento enquanto busca");
+ok(m6.skelGone, "Skeleton some quando o repertório chega");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 
