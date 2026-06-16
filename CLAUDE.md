@@ -83,14 +83,18 @@ arquivo `.json` (cifra, repertório ou escala).
    `git tag vX.Y.Z` (commit de versão direto no branch de trabalho, como o histórico).
    **Nunca** inclua rodapé `Co-Authored-By` (nem outras assinaturas de ferramenta)
    na mensagem de commit — o histórico é em pt-BR e sem co-autoria de assistente.
-6. (Opcional) salvar uma cópia `louvai-vX.Y.Z.html` para distribuição. **Ao gerar
+6. **Sincronizar o `index.html`** (cópia que o **GitHub Pages serve na raiz**): é uma cópia
+   **verbatim** do `louvai.html` — ao entregar uma versão, copie `louvai.html` por cima do
+   `index.html` para o app hospedado refletir a versão nova. Fica **fora do git** (`.gitignore`),
+   por isso não aparece no `git status` — fácil de esquecer; faz parte do ritual.
+7. (Opcional) salvar uma cópia `louvai-vX.Y.Z.html` para distribuição. **Ao gerar
    uma nova cópia, apague as cópias `louvai-v*.html` antigas da pasta** — manter só
    **o original (`louvai.html`) e a cópia de distribuição mais recente**. As cópias
    ficam fora do git (ver `.gitignore`) e são regeneráveis via `git checkout vX.Y.Z`.
 
 **Checklist rápido antes do commit:** APP_VERSION = package.json · CHANGELOG tem a
 versão · ROTEIRO (linha do tempo + rodapé + backlog) coerente · README na versão ·
-PLANO atualizado se aplicável · `npm test` verde.
+PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizado**.
 
 ## Como testar
 - **Automático (recomendado):**
@@ -131,7 +135,9 @@ PLANO atualizado se aplicável · `npm test` verde.
   cartões (v0.32.0) · M3 arrastar p/ fechar (v0.33.0) · M7 entrada da lista (v0.34.0) · M8 progresso
   na Apresentação (v0.35.0) · M6 skeleton de carregamento (v0.36.0). Insumo: `ANALISE-ui.md`
   (G1–G12, M1–M8) e `ANALISE-icones.md` (conjunto SVG, `archive`).
-- `.gitignore` — ignora `node_modules/`, as cópias `louvai-v*.html` e o
+- `index.html` — cópia **verbatim** do `louvai.html` que o **GitHub Pages serve na raiz** do site.
+  Fora do git (regenerável); **sincronizar a cada entrega** (ver Ritual, passo 6).
+- `.gitignore` — ignora `node_modules/`, o `index.html`, as cópias `louvai-v*.html` e o
   `COMMIT_MSG_tmp.txt`.
 - `CLAUDE.md` — este guia.
 
