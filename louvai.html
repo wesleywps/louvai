@@ -751,7 +751,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.37.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.38.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1232,7 +1232,10 @@ function unlockScreen(){
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
 }
 document.addEventListener("visibilitychange",()=>{  // voltou pro app com o player aberto? reacende
-  if(document.visibilityState==="visible" && view==="player") lockScreen();
+  if(document.visibilityState==="visible"){
+    if(view==="player") lockScreen();
+    maybeAutoPull({throttle:true});   // v0.38.0: ao reabrir, puxa as novidades (se auto-sync ligado)
+  }
 });
 
 /* ---------- Biblioteca ---------- */
@@ -1898,10 +1901,15 @@ async function pullRepo(opts){
   settings.repoPulledAt=Date.now(); saveSettings();
   importJSON(txt, {silent});   // reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
 }
-// auto-sync ao abrir (v0.37.0): pull silencioso se habilitado e há link; um link em importação tem prioridade
-function maybeAutoPull(){
+// auto-sync (v0.37.0): pull silencioso se habilitado e há link; um link em importação tem prioridade.
+// Disparado no boot (sem throttle) e ao voltar pro app (v0.38.0, com throttle p/ não martelar a rede).
+let lastAutoSync=0;
+const AUTO_SYNC_COOLDOWN=60000;   // 1 min entre auto-pulls ao reabrir (evita buscar a cada alt-tab)
+function maybeAutoPull(opts){
   if(!settings.autoPull || !(settings.repoUrl||"").trim()) return;
   if(/[#&]imp=/.test(location.hash||"")) return;
+  if(opts && opts.throttle && Date.now()-lastAutoSync < AUTO_SYNC_COOLDOWN) return;
+  lastAutoSync=Date.now();
   return pullRepo({silent:true});
 }
 function repoStatus(){

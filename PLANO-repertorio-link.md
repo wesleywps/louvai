@@ -19,6 +19,8 @@
 > tem prioridade. Confirma o caminho: o snapshot **sempre** levou cifras **e** escalas; o "não
 > apareceu" do usuário era operacional (esquecer de puxar / cancelar a folha de conflito) — o
 > auto-sync remove as duas armadilhas. **190 verificações.**
+> **v0.38.0:** o pull silencioso também roda no `visibilitychange` (voltar pro app), com throttle
+> de 1 min (`AUTO_SYNC_COOLDOWN`/`lastAutoSync`) — boot sem throttle, retorno com throttle. **192 verificações.**
 >
 > **Armadilhas/decisões registradas:**
 > - **Fura-cache só em http(s):** `data:`/`blob:` não aceitam query — o teste usa `data:` URL.

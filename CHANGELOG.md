@@ -8,6 +8,20 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.38.0 — Auto-sync também ao voltar pro app
+**Recurso (nuvem).** Estende o "Sincronizar ao abrir" (v0.37.0): além do boot, o pull silencioso
+também roda **ao voltar para o app** (quando a aba/janela fica visível de novo), no
+`visibilitychange` que já reacendia a tela no player.
+- Pendurado no handler de `visibilitychange` existente: ao ficar visível, `maybeAutoPull({throttle:true})`.
+- **Throttle de 1 min** (`AUTO_SYNC_COOLDOWN`/`lastAutoSync`): alternar de app rapidinho **não**
+  fica martelando o GitHub — só busca de novo passado o intervalo. O boot continua sem throttle.
+- Mesmo comportamento silencioso/idempotente/mão-única e a mesma prioridade do `#imp=`.
+- **192 verificações** (2 novas: puxa ao voltar, throttle bloqueia reabertura imediata). Também
+  estabilizei um teste flaky do auto-sync (baseline de sheet fechado — era estado global de outro
+  teste, não do recurso), confirmado em 6 execuções limpas.
+
+---
+
 ## v0.37.0 — Sincronizar ao abrir (auto-sync do repertório, habilitável)
 **Recurso (nuvem).** Opção para **puxar o repertório da nuvem automaticamente ao abrir o app** —
 assim a equipe pega as novidades (cifras **e escalas**) sem precisar lembrar de "Atualizar do link".

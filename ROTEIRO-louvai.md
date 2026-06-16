@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.37.0**.
+seguir. Atualizado até a **v0.38.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -97,6 +97,7 @@ instalação complexa.
 | **v0.36.0** | recurso | **Polimento de UI (Onda 3 · M6):** skeleton de carregamento no "Atualizar do link" (rede). Player abre síncrono, então o skeleton fica no pull. **Fecha a Onda 3** e o polimento em ondas. Ver `PLANO-ui.md`. |
 | **v0.36.1** | correção | **Limpeza pós-auditoria:** os `.mag` (lupa) nascem vazios e são pintados só pelo `icon()` — fecha a coerência da fonte única de ícones. Sem mudança visual. |
 | **v0.37.0** | recurso | **Sincronizar ao abrir (auto-sync):** opção habilitável (desligada por padrão) que puxa o repertório da nuvem ao abrir o app — cifras **e escalas** — com pull silencioso, não-interativo e idempotente; mão única preservada. Ver `PLANO-repertorio-link.md`. |
+| **v0.38.0** | recurso | **Auto-sync ao voltar pro app:** o pull silencioso também roda no `visibilitychange` (app volta ao foco), com throttle de 1 min pra não martelar a rede. Ver `PLANO-repertorio-link.md`. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -250,7 +251,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > **repertório + escalas por link** (pull de um snapshot do GitHub Pages) na v0.26.0;
 > **publicar na nuvem** (escrever o snapshot do celular via token do GitHub) na v0.27.0,
 > com **diff +/− e confirmação** ao publicar na v0.27.1 (e **"ver detalhes"** com os nomes na v0.27.2);
-> **sincronizar ao abrir** (auto-sync habilitável, pull silencioso de cifras+escalas) na v0.37.0.
+> **sincronizar ao abrir** (auto-sync habilitável, pull silencioso de cifras+escalas) na v0.37.0,
+> estendido para **puxar também ao voltar pro app** (visibilitychange, com throttle) na v0.38.0.
 > ✅ **Polimento de UI em ondas** (`PLANO-ui.md`) **concluído** (v0.28.0→v0.36.1): Onda 1 (tokens,
 > Tom, toast, vazios, acorde no claro), Onda 2 (ícones SVG inline via `ICONS`/`icon()`) e Onda 3
 > (seções do ⚙ Ajustes, linguagem de card unificada, `#reposheet` em cartões, arrastar p/ fechar,
@@ -275,4 +277,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.37.0.*
+*Última atualização deste roteiro: v0.38.0.*

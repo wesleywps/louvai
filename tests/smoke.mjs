@@ -999,6 +999,8 @@ ok(m6.skelGone, "Skeleton some quando o repertório chega");
 
 // ===== v0.37.0 — Auto-sync ao abrir (pull silencioso, habilitável; traz cifras E escalas) =====
 const auto = await page.evaluate(async () => {
+  history.replaceState(null, "", location.href.split("#")[0]);   // limpa #imp= deixado por teste anterior (guard do maybeAutoPull)
+  closeSheet();                                                  // baseline limpo: o pull silencioso não pode abrir sheet
   const real = window.fetch;
   songs.length = 0; escalas.length = 0;
   songs.push({ id: "keep1", title: "Mesma Musica", key: "C", capo: 0, tags: [], updatedAt: 5, body: "C" }); // título que vai colidir
@@ -1026,6 +1028,29 @@ ok(auto.stillOne, "Auto-sync é idempotente (abrir de novo não duplica)");
 const autoTog = await page.evaluate(() => { settings.autoPull = true; saveSettings(); openRepoSheet();
   const checked = document.getElementById("auto-pull").checked; closeRepoSheet(); settings.autoPull = false; saveSettings(); return checked; });
 ok(autoTog, "Toggle 'Sincronizar ao abrir' reflete settings.autoPull no sheet");
+
+// ===== v0.38.0 — Auto-sync também ao VOLTAR pro app (visibilitychange, com throttle) =====
+const vis = await page.evaluate(async () => {
+  history.replaceState(null, "", location.href.split("#")[0]);   // sem #imp= (guard do maybeAutoPull)
+  const real = window.fetch;
+  songs.length = 0; escalas.length = 0; saveSongs(); saveEscalas();
+  let snap = { type: "louvai-full", songs: [], escalas: [{ id: "e-vis", title: "Culto Visível", date: "2026-03-01", time: "", type: "Culto", team: [], items: [], updatedAt: 9 }] };
+  window.fetch = async () => ({ ok: true, status: 200, text: async () => JSON.stringify(snap) });
+  settings.autoPull = true; settings.repoUrl = "https://x.github.io/louvai/louvai.json"; saveSettings();
+  lastAutoSync = 0;                                          // libera o throttle p/ o 1º retorno
+  document.dispatchEvent(new Event("visibilitychange"));     // "voltou pro app"
+  await new Promise(r => setTimeout(r, 40));
+  const pulledOnReturn = escalas.some(e => e.id === "e-vis");
+  // throttle: nova escala na nuvem, reabrir de novo logo em seguida → NÃO puxa (cooldown)
+  snap = { type: "louvai-full", songs: [], escalas: [{ id: "e-vis2", title: "Outra", date: "2026-03-02", time: "", type: "Culto", team: [], items: [], updatedAt: 9 }] };
+  document.dispatchEvent(new Event("visibilitychange"));
+  await new Promise(r => setTimeout(r, 40));
+  const throttled = !escalas.some(e => e.id === "e-vis2");
+  window.fetch = real; settings.autoPull = false; saveSettings();
+  return { pulledOnReturn, throttled };
+});
+ok(vis.pulledOnReturn, "Auto-sync puxa ao voltar pro app (visibilitychange)");
+ok(vis.throttled, "Throttle: reabrir de novo logo em seguida não busca de novo");
 
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
