@@ -11,11 +11,14 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.36.0)
+## Recursos (v0.36.1)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
   **Ícones SVG coesos** (traço único, herdam o tema nos dois modos) no lugar da
-  mistura de emoji e setas parecidas.
+  mistura de emoji e setas parecidas. Sheets **arrastáveis para fechar**, ⚙ Ajustes
+  **agrupado por seção** (Afinação / Leitura / Esta música), cards de cifras e escalas
+  com a **mesma linguagem visual**, lista que **entra com leve animação** e
+  **barra de progresso do culto** no modo Apresentar.
 - Repertório com busca e tags; criar/editar cifras; **importar colando do Cifra Club**.
   Importar arquivo/link **avisa antes de mesclar** quando uma cifra tem título repetido
   (manter as suas sem duplicar, ficar com as duas, ou cancelar).

@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.36.0**.
+seguir. Atualizado até a **v0.36.1**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -95,6 +95,7 @@ instalação complexa.
 | **v0.34.0** | recurso | **Polimento de UI (Onda 3 · M7):** entrada da lista com stagger sutil só na 1ª pintura (cifras/escalas); re-render por busca não re-anima; respeita `prefers-reduced-motion`. Ver `PLANO-ui.md`. |
 | **v0.35.0** | recurso | **Polimento de UI (Onda 3 · M8):** barra fininha de progresso do culto no topo da Apresentação (fração música atual/total) — "onde estamos" de relance. Ver `PLANO-ui.md`. |
 | **v0.36.0** | recurso | **Polimento de UI (Onda 3 · M6):** skeleton de carregamento no "Atualizar do link" (rede). Player abre síncrono, então o skeleton fica no pull. **Fecha a Onda 3** e o polimento em ondas. Ver `PLANO-ui.md`. |
+| **v0.36.1** | correção | **Limpeza pós-auditoria:** os `.mag` (lupa) nascem vazios e são pintados só pelo `icon()` — fecha a coerência da fonte única de ícones. Sem mudança visual. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -142,10 +143,12 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   bottom nav + FAB único, player de palco com sheet Ajustes, vidro fosco e
   microinterações. Falta apenas a **aprovação visual do dono** nas telas reais
   (celular) antes de distribuir.
-- [~] **Polimento "cara de app pronto"** (`PLANO-ui.md`, em ondas): **Onda 1 ✅** (v0.28.0 —
-  tokens, Tom em destaque, toast tipado, vazios, acorde no claro, ícone do Backup);
-  **Onda 2 ✅** (v0.29.0 — ícones SVG inline unificados via `ICONS`/`icon()`); **Onda 3** pendente
-  (sheets/cards/gestos, um por vez). Falta a **validação visual no celular** (dark/light).
+- [x] **Polimento "cara de app pronto"** (`PLANO-ui.md`, em ondas) — **concluído (v0.28.0→v0.36.1)**:
+  **Onda 1** (v0.28.0 — tokens, Tom em destaque, toast tipado, vazios, acorde no claro, ícone do
+  Backup); **Onda 2** (v0.29.0 — ícones SVG inline unificados via `ICONS`/`icon()`); **Onda 3**
+  (M2 seções do ⚙ Ajustes · M4 linguagem de card · M5 `#reposheet` em cartões · M3 arrastar p/
+  fechar · M7 entrada da lista · M8 progresso na Apresentação · M6 skeleton de carregamento).
+  **Falta apenas a validação visual no celular** (palco, dark/light) — ver ordem sugerida.
 
 ### Tema A — Segurança dos dados
 - [ ] **PWA instalável de verdade** (ícone, 100% offline inclusive fontes;
@@ -227,10 +230,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 3. **PWA instalável** — fecha o offline 100% do app hospedado (manifest + service worker)
    e destrava "Abrir com Louvai" pra importar arquivo em 1 toque. **Encerra a regra
    "arquivo único"** (ver `CLAUDE.md`, seção "Horizonte").
-4. **Onda 3 do `PLANO-ui.md`** (incrementos de UI maiores, **um por vez**): seções do ⚙ Ajustes,
-   unificar linguagem de card, reorganizar o `#reposheet`, arrastar-pra-fechar sheets, etc.
-5. **Ordenar por menos tocadas** (usa a recência da v0.24.0) e **QR Code** — alto valor percebido.
-6. **PWA instalável** (Tema A) — fecha o offline do app hospedado e encerra a regra "arquivo único".
+4. **Ordenar por menos tocadas** (usa a recência da v0.24.0) e **QR Code** — alto valor percebido.
+5. **PWA instalável** (Tema A) — fecha o offline do app hospedado e encerra a regra "arquivo único".
 
 > ✅ **Modos de leitura no player** (auto-scroll opcional + Modo Página) concluídos
 > nas v0.14.0–v0.15.0 — ver `PLANO-modos-leitura.md`.
@@ -248,9 +249,11 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > **repertório + escalas por link** (pull de um snapshot do GitHub Pages) na v0.26.0;
 > **publicar na nuvem** (escrever o snapshot do celular via token do GitHub) na v0.27.0,
 > com **diff +/− e confirmação** ao publicar na v0.27.1 (e **"ver detalhes"** com os nomes na v0.27.2).
-> ✅ **Polimento de UI**: Onda 1 (tokens, Tom, toast, vazios, acorde no claro) na v0.28.0 e
-> **Onda 2** (ícones SVG inline unificados via `ICONS`/`icon()`) na v0.29.0 — falta a Onda 3 e a
-> validação visual no celular.
+> ✅ **Polimento de UI em ondas** (`PLANO-ui.md`) **concluído** (v0.28.0→v0.36.1): Onda 1 (tokens,
+> Tom, toast, vazios, acorde no claro), Onda 2 (ícones SVG inline via `ICONS`/`icon()`) e Onda 3
+> (seções do ⚙ Ajustes, linguagem de card unificada, `#reposheet` em cartões, arrastar p/ fechar,
+> entrada da lista, progresso na Apresentação, skeleton de carregamento). Auditado planejado×entregue.
+> **Falta só a validação visual no celular** (palco, dark/light).
 
 ---
 
@@ -270,4 +273,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.36.0.*
+*Última atualização deste roteiro: v0.36.1.*

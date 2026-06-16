@@ -8,6 +8,15 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.36.1 — Limpeza pós-auditoria (coerência da fonte única de ícones)
+**Correção (interface/coerência).** Auditoria das Ondas 1–3 (planejado × entregue) não achou gaps
+funcionais; apontou só um resíduo cosmético: os dois `<span class="mag">` ainda traziam o emoji `🔍`
+literal no HTML (sobrescrito por `paintIcons()` no boot). Para fechar 100% o princípio da **fonte
+única de ícones** (Onda 2), os spans agora nascem vazios e são pintados só pelo `icon("search")` —
+como todos os outros botões. Sem mudança visual (o SVG já era o que aparecia). 186 verificações.
+
+---
+
 ## v0.36.0 — Skeleton de carregamento no "Atualizar do link" (Onda 3 · M6)
 **Recurso (interface).** Sétimo e último item da Onda 3 (M6 de `ANALISE-ui.md`). **Percepção de
 velocidade** onde existe espera de verdade: ao puxar o repertório de um link (rede).
