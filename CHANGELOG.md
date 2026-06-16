@@ -8,6 +8,19 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.34.0 — Entrada da lista com stagger (Onda 3 · M7)
+**Recurso (interface).** Quinto item da Onda 3 (M7 de `ANALISE-ui.md`). Os cards apareciam "secos",
+todos de uma vez. Agora a lista **entra com um stagger sutil** (opacidade + leve subida), dando a
+sensação de "lista viva" que sinaliza app pronto.
+- **Só na primeira pintura** de cada lista (cifras e escalas): re-render por busca/filtro **não**
+  re-anima (evita o pisca-pisca a cada tecla). Controlado por um flag (`staggered`) + helper
+  `staggerIn`.
+- Escalonamento de ~28ms por card (limitado aos primeiros), `@keyframes cardIn` em ~260ms.
+- **Respeita `prefers-reduced-motion`:** a duração some sob "reduzir movimento" (regra global).
+- **182 verificações** (2 novas: anima na 1ª pintura, não re-anima no filtro), zero erro de JS.
+
+---
+
 ## v0.33.0 — Arrastar para fechar sheets (Onda 3 · M3)
 **Recurso (interface).** Quarto item da Onda 3 (M3 de `ANALISE-ui.md`). O `.grip` (a alcinha no topo
 de cada sheet) sugeria que dava pra arrastar, mas o sheet só fechava pelo fundo escuro — uma

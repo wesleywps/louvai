@@ -956,6 +956,24 @@ const m3 = await page.evaluate(() => {
 ok(m3.closedAfterFar, "Arrastar o sheet pra baixo além do limiar fecha");
 ok(m3.stillOpenNear, "Arraste curto volta com mola (sheet continua aberto)");
 
+// ===== v0.34.0 — Onda 3 / M7: animação de entrada da lista (stagger só na 1ª pintura) =====
+const m7 = await page.evaluate(() => {
+  songs.length = 0;
+  songs.push({ id: "s7a", title: "A", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });
+  songs.push({ id: "s7b", title: "B", key: "D", capo: 0, tags: [], updatedAt: 1, body: "D" });
+  saveSongs();
+  staggered.lib = false;                       // simula a primeira pintura da lista
+  switchTab("songs"); $("#search").value = ""; activeTag = null; renderLibrary();
+  const cards = [...document.querySelectorAll("#songlist .songcard")];
+  const firstAnimated = cards[0].classList.contains("card-in");
+  const hasDelay = !!cards[1].style.animationDelay;
+  renderLibrary();                              // 2ª pintura (ex.: busca) NÃO re-anima
+  const reanimated = [...document.querySelectorAll("#songlist .songcard")].some(c => c.classList.contains("card-in"));
+  return { firstAnimated, hasDelay, n: cards.length, reanimated };
+});
+ok(m7.firstAnimated && m7.hasDelay && m7.n === 2, "Lista anima na 1ª pintura (.card-in + animation-delay escalonado)");
+ok(!m7.reanimated, "Re-render (busca/filtro) não re-anima a lista");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

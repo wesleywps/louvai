@@ -63,7 +63,7 @@ Médio esforço; cada um vira sua própria versão.
 - **M4** ✅ **v0.31.0** — Unificar a linguagem de card (`.songcard` × `.escard`), respiro 8pt, 2 níveis de leitura.
 - **M5** ✅ **v0.32.0** — Reorganizar o `#reposheet` (Puxar × Publicar; token recolhido por padrão).
 - **M3** ✅ **v0.33.0** — Arrastar para fechar sheets (gesto no `.grip`, threshold, reduced-motion).
-- **M7** — Animação de entrada da lista (stagger sutil, 1ª pintura, reduced-motion).
+- **M7** ✅ **v0.34.0** — Animação de entrada da lista (stagger sutil, 1ª pintura, reduced-motion).
 - **M8** — Indicador de progresso na Apresentação. · **M6** — Skeleton de cifra (cuidar p/ não
   atrapalhar a medição do Modo Página).
 - **Acessibilidade contínua:** subir `--muted` no dark p/ folga a distância; `:focus-visible` em

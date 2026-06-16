@@ -134,6 +134,9 @@ input,textarea,select{font-family:inherit}
   padding:3px 10px;font-size:var(--fs-xs);color:var(--muted);line-height:1.4;white-space:nowrap}
 .pill.tag{color:var(--section)}                      /* tag da cifra: leve cor de seção */
 .pill.never{color:var(--accent-soft);border-color:var(--accent-soft)}  /* nunca tocada: dar vez */
+/* entrada da lista (M7): stagger sutil só na 1ª pintura — duração some sob prefers-reduced-motion */
+@keyframes cardIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.card-in{animation:cardIn .26s cubic-bezier(.2,.9,.3,1) both}
 .empty{text-align:center;padding:84px 24px;color:var(--muted);line-height:1.6}
 .empty .eic{line-height:0;margin-bottom:14px}   /* ícone SVG do estado vazio (injetado via icon()) */
 .empty .eic .ic-svg{width:42px;height:42px;color:var(--accent);opacity:.85;filter:drop-shadow(0 0 24px var(--accent-glow))}
@@ -733,7 +736,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.33.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.34.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1272,6 +1275,7 @@ function renderLibrary(){
     card.onclick=()=>openPlayer(s.id);
     box.appendChild(card);
   });
+  staggerIn(box,"lib");
 }
 
 /* ---------- Player ---------- */
@@ -2186,6 +2190,16 @@ function fmtPlayed(iso){
   if(d<365){ const m=Math.floor(d/30); return "tocada há "+m+(m===1?" mês":" meses"); }
   return "tocada há mais de um ano";
 }
+// entrada da lista (M7): aplica o stagger só na PRIMEIRA pintura de cada lista (não a cada busca)
+const staggered={};
+function staggerIn(box, key){
+  if(staggered[key]) return; staggered[key]=true;
+  [...box.children].forEach((el,i)=>{
+    if(el.classList.contains("songcard")||el.classList.contains("escard")){
+      el.classList.add("card-in"); el.style.animationDelay=Math.min(i,8)*28+"ms";
+    }
+  });
+}
 // pílula pro card: "tocada há…" / "nunca tocada" (só quando há escala confirmada, p/ não poluir)
 function playedPill(songId, map, anyDone){
   const iso=map[songId];
@@ -2218,6 +2232,7 @@ function renderEscalas(){
     card.onclick=()=>openEscala(e.id);
     box.appendChild(card);
   });
+  staggerIn(box,"esc");
 }
 
 /* ---- detalhe da escala (ordem do culto) ---- */
