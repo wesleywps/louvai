@@ -28,7 +28,13 @@
   --lyric:rgba(255,255,255,.84);         /* letra: um tom abaixo do branco puro */
   --section:#5eead4;
   --danger:#f87171; --shadow:0 18px 50px -20px rgba(0,0,0,.7);
+  --ok:var(--accent); --warn:#fbbf24;    /* feedback do toast: sucesso / aviso / erro(--danger) */
   --r:16px; --r-lg:24px; --dur:.2s;
+  /* === Fundação de design (v0.28.0) — escala tipográfica, grade 8pt e raios ===
+     usados pelos componentes; a cifra mono fica fora (tem sizing próprio por fontSize). */
+  --fs-xs:12px; --fs-sm:13px; --fs-md:15px; --fs-lg:17px; --fs-xl:20px; --fs-2xl:25px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-6:24px;
+  --r-sm:12px; --r-pill:999px;
   /* aliases da paleta antiga: o resto do CSS continua funcionando */
   --gold:var(--accent); --gold-soft:var(--accent-soft);
 }
@@ -40,8 +46,8 @@
   --accent-glow:rgba(124,58,237,.35);
   --glass:rgba(246,245,248,.82);
   --glass2:rgba(255,255,255,.92);
-  /* no claro o contraste já é bom: sem chip nem halo */
-  --chord:#6d28d9; --chord-bg:transparent; --chord-halo:transparent;
+  /* no claro o acorde ganha um chip violeta translúcido p/ não sumir com sol no palco (G9) */
+  --chord:#6d28d9; --chord-bg:rgba(124,58,237,.12); --chord-halo:rgba(124,58,237,.22);
   --lyric:#17131f;
   --section:#0f766e;
   --danger:#dc2626; --shadow:0 18px 50px -24px rgba(40,25,80,.18);
@@ -106,25 +112,45 @@ input,textarea,select{font-family:inherit}
   border:1px solid var(--line);font-size:13.5px;color:var(--muted);font-weight:500}
 .chip.on{background:var(--gold);color:var(--accent-ink);border-color:transparent;font-weight:700}
 .count{font-size:12.5px;color:var(--muted);margin:2px 2px 12px;letter-spacing:.3px;text-transform:uppercase}
-.songcard{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:var(--r);
-  background:var(--panel);border:1px solid var(--line);margin-bottom:11px;transition:var(--dur)}
-.songcard:active{transform:scale(.985);background:var(--panel2)}
-.keytag{flex:0 0 auto;width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
-  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:17px;
+/* gramática de card UNIFICADA (.songcard × .escard, M4): título → sub → faixa de pílulas.
+   Mesma tipografia, mesmo respiro 8pt e o mesmo vocabulário de pílula nas duas telas irmãs. */
+.songcard,.escard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  margin-bottom:var(--sp-3);transition:var(--dur)}
+.songcard{display:flex;align-items:center;gap:14px;padding:var(--sp-3) var(--sp-4)}
+.escard{padding:var(--sp-3) var(--sp-4)}
+.songcard:active,.escard:active{transform:scale(.985);background:var(--panel2)}
+.keytag{flex:0 0 auto;width:46px;height:46px;border-radius:var(--r-sm);display:grid;place-items:center;
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:var(--fs-lg);
   background:linear-gradient(140deg,var(--panel2),var(--bg2));color:var(--gold);
   border:1px solid var(--line)}
 .songcard .meta{flex:1;min-width:0}
-.songcard .ttl{font-size:16.5px;font-weight:700;letter-spacing:-.2px;
+/* nível 1: título · nível 2: subtítulo (artista/data) · faixa de metadados em pílulas */
+.c-ttl{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.songcard .sub{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis;margin-top:2px}
-.songcard .tags{font-size:11.5px;color:var(--section);margin-top:3px}
-.songcard .played{font-size:11.5px;color:var(--muted);margin-top:3px}
-.songcard .played.never{color:var(--accent-soft)}   /* nunca tocada: leve destaque (boa pra dar vez) */
+.c-sub{font-size:var(--fs-sm);color:var(--muted);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;margin-top:var(--sp-1)}
+.c-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:var(--sp-2)}
+.pill{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-pill);
+  padding:3px 10px;font-size:var(--fs-xs);color:var(--muted);line-height:1.4;white-space:nowrap}
+.pill.tag{color:var(--section)}                      /* tag da cifra: leve cor de seção */
+.pill.never{color:var(--accent-soft);border-color:var(--accent-soft)}  /* nunca tocada: dar vez */
+/* entrada da lista (M7): stagger sutil só na 1ª pintura — duração some sob prefers-reduced-motion */
+@keyframes cardIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.card-in{animation:cardIn .26s cubic-bezier(.2,.9,.3,1) both}
+/* skeleton de carregamento (M6): placeholders pulsando enquanto "Atualizar do link" busca a rede.
+   O player abre síncrono (sem espera), então o skeleton mora aqui, onde há de fato latência. */
+@keyframes skelPulse{0%,100%{opacity:.45}50%{opacity:.8}}
+.skel{animation:skelPulse 1.1s ease-in-out infinite}
+.skel-card{height:74px;border-radius:var(--r);background:var(--panel2);border:1px solid var(--line);margin-bottom:var(--sp-3)}
 .empty{text-align:center;padding:84px 24px;color:var(--muted);line-height:1.6}
-.empty::before{content:"♪";display:block;font-size:34px;color:var(--accent);
-  opacity:.85;margin-bottom:14px;text-shadow:0 0 24px var(--accent-glow)}
-.empty .big{font-size:19px;font-weight:700;letter-spacing:-.2px;color:var(--text);margin-bottom:8px}
+.empty .eic{line-height:0;margin-bottom:14px}   /* ícone SVG do estado vazio (injetado via icon()) */
+.empty .eic .ic-svg{width:42px;height:42px;color:var(--accent);opacity:.85;filter:drop-shadow(0 0 24px var(--accent-glow))}
+.empty .big{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.2px;color:var(--text);margin-bottom:var(--sp-2)}
+.emptyact{margin-top:var(--sp-4)}
+.emptybtn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:var(--r);
+  font-weight:700;font-size:var(--fs-md);border:1px solid var(--line);background:var(--panel);color:var(--text)}
+.emptybtn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.emptybtn:active{transform:scale(.97)}
 
 /* ---------- Botões / FAB / bottom nav ---------- */
 .btn{flex:1;padding:16px;border-radius:15px;font-size:15.5px;font-weight:700;
@@ -178,11 +204,19 @@ input,textarea,select{font-family:inherit}
   background:var(--panel);border:1px solid var(--line);border-radius:13px;
   font-size:13.5px;font-weight:700;color:var(--text);transition:var(--dur)}
 .settingsbtn:active{background:var(--panel2)}
-/* controles dentro do sheet Ajustes: lista vertical, rótulo à esquerda */
+/* controles dentro do sheet Ajustes: lista vertical, rótulo à esquerda, agrupada por seção (M2) */
 .sheetctrls{display:flex;flex-direction:column;gap:10px;padding:4px 2px 8px}
 .sheetctrls .ctrl{justify-content:space-between;padding-left:6px}
 .sheetctrls .ctrl .lbl{font-size:12.5px;letter-spacing:.4px}
 .sheetctrls .grp{display:flex;align-items:center;flex:0 0 auto}
+/* subtítulo de seção: Afinação / Leitura / Esta música (encontra o controle certo na penumbra) */
+.sheetsec{font-size:var(--fs-xs);font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  color:var(--accent-soft);margin-top:8px;padding:12px 4px 0;border-top:1px solid var(--line)}
+.sheetctrls>.sheetsec:first-child{margin-top:0;padding-top:0;border-top:none}
+/* linha de ações (Editar/Enviar): os dois botões preenchem a largura */
+.sheetctrls .ctrl.actions{justify-content:stretch;padding-left:0}
+.sheetctrls .ctrl.actions .grp{flex:1;gap:8px}
+.sheetctrls .ctrl.actions .grp button{flex:1}
 /* título da música na barra de UMA linha (player normal); some no modo Apresentar */
 .p-titlebar{flex:1;min-width:0;font-size:16px;font-weight:700;letter-spacing:-.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
@@ -200,6 +234,10 @@ input,textarea,select{font-family:inherit}
 .cifra .sec{color:var(--section);font-weight:700;font-style:normal;
   display:inline-block;margin-top:6px}
 .cifra .lyr{color:var(--lyric)}
+.tomhi{color:var(--accent);font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:700}
+.ic-svg{width:22px;height:22px;display:inline-block;vertical-align:middle}   /* ícone SVG (única fonte: ICONS/icon()); alvo de toque preservado pelo botão */
+.ic-tx{width:19px;height:19px;margin-right:7px;vertical-align:-.18em}         /* ícone seguido de rótulo (botões com texto) */
+.mag .ic-svg{width:18px;height:18px}             /* lupa da busca: um pouco menor */
 .scrollbar-mini{position:fixed;left:0;right:0;bottom:0;z-index:24;max-width:860px;margin:0 auto;
   padding:12px 16px calc(14px + env(safe-area-inset-bottom));
   display:flex;align-items:center;gap:12px;
@@ -262,14 +300,7 @@ input,textarea,select{font-family:inherit}
 
 /* (abas Cifras/Escalas agora vivem na .bottomnav, acima) */
 
-/* ---------- Escala cards (lista) ---------- */
-.escard{padding:15px 16px;border-radius:var(--r);background:var(--panel);
-  border:1px solid var(--line);margin-bottom:11px;transition:var(--dur)}
-.escard:active{transform:scale(.985);background:var(--panel2)}
-.escard .et{font-size:17px;font-weight:700;letter-spacing:-.2px}
-.escard .ed{font-size:13px;color:var(--muted);margin-top:3px}
-.escard .ex{font-size:12px;color:var(--section);margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
-.estag{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+/* ---------- Escala cards (lista) — usa a gramática unificada .c-ttl/.c-sub/.c-meta/.pill (M4) ---------- */
 
 /* ---------- Escala detail ---------- */
 .escala{padding:18px 16px 130px}
@@ -316,6 +347,8 @@ input,textarea,select{font-family:inherit}
 .irow.itemkind{border-style:dashed}
 .irow .ihead{display:flex;align-items:center;gap:9px;margin-bottom:9px}
 .irow .ihead .ic{font-size:15px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.irow .move,.irow .rm,.prow .rm{display:grid;place-items:center}
+.prow .rm{width:42px;height:42px;color:var(--danger);font-size:18px;flex:0 0 auto;background:transparent;border:1px solid var(--line);border-radius:10px}
 .irow .move{width:44px;height:44px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);
   display:grid;place-items:center;font-size:15px;font-weight:700;flex:0 0 auto}
 .irow .move:active{background:var(--line)}
@@ -336,11 +369,16 @@ input,textarea,select{font-family:inherit}
   border-bottom:1px solid var(--line);
   padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top))}
 .pb-nav{display:flex;align-items:center;gap:8px}
+/* indicador de progresso no culto (M8): "onde estamos" de relance, sem ler números */
+.pb-progress{height:3px;border-radius:var(--r-pill);background:var(--line);overflow:hidden}
+.pb-progress>span{display:block;height:100%;width:0;background:var(--accent);
+  border-radius:var(--r-pill);transition:width var(--dur)}
 .pb-tom{display:flex;align-items:center;justify-content:center;gap:8px}
 .presentbar .pbtn{width:44px;height:44px;border-radius:11px;background:var(--panel2);
   border:1px solid var(--line);font-size:22px;font-weight:700;color:var(--gold);flex:0 0 auto}
 .presentbar .pbtn-sm{width:40px;height:40px;border-radius:10px;background:var(--panel2);
   border:1px solid var(--line);font-size:17px;font-weight:700;color:var(--text);flex:0 0 auto}
+.presentbar .pbtn,.presentbar .pbtn-sm{display:grid;place-items:center}
 .presentbar .pbtn:active,.presentbar .pbtn-sm:active{background:var(--line)}
 .presentbar .pbtn:disabled{opacity:.35}
 .presentbar .pinfo{flex:1;min-width:0;text-align:center;line-height:1.2}
@@ -359,9 +397,13 @@ input,textarea,select{font-family:inherit}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
   background:var(--glass2);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border:1px solid var(--line);color:var(--text);
-  padding:13px 20px;border-radius:13px;font-size:14px;font-weight:600;z-index:60;
+  padding:13px 20px;border-radius:var(--r-sm);font-size:var(--fs-sm);font-weight:600;z-index:60;
+  border-left:3px solid transparent;   /* faixa de cor por tipo (sucesso/erro/aviso) */
   box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:90%}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-left-color:var(--ok)}
+.toast.err{border-left-color:var(--danger)}
+.toast.warn{border-left-color:var(--warn)}
 .sheetbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;opacity:0;transition:.2s;pointer-events:none}
 .sheetbg.show{opacity:1;pointer-events:auto}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;max-width:860px;margin:0 auto;
@@ -376,8 +418,19 @@ input,textarea,select{font-family:inherit}
 .sheet .grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:6px auto 14px}
 .sheet h3{margin:0 6px 10px;font-size:17px;font-weight:700;letter-spacing:-.2px}
 .sheetnote{margin:-4px 6px 12px;font-size:13px;color:var(--muted);line-height:1.4}
-.repo-div{margin:16px 2px 8px;padding-top:14px;border-top:1px solid var(--line);
-  font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+/* #reposheet em cartões claros: Baixar (equipe) × Publicar (líder, recolhido por padrão) — M5 */
+.repo-card{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:var(--sp-3);margin-bottom:var(--sp-3)}
+.repo-h{font-size:var(--fs-xs);font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--accent-soft);margin-bottom:var(--sp-2)}
+.repo-pub>summary{font-size:var(--fs-xs);font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--accent-soft);cursor:pointer;list-style:none;display:flex;align-items:center;
+  min-height:32px}
+.repo-pub>summary::-webkit-details-marker{display:none}
+.repo-pub>summary::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;transform:rotate(45deg);margin-left:auto;transition:transform var(--dur)}
+.repo-pub[open]>summary::after{transform:rotate(-135deg)}
+.repo-pub[open]>summary{margin-bottom:var(--sp-2)}
 /* pontinho de "backup devido" no botão ↥ (rede de segurança) */
 #backupBtn{position:relative}
 #backupBtn.due::after{content:"";position:absolute;top:7px;right:7px;width:9px;height:9px;
@@ -414,15 +467,15 @@ input,textarea,select{font-family:inherit}
     <div class="topbar">
       <div class="brand"><span class="dot"></span>Louvai<span class="ver" id="appVer"></span></div>
       <div class="spacer"></div>
-      <button class="iconbtn" id="themeBtn" title="Tema" aria-label="Alternar tema claro/escuro">◐</button>
-      <button class="iconbtn" id="backupBtn" title="Backup" aria-label="Backup e compartilhamento">↥</button>
-      <button class="iconbtn" id="importBtn" title="Importar" aria-label="Importar arquivo">↧</button>
+      <button class="iconbtn" id="themeBtn" title="Tema" aria-label="Alternar tema claro/escuro"></button>
+      <button class="iconbtn" id="backupBtn" title="Repertório" aria-label="Repertório (backup, compartilhar, nuvem)"></button>
+      <button class="iconbtn" id="importBtn" title="Restaurar/Importar" aria-label="Importar arquivo"></button>
     </div>
     <div class="lib">
       <!-- aba Cifras -->
       <div id="pane-songs">
         <div class="searchwrap">
-          <span class="mag">🔍</span>
+          <span class="mag"></span>
           <input class="search" id="search" placeholder="Buscar música, artista, tom…">
         </div>
         <div class="tagbar" id="tagbar"></div>
@@ -451,20 +504,21 @@ input,textarea,select{font-family:inherit}
     <!-- Player normal: barra de UMA linha, prioriza a cifra (Tom/Editar/Compartilhar moram no ⚙ Ajustes) -->
     <div class="controls">
       <div class="topbar" style="position:static;background:none;border:none;backdrop-filter:none;padding:6px 0 8px">
-        <button class="iconbtn" id="p-back" aria-label="Voltar">←</button>
+        <button class="iconbtn" id="p-back" aria-label="Voltar"></button>
         <div class="p-titlebar" id="p-title"></div>
-        <button class="iconbtn" id="p-struct" title="Estrutura da música" aria-label="Estrutura da música">☰</button>
-        <button class="iconbtn" id="p-settings" aria-label="Ajustes">⚙</button>
+        <button class="iconbtn" id="p-struct" title="Estrutura da música" aria-label="Estrutura da música"></button>
+        <button class="iconbtn" id="p-settings" aria-label="Ajustes"></button>
       </div>
     </div>
     <!-- Apresentação: barra compacta de uma linha (o Tom mora no ⚙ Ajustes; o player normal usa .controls/.songhead acima) -->
     <div class="presentbar hidden" id="presentbar">
+      <div class="pb-progress" id="pv-progress" aria-hidden="true"><span></span></div>
       <div class="pb-nav">
-        <button class="pbtn-sm" id="pv-back" aria-label="Voltar para a escala">←</button>
-        <button class="pbtn" id="pv-prev" aria-label="Música anterior">‹</button>
+        <button class="pbtn-sm" id="pv-back" aria-label="Voltar para a escala"></button>
+        <button class="pbtn" id="pv-prev" aria-label="Música anterior"></button>
         <div class="pinfo"><span id="pv-title"></span><span id="pv-pos"></span></div>
-        <button class="pbtn" id="pv-next" aria-label="Próxima música">›</button>
-        <button class="pbtn-sm" id="pv-settings" aria-label="Ajustes">⚙</button>
+        <button class="pbtn" id="pv-next" aria-label="Próxima música"></button>
+        <button class="pbtn-sm" id="pv-settings" aria-label="Ajustes"></button>
       </div>
     </div>
     <div class="songhead">
@@ -472,7 +526,7 @@ input,textarea,select{font-family:inherit}
     </div>
     <div class="cifra" id="p-body"></div>
     <div class="scrollbar-mini" id="scrollbar-mini">
-      <button class="scrollbtn" id="scroll-toggle" aria-label="Rolar a tela">▶</button>
+      <button class="scrollbtn" id="scroll-toggle" aria-label="Rolar a tela"></button>
       <div class="speed"><span>Velocidade</span>
         <input type="range" id="scroll-speed" min="1" max="10" value="4" aria-label="Velocidade da rolagem">
       </div>
@@ -483,13 +537,13 @@ input,textarea,select{font-family:inherit}
   <!-- ===== EDITOR VIEW ===== -->
   <div id="view-editor" class="hidden">
     <div class="topbar">
-      <button class="iconbtn" id="e-cancel" aria-label="Cancelar">✕</button>
+      <button class="iconbtn" id="e-cancel" aria-label="Cancelar"></button>
       <div class="brand" style="font-size:19px"><span id="e-mode">Nova cifra</span></div>
       <div class="spacer"></div>
       <button class="iconbtn gold" id="e-save" style="width:auto;padding:0 18px;font-size:15px">Salvar</button>
     </div>
     <div class="editor">
-      <button class="addrow hidden" id="e-paste" style="margin-bottom:14px">📋 Colar cifra pronta (Cifra Club…)</button>
+      <button class="addrow hidden" id="e-paste" style="margin-bottom:14px">Colar cifra pronta (Cifra Club…)</button>
       <div class="field"><label>Título</label><input id="e-title" placeholder="Ex.: Tua Graça Me Basta"></div>
       <div class="field"><label>Artista / autor</label><input id="e-artist" placeholder="Opcional"></div>
       <div class="row2">
@@ -511,24 +565,24 @@ input,textarea,select{font-family:inherit}
         </div>
         <div class="lint" id="e-lint"></div>
       </div>
-      <button class="deletebtn hidden" id="e-delete">🗑 Excluir esta cifra</button>
+      <button class="deletebtn hidden" id="e-delete">Excluir esta cifra</button>
     </div>
   </div>
 
   <!-- ===== ESCALA DETAIL VIEW ===== -->
   <div id="view-escala" class="hidden">
     <div class="topbar">
-      <button class="iconbtn" id="es-back" aria-label="Voltar">←</button>
+      <button class="iconbtn" id="es-back" aria-label="Voltar"></button>
       <div class="spacer"></div>
-      <button class="iconbtn" id="es-edit" title="Editar" aria-label="Editar escala">✎</button>
-      <button class="iconbtn gold" id="es-share" title="Compartilhar" aria-label="Compartilhar escala">↗</button>
+      <button class="iconbtn" id="es-edit" title="Editar" aria-label="Editar escala"></button>
+      <button class="iconbtn gold" id="es-share" title="Compartilhar" aria-label="Compartilhar escala"></button>
     </div>
     <div class="escala">
       <div class="es-head">
         <div class="es-title" id="es-title"></div>
         <div class="es-meta" id="es-meta"></div>
       </div>
-      <button class="btn primary present-btn" id="es-present">▶ Apresentar</button>
+      <button class="btn primary present-btn" id="es-present">Apresentar</button>
       <button class="es-done-btn" id="es-done">Marcar culto como realizado</button>
       <div id="es-team"></div>
       <div class="es-order-h" id="es-order-h">Ordem do culto</div>
@@ -540,7 +594,7 @@ input,textarea,select{font-family:inherit}
   <!-- ===== ESCALA EDITOR VIEW ===== -->
   <div id="view-escala-edit" class="hidden">
     <div class="topbar">
-      <button class="iconbtn" id="ee-cancel" aria-label="Cancelar">✕</button>
+      <button class="iconbtn" id="ee-cancel" aria-label="Cancelar"></button>
       <div class="brand" style="font-size:19px"><span id="ee-mode">Nova escala</span></div>
       <div class="spacer"></div>
       <button class="iconbtn gold" id="ee-save" style="width:auto;padding:0 18px;font-size:15px">Salvar</button>
@@ -575,12 +629,12 @@ input,textarea,select{font-family:inherit}
       <div class="field"><label>Observações do culto</label>
         <textarea id="ee-notes" style="min-height:90px;white-space:pre-wrap;font-family:inherit;font-size:15px" placeholder="Tema, avisos gerais, transições…"></textarea></div>
 
-      <button class="deletebtn hidden" id="ee-delete">🗑 Excluir esta escala</button>
+      <button class="deletebtn hidden" id="ee-delete">Excluir esta escala</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="sheetbg" id="sheetbg"></div>
 <div class="sheet" id="sheet">
   <div class="grip"></div>
@@ -597,7 +651,7 @@ input,textarea,select{font-family:inherit}
   <div class="grip"></div>
   <h3>Adicionar música à escala</h3>
   <div class="searchwrap" style="margin:4px 0 10px">
-    <span class="mag">🔍</span>
+    <span class="mag"></span>
     <input class="search" id="picksearch" placeholder="Buscar no repertório…">
   </div>
   <div id="picklist" style="max-height:50dvh;overflow:auto"></div>
@@ -622,22 +676,32 @@ input,textarea,select{font-family:inherit}
 <div class="sheet" id="reposheet">
   <div class="grip"></div>
   <h3>Repertório na nuvem</h3>
-  <div class="hint" style="margin:0 2px 8px">
-    Cole o link de um repertório publicado (ex.: no GitHub Pages). “Atualizar” baixa as
-    cifras e escalas e mescla no aparelho — mão única: você baixa, não escreve de volta.
+
+  <!-- Baixar (equipe): mão única, só puxa do link -->
+  <div class="repo-card">
+    <div class="repo-h">Baixar do link (equipe)</div>
+    <div class="hint" style="margin:0 0 8px">
+      Cole o link de um repertório publicado (ex.: no GitHub Pages). “Atualizar” baixa as
+      cifras e escalas e mescla no aparelho — mão única: você baixa, não escreve de volta.
+    </div>
+    <input id="repo-url" class="search" inputmode="url" placeholder="https://…/louvai.json" style="width:100%;margin-bottom:8px">
+    <div id="repo-status" class="sheetnote" style="margin:0 0 10px"></div>
+    <button class="btn primary" id="repo-pull" style="width:100%">Atualizar do link</button>
   </div>
-  <input id="repo-url" class="search" inputmode="url" placeholder="https://…/louvai.json" style="width:100%;margin-bottom:8px">
-  <div id="repo-status" class="sheetnote" style="margin:0 2px 12px"></div>
-  <button class="btn primary" id="repo-pull" style="width:100%">↓ Atualizar do link</button>
-  <button class="btn" id="repo-export" style="width:100%;margin-top:8px">↥ Exportar tudo (pra publicar)</button>
-  <div class="repo-div">Publicar (líder)</div>
-  <div class="hint" style="margin:0 2px 8px">
-    Cole um <b>token fino</b> do GitHub (Contents: escrever). Ele fica <b>só neste aparelho</b>
-    e só conversa direto com o GitHub. Você pode revogá-lo no GitHub quando quiser.
-  </div>
-  <input id="gh-token" class="search" type="password" autocomplete="off" placeholder="github_pat_… (token)" style="width:100%;margin-bottom:8px">
-  <button class="btn primary" id="repo-publish" style="width:100%">☁ Publicar na nuvem</button>
-  <button class="btn" id="repo-forget" style="width:100%;margin-top:8px">Remover token deste aparelho</button>
+
+  <!-- Publicar (líder): recolhido por padrão — a maioria da equipe só baixa -->
+  <details class="repo-card repo-pub">
+    <summary>Publicar (líder)</summary>
+    <div class="hint" style="margin:0 0 8px">
+      Salve o repertório (cifras + escalas) num arquivo, ou escreva direto na nuvem com um
+      <b>token fino</b> do GitHub (Contents: escrever). O token fica <b>só neste aparelho</b>
+      e só conversa direto com o GitHub — dá pra revogá-lo no GitHub quando quiser.
+    </div>
+    <button class="btn" id="repo-export" style="width:100%;margin-bottom:10px">Exportar tudo (arquivo .json)</button>
+    <input id="gh-token" class="search" type="password" autocomplete="off" placeholder="github_pat_… (token)" style="width:100%;margin-bottom:8px">
+    <button class="btn primary" id="repo-publish" style="width:100%">Publicar na nuvem</button>
+    <button class="btn" id="repo-forget" style="width:100%;margin-top:8px">Remover token deste aparelho</button>
+  </details>
 </div>
 <!-- Ajustes do player (capo, fonte, só-letra, tabs, ♯/♭) — IDs preservados -->
 <div class="sheetbg" id="playerbg"></div>
@@ -645,11 +709,9 @@ input,textarea,select{font-family:inherit}
   <div class="grip"></div>
   <h3>Ajustes da cifra</h3>
   <div class="sheetctrls">
+    <div class="sheetsec">Afinação</div>
     <div class="ctrl"><span class="lbl">Tom</span>
       <span class="grp"><button id="s-tdown" aria-label="Descer meio tom">♭</button><span class="val" id="s-tkey">C</span><button id="s-tup" aria-label="Subir meio tom">♯</button></span>
-    </div>
-    <div class="ctrl"><span class="lbl">Modo de leitura</span>
-      <span class="grp seg"><button id="mode-scroll" class="on">Rolagem</button><button id="mode-page">Página</button></span>
     </div>
     <div class="ctrl"><span class="lbl">Capo</span>
       <span class="grp"><button id="c-down" aria-label="Diminuir capotraste">−</button><span class="val" id="c-val">0</span><button id="c-up" aria-label="Aumentar capotraste">＋</button></span>
@@ -657,17 +719,22 @@ input,textarea,select{font-family:inherit}
     <div class="ctrl"><span class="lbl">Tamanho da fonte</span>
       <span class="grp"><button id="f-down" aria-label="Diminuir fonte">A−</button><button id="f-up" aria-label="Aumentar fonte">A＋</button></span>
     </div>
+    <div class="sheetsec">Leitura</div>
+    <div class="ctrl"><span class="lbl">Modo de leitura</span>
+      <span class="grp seg"><button id="mode-scroll" class="on">Rolagem</button><button id="mode-page">Página</button></span>
+    </div>
     <div class="ctrl toggle"><span class="lbl">Só letra (esconde acordes)</span>
-      <span class="grp"><button id="lyr-toggle" aria-label="Só letra (esconde acordes)" aria-pressed="false">𝄞</button></span>
+      <span class="grp"><button id="lyr-toggle" aria-label="Só letra (esconde acordes)" aria-pressed="false"></button></span>
     </div>
     <div class="ctrl toggle"><span class="lbl">Tablaturas</span>
-      <span class="grp"><button id="tabs-toggle" aria-label="Mostrar/ocultar tablaturas" aria-pressed="false">≣</button></span>
+      <span class="grp"><button id="tabs-toggle" aria-label="Mostrar/ocultar tablaturas" aria-pressed="false"></button></span>
     </div>
     <div class="ctrl toggle" id="scrollbar-ctrl"><span class="lbl">Mostrar barra de auto-scroll</span>
-      <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false">▶</button></span>
+      <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false"></button></span>
     </div>
-    <div class="ctrl"><span class="lbl">Música</span>
-      <span class="grp"><button id="p-edit" aria-label="Editar cifra">✎ Editar</button><button id="p-share" aria-label="Compartilhar cifra">↗ Enviar</button></span>
+    <div class="sheetsec">Esta música</div>
+    <div class="ctrl actions">
+      <span class="grp"><button id="p-edit" aria-label="Editar cifra">Editar</button><button id="p-share" aria-label="Compartilhar cifra">Enviar</button></span>
     </div>
   </div>
 </div>
@@ -679,7 +746,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.27.3";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.36.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1045,7 +1112,7 @@ function uid(){ return "s"+Date.now().toString(36)+Math.random().toString(36).sl
 
 function demoSong(){
   return {
-    id:uid(), title:"Cifra de Exemplo", artist:"Toque pra abrir · edite no lápis ✎",
+    id:uid(), title:"Cifra de Exemplo", artist:"Toque pra abrir · edite no lápis",
     key:"G", capo:0, tags:["exemplo"], updatedAt:Date.now(),
     body:
 `[Intro]
@@ -1064,8 +1131,8 @@ E o ▶ embaixo rola a tela sozinho
 [Refrão]
 C            G
 Toque o lápis pra editar
-      D                 Em
-Toque ↗ pra mandar pro grupo
+      D                  Em
+Toque Compartilhar pra mandar
 C           G
 Crie quantas quiser sem internet
         D            C        G
@@ -1076,6 +1143,63 @@ Tudo fica salvo aqui no seu aparelho`
 /* ---------- Estado da tela ---------- */
 let view="lib", current=null, transp=0, capo=0, fontSize=15, showChords=true, activeTag=null;
 const $=s=>document.querySelector(s);
+
+/* ---------- Ícones (fonte única da verdade, como o parseChord é p/ acordes) ----------
+   SVG inline (Lucide, MIT) — traço 2px, currentColor: herda o tema nos dois modos e some
+   a mistura emoji+glifo. icon(name[,cls]) devolve o <svg>; paintIcons() pinta os botões
+   estáticos no boot. Exceções deliberadas que ficam TEXTO (língua do músico): ♯ ♭ (tom),
+   A−/A＋ (fonte), −/＋ (capo) e o ＋ de "Novo". */
+const ICONS={
+  archive:'<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
+  "arrow-left":'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  "chevron-left":'<path d="m15 18-6-6 6-6"/>',
+  "chevron-right":'<path d="m9 18 6-6-6-6"/>',
+  "chevron-up":'<path d="m18 15-6-6-6 6"/>',
+  "chevron-down":'<path d="m6 9 6 6 6-6"/>',
+  "list-music":'<path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/>',
+  sliders:'<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',
+  x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  pencil:'<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  "share-2":'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  copy:'<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  "trash-2":'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  cloud:'<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+  "cloud-upload":'<path d="M12 13v8"/><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="m8 17 4-4 4 4"/>',
+  "file-down":'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  play:'<polygon points="6 3 20 12 6 21 6 3"/>',
+  pause:'<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>',
+  music:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  "calendar-days":'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  type:'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/>',
+  tabs:'<line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/>',
+  clipboard:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+  eye:'<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+  user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+};
+function icon(name,cls){
+  return '<svg class="ic-svg'+(cls?" "+cls:"")+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||"")+'</svg>';
+}
+/* botões só-ícone (innerHTML=ícone) e botões ícone+rótulo (prefixa o ícone, mantém o texto do HTML) */
+const ICON_ONLY={"#backupBtn":"archive","#importBtn":"download","#p-back":"arrow-left","#es-back":"arrow-left",
+  "#pv-back":"arrow-left","#p-struct":"list-music","#p-settings":"sliders","#pv-settings":"sliders",
+  "#pv-prev":"chevron-left","#pv-next":"chevron-right","#e-cancel":"x","#ee-cancel":"x","#es-edit":"pencil",
+  "#es-share":"share-2","#lyr-toggle":"type","#tabs-toggle":"tabs","#scrollbar-toggle":"play","#scroll-toggle":"play"};
+const ICON_TX={"#es-present":"play","#e-delete":"trash-2","#ee-delete":"trash-2","#e-paste":"clipboard",
+  "#repo-pull":"download","#repo-export":"file-down","#repo-publish":"cloud-upload","#p-edit":"pencil","#p-share":"share-2"};
+function paintIcons(){
+  for(const s in ICON_ONLY){ const e=$(s); if(e) e.innerHTML=icon(ICON_ONLY[s]); }
+  for(const s in ICON_TX){ const e=$(s); if(e) e.insertAdjacentHTML("afterbegin",icon(ICON_TX[s],"ic-tx")); }
+  document.querySelectorAll(".mag").forEach(e=>e.innerHTML=icon("search"));
+  const ns=$("#tab-songs .nic"), ne=$("#tab-escalas .nic");
+  if(ns) ns.innerHTML=icon("music"); if(ne) ne.innerHTML=icon("calendar-days");
+}
 
 function show(v){
   view=v;
@@ -1134,24 +1258,34 @@ function renderLibrary(){
   $("#count").textContent = list.length+(list.length===1?" cifra":" cifras");
   const box=$("#songlist"); box.innerHTML="";
   if(!list.length){
-    box.innerHTML='<div class="empty"><div class="big">Nada por aqui ainda</div>'+
-      'Toque em <b>＋ Nova cifra</b> para começar, ou <b>↧</b> para importar um arquivo do grupo.</div>';
+    if(q||activeTag){   // busca/tag sem resultado: mensagem certa + limpar (G7)
+      box.innerHTML='<div class="empty search"><div class="eic">'+icon("search")+'</div><div class="big">Nada encontrado</div>'+
+        'Tente outra busca ou toque na tag de novo.<div class="emptyact">'+
+        '<button class="emptybtn" id="empty-clear">Limpar busca</button></div></div>';
+      $("#empty-clear").onclick=()=>{ $("#search").value=""; activeTag=null; renderLibrary(); };
+    }else{              // repertório vazio de verdade: ação embutida (G8)
+      box.innerHTML='<div class="empty"><div class="eic">'+icon("music")+'</div><div class="big">Nada por aqui ainda</div>'+
+        'Crie a primeira cifra, ou importe um arquivo do grupo (no Repertório).<div class="emptyact">'+
+        '<button class="emptybtn primary" id="empty-new">＋ Nova cifra</button></div></div>';
+      $("#empty-new").onclick=()=>$("#newBtn").click();
+    }
     return;
   }
   const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
   list.forEach(s=>{
     const card=document.createElement("div");
     card.className="songcard";
-    const tags=(s.tags||[]).filter(Boolean).slice(0,3).join(" · ");
+    const tagPills=(s.tags||[]).filter(Boolean).slice(0,3).map(t=>'<span class="pill tag">'+esc(t)+'</span>').join("");
+    const meta=tagPills+playedPill(s.id,played,anyDone);
     card.innerHTML=
       '<div class="keytag">'+esc(s.key||"?")+'</div>'+
-      '<div class="meta"><div class="ttl">'+esc(s.title)+'</div>'+
-      (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+
-      (tags?'<div class="tags">'+esc(tags)+'</div>':'')+
-      playedLine(s.id,played,anyDone)+'</div>';
+      '<div class="meta"><div class="c-ttl">'+esc(s.title)+'</div>'+
+      (s.artist?'<div class="c-sub">'+esc(s.artist)+'</div>':'')+
+      (meta?'<div class="c-meta">'+meta+'</div>':'')+'</div>';
     card.onclick=()=>openPlayer(s.id);
     box.appendChild(card);
   });
+  staggerIn(box,"lib");
 }
 
 /* ---------- Player ---------- */
@@ -1190,6 +1324,8 @@ function updatePresentBar(){
   bar.classList.remove("hidden");
   $("#pv-title").textContent = current.title;             // título pequeno no meio da barra
   $("#pv-pos").textContent = (escalaCtx.idx+1)+" de "+escalaCtx.list.length;
+  const pct = escalaCtx.list.length>1 ? (escalaCtx.idx+1)/escalaCtx.list.length*100 : 100;
+  $("#pv-progress span").style.width = pct+"%";          // fração visual do culto (M8)
   $("#pv-prev").disabled = escalaCtx.idx<=0;
   $("#pv-next").disabled = escalaCtx.idx>=escalaCtx.list.length-1;
 }
@@ -1213,10 +1349,10 @@ function drawPlayer(){
   const ctxShape = spellCtx(current.key, shapeShift());
   const sounding = transposeNote(origRoot, transp, ctxSound)+(minor?"m":"");
   const bits=[];
-  if(current.artist) bits.push(current.artist);
-  bits.push("Tom: "+sounding);
-  if(capo>0) bits.push("Capo "+capo+" (forma em "+(transposeNote(origRoot,shapeShift(),ctxShape)+(minor?"m":""))+")");
-  $("#p-sub").textContent=bits.join("  ·  ");   // linha fininha: artista · Tom atual · capo
+  if(current.artist) bits.push(esc(current.artist));
+  bits.push('<b class="tomhi">Tom: '+esc(sounding)+'</b>');   // Tom em destaque (mono+acento): info mais olhada no palco
+  if(capo>0) bits.push("Capo "+capo+" (forma em "+esc(transposeNote(origRoot,shapeShift(),ctxShape)+(minor?"m":""))+")");
+  $("#p-sub").innerHTML=bits.join("  ·  ");   // linha fininha: artista · Tom atual · capo
   $("#s-tkey").textContent=sounding;            // valor do Tom no ⚙ Ajustes (controle e indicador)
   $("#c-val").textContent=capo;
   const b=$("#p-body");
@@ -1300,7 +1436,7 @@ function applyScrollbar(){
   if(!on) stopScroll();
 }
 function startScroll(){
-  $("#scroll-toggle").textContent="❚❚"; $("#scroll-toggle").setAttribute("aria-label","Pausar rolagem");
+  $("#scroll-toggle").innerHTML=icon("pause"); $("#scroll-toggle").setAttribute("aria-label","Pausar rolagem");
   let last=performance.now(),acc2=0;
   const step=now=>{
     const dt=now-last; last=now;
@@ -1311,7 +1447,7 @@ function startScroll(){
   };
   scrollRAF=requestAnimationFrame(step);
 }
-function stopScroll(){ if(scrollRAF){cancelAnimationFrame(scrollRAF);scrollRAF=null;} $("#scroll-toggle").textContent="▶"; $("#scroll-toggle").setAttribute("aria-label","Rolar a tela"); }
+function stopScroll(){ if(scrollRAF){cancelAnimationFrame(scrollRAF);scrollRAF=null;} $("#scroll-toggle").innerHTML=icon("play"); $("#scroll-toggle").setAttribute("aria-label","Rolar a tela"); }
 $("#scroll-toggle").onclick=()=>{ scrollRAF?stopScroll():startScroll(); };
 
 /* ========================================================================
@@ -1578,7 +1714,7 @@ $("#e-save").onclick=()=>{
   };
   if(editingId){ Object.assign(songs.find(s=>s.id===editingId),data); }
   else{ data.id=uid(); songs.push(data); editingId=data.id; }
-  saveSongs(); openPlayer(editingId); toast("Salvo ✓");
+  saveSongs(); openPlayer(editingId); toast("Salvo","ok");
 };
 $("#e-delete").onclick=()=>{
   if(!editingId)return;
@@ -1683,9 +1819,9 @@ async function shareLink(envelopeObj, title, fileFn){
   // \u00e9 longo demais pra mensagem, avisa e oferece o arquivo \u2014 que n\u00e3o sofre esse corte.
   if(url.length>LINK_MAX && fileFn){
     openSheet("Link longo (~"+Math.round(url.length/1024)+" KB)",[
-      {ic:"\ud83d\udcc4",label:"Enviar como arquivo (recomendado)",fn:()=>{ closeSheet(); fileFn(); }},
-      {ic:"\ud83d\udd17",label:"Enviar link mesmo assim",fn:()=>{ closeSheet(); sendLink(url,title); }},
-      {ic:"\u2715",label:"Cancelar",fn:closeSheet},
+      {ic:icon("file-down"),label:"Enviar como arquivo (recomendado)",fn:()=>{ closeSheet(); fileFn(); }},
+      {ic:icon("link"),label:"Enviar link mesmo assim",fn:()=>{ closeSheet(); sendLink(url,title); }},
+      {ic:icon("x"),label:"Cancelar",fn:closeSheet},
     ]);
     return;
   }
@@ -1696,33 +1832,33 @@ function shareSheet(song){
   const env={type:"louvai-song",version:1,app:APP_VERSION,song};
   const sendFile=()=>shareFile(slug(song.title)+".louvai.json",JSON.stringify(env),"Cifra: "+song.title);
   openSheet("Compartilhar “"+song.title+"”",[
-    {ic:"🔗",label:"Enviar link da cifra",fn:()=>{
+    {ic:icon("link"),label:"Enviar link da cifra",fn:()=>{
       closeSheet();
       shareLink(env,"Cifra: "+song.title,sendFile);
     }},
-    {ic:"↗",label:"Enviar esta cifra (.json)",fn:()=>{ sendFile(); closeSheet(); }},
-    {ic:"✎",label:"Editar cifra",fn:()=>{closeSheet();openEditor(song.id);}},
-    {ic:"⧉",label:"Copiar texto da cifra",fn:async()=>{
+    {ic:icon("file-down"),label:"Enviar esta cifra (.json)",fn:()=>{ sendFile(); closeSheet(); }},
+    {ic:icon("pencil"),label:"Editar cifra",fn:()=>{closeSheet();openEditor(song.id);}},
+    {ic:icon("copy"),label:"Copiar texto da cifra",fn:async()=>{
       try{await navigator.clipboard.writeText(song.body);toast("Texto copiado ✓");}
       catch(e){toast("Não consegui copiar");}
       closeSheet();
     }},
-    {ic:"🗑",label:"Excluir",danger:true,fn:()=>{closeSheet();openEditor(song.id);$("#e-delete").click();}},
+    {ic:icon("trash-2"),label:"Excluir",danger:true,fn:()=>{closeSheet();openEditor(song.id);$("#e-delete").click();}},
   ]);
 }
 $("#backupBtn").onclick=()=>{
   const env={type:"louvai-library",version:1,app:APP_VERSION,songs};
   const sendFile=()=>shareFile("repertorio-louvai.json",JSON.stringify(env),"Repertório Louvai");
-  openSheet("Backup e compartilhamento",[
-    {ic:"↥",label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); recordBackup(); closeSheet(); }},
-    {ic:"🔗",label:"Enviar link do repertório",fn:()=>{
+  openSheet("Repertório",[
+    {ic:icon("file-down"),label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); recordBackup(); closeSheet(); }},
+    {ic:icon("link"),label:"Enviar link do repertório",fn:()=>{
       // repertório inteiro quase sempre passa do limite: o shareLink vai oferecer o
       // arquivo (caminho primário do repertório) em vez de um link fadado a ser cortado.
       closeSheet();
       shareLink(env,"Repertório Louvai",sendFile);
     }},
-    {ic:"↧",label:"Restaurar de um arquivo (.json)",fn:()=>{closeSheet();$("#fileInput").click();}},
-    {ic:"☁",label:"Repertório na nuvem (link)…",fn:()=>{closeSheet();openRepoSheet();}},
+    {ic:icon("upload"),label:"Restaurar de um arquivo (.json)",fn:()=>{closeSheet();$("#fileInput").click();}},
+    {ic:icon("cloud"),label:"Repertório na nuvem (link)…",fn:()=>{closeSheet();openRepoSheet();}},
   ],backupNote());
 };
 $("#importBtn").onclick=()=>$("#fileInput").click();
@@ -1737,7 +1873,9 @@ function exportFull(){
 }
 async function pullRepo(){
   const url=(settings.repoUrl||"").trim();
-  if(!url){ toast("Cole o link do repertório primeiro"); return; }
+  if(!url){ toast("Cole o link do repertório primeiro","warn"); return; }
+  const box=$("#songlist"); if(box) box.innerHTML=loadingSkeleton();   // M6: feedback de carregamento (rede)
+  const restore=()=>{ if(box) renderLibrary(); };                      // desfaz o skeleton se algo falhar
   let txt;
   try{
     // fura-cache só em http(s) (data:/blob: não aceitam query); no-store reforça
@@ -1745,11 +1883,11 @@ async function pullRepo(){
     const res = await fetch(u,{cache:"no-store"});
     if(!res.ok) throw new Error("http "+res.status);
     txt = await res.text();
-  }catch(e){ toast("Não consegui buscar — sem internet?"); return; }
-  let data; try{ data=JSON.parse(txt); }catch(e){ toast("O link não tem um repertório válido"); return; }
+  }catch(e){ toast("Não consegui buscar — sem internet?","err"); restore(); return; }
+  let data; try{ data=JSON.parse(txt); }catch(e){ toast("O link não tem um repertório válido","err"); restore(); return; }
   const tp=String(data.type||"").replace(/^levita-/,"louvai-");
   if(!/^louvai-(full|library|escala|song)$/.test(tp) && !Array.isArray(data) && !(data.title&&data.body)){
-    toast("O link não tem um repertório válido"); return;
+    toast("O link não tem um repertório válido","err"); restore(); return;
   }
   settings.repoPulledAt=Date.now(); saveSettings();
   importJSON(txt);   // reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
@@ -1810,29 +1948,29 @@ function diffNote(d){
 // escreve o snapshot no louvai.json via API Contents do GitHub (token fino, do aparelho)
 async function publishRepo(){
   const token=(settings.ghToken||"").trim();
-  if(!token){ toast("Cole um token do GitHub primeiro"); return; }
+  if(!token){ toast("Cole um token do GitHub primeiro","warn"); return; }
   const r=ghRepoFromUrl((settings.repoUrl||"").trim());
-  if(!r){ toast("Publicar só funciona com URL do GitHub Pages"); return; }
+  if(!r){ toast("Publicar só funciona com URL do GitHub Pages","err"); return; }
   const api="https://api.github.com/repos/"+r.owner+"/"+r.repo+"/contents/"+r.path;
   const headers={Authorization:"Bearer "+token, Accept:"application/vnd.github+json"};
   const cur=await ghGetCurrent(api,headers);
-  if(cur==="__auth__"){ toast("Token inválido ou sem permissão"); return; }
-  if(cur==="__net__"){ toast("Não consegui publicar — sem internet?"); return; }
-  if(cur==="__err__"){ toast("Não consegui acessar o repositório"); return; }
+  if(cur==="__auth__"){ toast("Token inválido ou sem permissão","err"); return; }
+  if(cur==="__net__"){ toast("Não consegui publicar — sem internet?","err"); return; }
+  if(cur==="__err__"){ toast("Não consegui acessar o repositório","err"); return; }
   // mostra o diff (e protege contra publicar de um aparelho desatualizado: "−40 cifras" = pare)
   const d=diffRepo(cur.data, fullEnvelope());
   closeRepoSheet();   // fecha a folha da nuvem ANTES da confirmação (senão empilha por cima dela)
   openSheet(d.first?"Publicar pela 1ª vez?":"Publicar na nuvem?",[
-    {ic:"☁",label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,cur.sha,d); }},
-    {ic:"👁",label:"Ver detalhes (nomes)",fn:()=>{ closeSheet(); showPublishDetails(api,headers,cur.sha,d); }},
-    {ic:"✕",label:"Cancelar",fn:closeSheet},
+    {ic:icon("cloud-upload"),label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,cur.sha,d); }},
+    {ic:icon("eye"),label:"Ver detalhes (nomes)",fn:()=>{ closeSheet(); showPublishDetails(api,headers,cur.sha,d); }},
+    {ic:icon("x"),label:"Cancelar",fn:closeSheet},
   ], diffNote(d));
 }
 // folha rolável com os NOMES que entram (+) e saem (−, em vermelho); ainda dá pra publicar dali
 function showPublishDetails(api, headers, sha, d){
   const rows=[
-    {ic:"☁",label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,sha,d); }},
-    {ic:"✕",label:"Cancelar",fn:closeSheet},
+    {ic:icon("cloud-upload"),label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,sha,d); }},
+    {ic:icon("x"),label:"Cancelar",fn:closeSheet},
   ];
   const CAP=60, push=(arr,sign,pre)=>arr.slice(0,CAP).forEach(t=>rows.push({ic:sign,label:(pre||"")+t,danger:sign==="−"}));
   push(d.sAddN,"+"); push(d.sRemN,"−");
@@ -1844,21 +1982,22 @@ async function doPublish(api, headers, sha, d){
   const content=bytesToB64(new TextEncoder().encode(JSON.stringify(fullEnvelope())));
   const put=s=>{ const body={message:"atualiza louvai.json (v"+APP_VERSION+")",content}; if(s) body.sha=s;
     return fetch(api,{method:"PUT",headers,body:JSON.stringify(body)}); };
-  let res; try{ res=await put(sha); }catch(e){ toast("Não consegui publicar — sem internet?"); return; }
+  let res; try{ res=await put(sha); }catch(e){ toast("Não consegui publicar — sem internet?","err"); return; }
   if(res.status===409){                                       // mudou na nuvem: rebusca o sha e tenta 1x
     const cur2=await ghGetCurrent(api,headers);
-    if(typeof cur2==="string"){ toast("Mudou na nuvem — atualize e tente de novo"); return; }
-    try{ res=await put(cur2.sha); }catch(e){ toast("Não consegui publicar — sem internet?"); return; }
+    if(typeof cur2==="string"){ toast("Mudou na nuvem — atualize e tente de novo","err"); return; }
+    try{ res=await put(cur2.sha); }catch(e){ toast("Não consegui publicar — sem internet?","err"); return; }
   }
-  if(res.ok){ settings.repoPublishedAt=Date.now(); saveSettings(); toast("Publicado na nuvem ✓"+diffLabel(d)); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
-  else if(res.status===401||res.status===403) toast("Token inválido ou sem permissão");
-  else if(res.status===409) toast("Mudou na nuvem — atualize e tente de novo");
-  else toast("Não consegui publicar (erro "+res.status+")");
+  if(res.ok){ settings.repoPublishedAt=Date.now(); saveSettings(); toast("Publicado na nuvem"+diffLabel(d),"ok"); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
+  else if(res.status===401||res.status===403) toast("Token inválido ou sem permissão","err");
+  else if(res.status===409) toast("Mudou na nuvem — atualize e tente de novo","err");
+  else toast("Não consegui publicar (erro "+res.status+")","err");
 }
 function openRepoSheet(){
   $("#repo-url").value=settings.repoUrl||"";
   $("#gh-token").value=settings.ghToken||"";
   $("#repo-status").textContent=repoStatus();
+  const pub=$("#reposheet .repo-pub"); if(pub) pub.open=!!settings.ghToken;  // líder (com token) abre; equipe fica recolhida
   openS("#repobg","#reposheet","#repo-url");
 }
 function closeRepoSheet(){ closeS("#repobg","#reposheet"); }
@@ -1872,7 +2011,7 @@ $("#repo-publish").onclick=()=>{
   settings.repoUrl=$("#repo-url").value.trim(); settings.ghToken=$("#gh-token").value.trim(); saveSettings();
   publishRepo();   // mantém a folha aberta: mostra "Publicado ✓"/erro e permite reenviar no conflito
 };
-$("#repo-forget").onclick=()=>{ settings.ghToken=""; saveSettings(); $("#gh-token").value=""; toast("Token removido deste aparelho"); };
+$("#repo-forget").onclick=()=>{ settings.ghToken=""; saveSettings(); $("#gh-token").value=""; toast("Token removido deste aparelho","ok"); };
 
 $("#fileInput").onchange=e=>{
   const f=e.target.files[0]; if(!f)return;
@@ -1880,7 +2019,7 @@ $("#fileInput").onchange=e=>{
   r.onload=()=>{ importJSON(r.result); $("#fileInput").value=""; };
   // falha de leitura (arquivo travado/removido no mobile) não pode ficar silenciosa;
   // limpa o value nos dois caminhos p/ permitir re-selecionar o MESMO arquivo.
-  r.onerror=()=>{ toast("Não consegui ler o arquivo 😕"); $("#fileInput").value=""; };
+  r.onerror=()=>{ toast("Não consegui ler o arquivo","err"); $("#fileInput").value=""; };
   r.readAsText(f);
 };
 const normTitle=t=>String(t==null?"":t).trim().toLowerCase();
@@ -1919,7 +2058,7 @@ function mergeSongs(arr, policy){
   return {added,updated,remap};
 }
 function importJSON(text){
-  let data; try{data=JSON.parse(text);}catch(e){toast("Arquivo inválido 😕");return;}
+  let data; try{data=JSON.parse(text);}catch(e){toast("Arquivo inválido","err");return;}
   // arquivos da era "Levita" (nome antigo do app) continuam abrindo normalmente
   const tp=String(data.type||"").replace(/^levita-/,"louvai-");
   // descobre QUAIS cifras chegam (sem mexer em nada ainda) p/ detectar título repetido
@@ -1939,9 +2078,9 @@ function importJSON(text){
     // duplicata sem querer nem sobrescreve a versão dele silenciosamente.
     const names=dups.slice(0,3).join(", ")+(dups.length>3?` +${dups.length-3}`:"");
     openSheet("Você já tem: "+names,[
-      {ic:"👤",label:"Manter as minhas (não duplicar)",fn:()=>{closeSheet();doImport(data,tp,incoming,"mine");}},
-      {ic:"⧉",label:"Importar como cópias (ficar com as duas)",fn:()=>{closeSheet();doImport(data,tp,incoming,"both");}},
-      {ic:"✕",label:"Cancelar importação",fn:closeSheet},
+      {ic:icon("user"),label:"Manter as minhas (não duplicar)",fn:()=>{closeSheet();doImport(data,tp,incoming,"mine");}},
+      {ic:icon("copy"),label:"Importar como cópias (ficar com as duas)",fn:()=>{closeSheet();doImport(data,tp,incoming,"both");}},
+      {ic:icon("x"),label:"Cancelar importação",fn:closeSheet},
     ]);
     return;
   }
@@ -2013,8 +2152,8 @@ async function handleImportLink(){
   // "nada salvo no escuro": dado vindo de link é não-confiável — confirma antes de mesclar
   // (o esc() da v0.13.2 ainda blinda XSS na exibição depois de importado).
   openSheet("Importar deste link?",[
-    {ic:"↧",label:"Importar "+label,fn:()=>{ closeSheet(); importJSON(jsonText); }},
-    {ic:"✕",label:"Cancelar",fn:closeSheet},
+    {ic:icon("download"),label:"Importar "+label,fn:()=>{ closeSheet(); importJSON(jsonText); }},
+    {ic:icon("x"),label:"Cancelar",fn:closeSheet},
   ]);
 }
 
@@ -2065,11 +2204,23 @@ function fmtPlayed(iso){
   if(d<365){ const m=Math.floor(d/30); return "tocada há "+m+(m===1?" mês":" meses"); }
   return "tocada há mais de um ano";
 }
-// linha pro card: "tocada há…" / "nunca tocada" (só quando há escala confirmada, p/ não poluir)
-function playedLine(songId, map, anyDone){
+// entrada da lista (M7): aplica o stagger só na PRIMEIRA pintura de cada lista (não a cada busca)
+const staggered={};
+function staggerIn(box, key){
+  if(staggered[key]) return; staggered[key]=true;
+  [...box.children].forEach((el,i)=>{
+    if(el.classList.contains("songcard")||el.classList.contains("escard")){
+      el.classList.add("card-in"); el.style.animationDelay=Math.min(i,8)*28+"ms";
+    }
+  });
+}
+// placeholders de carregamento (M6): usados no "Atualizar do link" enquanto a rede responde
+function loadingSkeleton(n){ return '<div class="skel">'+Array.from({length:n||5},()=>'<div class="skel-card"></div>').join("")+'</div>'; }
+// pílula pro card: "tocada há…" / "nunca tocada" (só quando há escala confirmada, p/ não poluir)
+function playedPill(songId, map, anyDone){
   const iso=map[songId];
   const txt=iso?fmtPlayed(iso):(anyDone?"nunca tocada":"");
-  return txt ? '<div class="played'+(iso?'':' never')+'">'+esc(txt)+'</div>' : '';
+  return txt ? '<span class="pill played'+(iso?'':' never')+'">'+esc(txt)+'</span>' : '';
 }
 
 /* ---- lista de escalas ---- */
@@ -2078,23 +2229,26 @@ function renderEscalas(){
   $("#escount").textContent=list.length+(list.length===1?" escala":" escalas");
   const box=$("#escalalist"); box.innerHTML="";
   if(!list.length){
-    box.innerHTML='<div class="empty"><div class="big">Nenhuma escala ainda</div>'+
-      'Toque em <b>＋ Nova escala</b> para montar a ordem do próximo culto.</div>';
+    box.innerHTML='<div class="empty esc"><div class="eic">'+icon("calendar-days")+'</div><div class="big">Nenhuma escala ainda</div>'+
+      'Monte a ordem do próximo culto.<div class="emptyact">'+
+      '<button class="emptybtn primary" id="empty-newesc">＋ Nova escala</button></div></div>';
+    $("#empty-newesc").onclick=()=>$("#newEscBtn").click();
     return;
   }
   list.forEach(e=>{
     const nSongs=songItems(e).length, tot=escTotalMin(e);
     const card=document.createElement("div"); card.className="escard";
-    card.innerHTML='<div class="et">'+esc(e.title||"(sem título)")+'</div>'+
-      '<div class="ed">'+esc([fmtDate(e.date),e.time,e.type].filter(Boolean).join(" · "))+'</div>'+
-      '<div class="ex">'+
-        '<span class="estag">'+nSongs+' música'+(nSongs===1?'':'s')+'</span>'+
-        (tot?'<span class="estag">'+esc(fmtDur(tot))+'</span>':'')+
-        ((e.team||[]).length?'<span class="estag">'+e.team.length+' na equipe</span>':'')+
+    card.innerHTML='<div class="c-ttl">'+esc(e.title||"(sem título)")+'</div>'+
+      '<div class="c-sub">'+esc([fmtDate(e.date),e.time,e.type].filter(Boolean).join(" · "))+'</div>'+
+      '<div class="c-meta">'+
+        '<span class="pill">'+nSongs+' música'+(nSongs===1?'':'s')+'</span>'+
+        (tot?'<span class="pill">'+esc(fmtDur(tot))+'</span>':'')+
+        ((e.team||[]).length?'<span class="pill">'+e.team.length+' na equipe</span>':'')+
       '</div>';
     card.onclick=()=>openEscala(e.id);
     box.appendChild(card);
   });
+  staggerIn(box,"esc");
 }
 
 /* ---- detalhe da escala (ordem do culto) ---- */
@@ -2191,7 +2345,7 @@ function renderTeamEditor(){
     row.innerHTML=
       '<select class="rolesel">'+FUNCOES.map(f=>'<option'+(f===t.role?' selected':'')+'>'+f+'</option>').join("")+'</select>'+
       '<input class="nameinp" placeholder="Nome" value="'+esc(t.name||"")+'">'+
-      '<button class="rm" title="Remover">✕</button>';
+      '<button class="rm" aria-label="Remover" title="Remover">'+icon("x")+'</button>';
     row.querySelector(".rolesel").onchange=e=>{editEscala.team[i].role=e.target.value;};
     row.querySelector(".nameinp").oninput=e=>{editEscala.team[i].name=e.target.value;};
     row.querySelector(".rm").onclick=()=>{editEscala.team.splice(i,1);renderTeamEditor();};
@@ -2205,7 +2359,7 @@ function renderItemsEditor(){
   (editEscala.items||[]).forEach((it,i)=>{
     const row=document.createElement("div");
     row.className="irow"+(it.kind==="item"?" itemkind":"");
-    const moveBtns='<button class="move" data-d="-1" aria-label="Mover para cima">↑</button><button class="move" data-d="1" aria-label="Mover para baixo">↓</button><button class="rm" aria-label="Remover item" title="Remover">✕</button>';
+    const moveBtns='<button class="move" data-d="-1" aria-label="Mover para cima">'+icon("chevron-up")+'</button><button class="move" data-d="1" aria-label="Mover para baixo">'+icon("chevron-down")+'</button><button class="rm" aria-label="Remover item" title="Remover">'+icon("x")+'</button>';
     const momSel='<select class="f-mom">'+MOMENTOS.map(m=>'<option'+(m===(it.momento||"")?' selected':'')+'>'+(m||"— momento —")+'</option>').join("")+'</select>';
     if(it.kind==="song"){
       const s=songById(it.songId);
@@ -2213,7 +2367,7 @@ function renderItemsEditor(){
         KEYS.map(k=>'<option'+(k===it.key?' selected':'')+'>'+k+'</option>').join("")+'</select>';
       const capoSel='<select class="f-capo">'+Array.from({length:12},(_,c)=>'<option'+(c===(it.capo||0)?' selected':'')+'>'+c+'</option>').join("")+'</select>';
       row.innerHTML=
-        '<div class="ihead"><span class="ic">🎵 '+esc(s?s.title:"(cifra removida)")+'</span>'+moveBtns+'</div>'+
+        '<div class="ihead"><span class="ic">'+icon("music","ic-tx")+esc(s?s.title:"(cifra removida)")+'</span>'+moveBtns+'</div>'+
         '<div class="igrid three">'+
           '<div class="fld"><label>Tom (escala)</label>'+keySel+'</div>'+
           '<div class="fld"><label>Capo</label>'+capoSel+'</div>'+
@@ -2285,9 +2439,10 @@ function renderPicker(q){
   const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
   list.forEach(s=>{
     const c=document.createElement("div"); c.className="songcard";
-    c.innerHTML='<div class="keytag">'+esc(s.key||"?")+'</div><div class="meta"><div class="ttl">'+esc(s.title)+'</div>'+
-      (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+
-      playedLine(s.id,played,anyDone)+'</div>';
+    const pp=playedPill(s.id,played,anyDone);
+    c.innerHTML='<div class="keytag">'+esc(s.key||"?")+'</div><div class="meta"><div class="c-ttl">'+esc(s.title)+'</div>'+
+      (s.artist?'<div class="c-sub">'+esc(s.artist)+'</div>':'')+
+      (pp?'<div class="c-meta">'+pp+'</div>':'')+'</div>';
     c.onclick=()=>{
       editEscala.items.push({kind:"song",songId:s.id,key:"",capo:0,momento:"",dur:0,note:""});
       closePicker(); renderItemsEditor(); toast("“"+s.title+"” adicionada");
@@ -2304,13 +2459,13 @@ function shareEscalaSheet(id){
   const env={type:"louvai-escala",version:1,app:APP_VERSION,escala:e,songs:bundle};
   const sendFile=()=>shareFile(slug(e.title)+".escala.louvai.json",JSON.stringify(env),"Escala: "+e.title);
   openSheet("Compartilhar “"+(e.title||"escala")+"”",[
-    {ic:"🔗",label:"Enviar link (escala + cifras)",fn:()=>{
+    {ic:icon("link"),label:"Enviar link (escala + cifras)",fn:()=>{
       closeSheet();
       shareLink(env,"Escala: "+(e.title||"escala"),sendFile);
     }},
-    {ic:"↗",label:"Enviar escala + cifras (.json)",fn:()=>{ sendFile(); closeSheet(); }},
-    {ic:"✎",label:"Editar escala",fn:()=>{closeSheet();openEscalaEditor(id);}},
-    {ic:"🗑",label:"Excluir",danger:true,fn:()=>{closeSheet();openEscalaEditor(id);$("#ee-delete").click();}},
+    {ic:icon("file-down"),label:"Enviar escala + cifras (.json)",fn:()=>{ sendFile(); closeSheet(); }},
+    {ic:icon("pencil"),label:"Editar escala",fn:()=>{closeSheet();openEscalaEditor(id);}},
+    {ic:icon("trash-2"),label:"Excluir",danger:true,fn:()=>{closeSheet();openEscalaEditor(id);$("#ee-delete").click();}},
   ]);
 }
 
@@ -2338,6 +2493,35 @@ function openS(bgSel,sheetSel,focusSel){
   if(focusSel) setTimeout(()=>$(focusSel).focus(),200);
 }
 function closeS(bgSel,sheetSel){ $(sheetSel).classList.remove("show"); $(bgSel).classList.remove("show"); }
+
+/* arrastar para fechar (M3): pega no grip OU no cabeçalho (h3) — nunca no corpo rolável.
+   Segue o dedo 1:1 (sem transição); ao soltar, fecha se passou do limiar ou volta com mola.
+   A volta/fechamento usam a transição do CSS, então já respeitam prefers-reduced-motion. */
+const SHEET_BG={sheet:"#sheetbg",playersheet:"#playerbg",reposheet:"#repobg",picksheet:"#pickbg",pastesheet:"#pastebg"};
+const SHEET_CLOSE_DY=90;
+function enableSheetDrag(sheet){
+  let startY=0, dy=0, dragging=false;
+  sheet.addEventListener("pointerdown",e=>{
+    const t=e.target;
+    if(!(t.classList.contains("grip")||t.tagName==="H3")) return;  // só o "puxador"/topo
+    dragging=true; startY=e.clientY; dy=0;
+    sheet.style.transition="none";
+    try{ sheet.setPointerCapture(e.pointerId); }catch(_){}   // ponteiro sintético (teste) pode não capturar
+  });
+  sheet.addEventListener("pointermove",e=>{
+    if(!dragging) return;
+    dy=Math.max(0,e.clientY-startY);            // só para baixo
+    sheet.style.transform="translateY("+dy+"px)";
+  });
+  const end=()=>{
+    if(!dragging) return; dragging=false;
+    sheet.style.transition="";                  // devolve a transição ao CSS
+    sheet.style.transform="";                   // volta pro translateY(0) (mola) — anima
+    if(dy>SHEET_CLOSE_DY){ const bg=SHEET_BG[sheet.id]||"#sheetbg"; closeS(bg,"#"+sheet.id); }
+  };
+  sheet.addEventListener("pointerup",end);
+  sheet.addEventListener("pointercancel",end);
+}
 function openSheet(title,items,note){
   $("#sheet-title").textContent=title;
   const n=$("#sheet-note"); if(n){ n.textContent=note||""; n.classList.toggle("hidden",!note); }
@@ -2354,15 +2538,17 @@ function closeSheet(){ closeS("#sheetbg","#sheet"); }
 $("#sheetbg").onclick=closeSheet;
 
 let toastT=null;
-function toast(msg){
-  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
-  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200);
+function toast(msg, type){   // type: "ok" | "err" | "warn" (faixa de cor + tempo). erro fica mais tempo.
+  const t=$("#toast");
+  t.classList.remove("ok","err","warn"); if(type) t.classList.add(type);
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"), type==="err"?3600:2200);
 }
 
 /* ---------- Tema ---------- */
 function applyTheme(){
   document.body.classList.toggle("light",settings.theme==="light");
-  $("#themeBtn").textContent=settings.theme==="light"?"◑":"◐";
+  $("#themeBtn").innerHTML=icon(settings.theme==="light"?"moon":"sun");
   document.querySelector('meta[name=theme-color]').setAttribute("content",settings.theme==="light"?"#f6f5f8":"#121212");
 }
 $("#themeBtn").onclick=()=>{settings.theme=settings.theme==="light"?"dark":"light";saveSettings();applyTheme();};
@@ -2372,6 +2558,8 @@ $("#search").oninput=renderLibrary;
 
 /* ---------- Boot ---------- */
 $("#appVer").textContent="v"+APP_VERSION;
+paintIcons();   // pinta os ícones SVG dos botões estáticos (fonte única: ICONS/icon())
+document.querySelectorAll(".sheet").forEach(enableSheetDrag);   // arrastar para fechar (M3)
 load(); applyTheme(); renderLibrary(); show("lib");
 // link auto-importável: após carregar/render, trata #imp= do boot e de links tocados depois
 handleImportLink();
@@ -2380,7 +2568,7 @@ window.addEventListener("hashchange",handleImportLink);
 // (não atropela uma importação por link em andamento, que usa o mesmo toast).
 updateBackupBadge();
 if(backupDue() && location.hash.indexOf("#imp=")!==0)
-  setTimeout(()=>{ if(backupDue()) toast("Faça backup do repertório ↥"); },700);
+  setTimeout(()=>{ if(backupDue()) toast("Faça backup do repertório","warn"); },700);
 </script>
 </body>
 </html>
