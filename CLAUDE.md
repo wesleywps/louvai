@@ -229,13 +229,15 @@ Já entregues: redesign visual (v0.10.0–v0.13.x), grafia dos acordes (v0.16.0�
 modos de leitura (v0.14.0–v0.15.x), Apresentação enxuta + "livro" (v0.18.0–v0.19.0),
 **compartilhar por link** (v0.21.0), aviso de duplicado + **backup com rede de segurança**
 (v0.22.0–v0.23.0), **"última vez que tocamos"** (v0.24.0), **diagramas de acorde** (v0.25.0), **repertório +
-escalas por link** (pull — v0.26.0) e **publicar na nuvem** (escrever do celular via token do
-GitHub — v0.27.0). Ver `PLANO-repertorio-link.md` / `PLANO-publicar-nuvem.md`.
-Ver `ROTEIRO-louvai.md` (seções 4 e 5). Ordem sugerida agora:
-1. **Hospedar + validar o link em campo** (tarefa do dono): publicar no GitHub Pages
-   (passo a passo no `README` / `PLANO-compartilhar-link.md`) e testar o link entre celulares.
-2. **Validação visual no celular** (dark/light) — redesign, Modo Página, barra compacta da
-   Apresentação e o popover do diagrama de acorde só se confirmam de verdade na tela do palco.
+escalas por link** (pull — v0.26.0), **publicar na nuvem** (token do GitHub — v0.27.0–v0.27.3,
+com diff/detalhes) e **polimento de UI Onda 1** (v0.28.0). Ver os `PLANO-*.md`.
+Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
+1. **Onda 2 do `PLANO-ui.md`** — migrar TODOS os ícones pra **SVG inline** via helper `icon()`
+   (helper `ICONS` + `.iconbtn`/`.ic` etc.). ⚠️ **Armadilha:** o smoke casa alguns botões por
+   `textContent` de glifo → migrar essas asserções pra `aria-label`/seletor. (O ícone do Backup
+   já virou SVG na v0.28.0 — usar como modelo.) Depois: **Onda 3** (sheets/cards/gestos, um por vez).
+2. **Validação visual no celular** (dark/light) da Onda 1 — Tom destacado, toast colorido,
+   estados vazios, acorde no claro, ícone "Repertório" só se confirmam na tela do palco.
 3. **Ordenar por menos tocadas** (usa a recência da v0.24.0) e **QR Code**.
-4. **PWA instalável** (ícone, 100% offline) — fecha o offline do app hospedado e **encerra a
-   regra "arquivo único"** (ver seção "Horizonte").
+4. **PWA instalável** — fecha o offline do app hospedado e **encerra a regra "arquivo único"**
+   (ver seção "Horizonte").
