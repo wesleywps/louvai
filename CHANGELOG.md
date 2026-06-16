@@ -8,6 +8,22 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.31.0 — Linguagem de card unificada (Onda 3 · M4)
+**Recurso (interface).** Segundo item da Onda 3 (M4 de `ANALISE-ui.md`). A lista de cifras
+(`.songcard`) e a de escalas (`.escard`) eram **telas irmãs com gramáticas visuais diferentes**:
+a de escalas já usava pílulas de metadado; a de cifras empilhava tags e recência como texto solto
+em níveis muito próximos (16,5/13,5/11,5/11,5px), deixando o card "denso e sem ritmo".
+- **Mesma gramática nas duas telas:** **título → subtítulo → faixa de metadados em pílulas**
+  (`.c-ttl` / `.c-sub` / `.c-meta` + `.pill`). Dois níveis de leitura, não quatro.
+- **Cifra:** tags viram **pílulas** (`.pill.tag`) e "tocada há…/nunca tocada" vira uma pílula
+  (`.pill.never` com acento, pra "dar vez" às nunca tocadas) — tudo numa faixa só.
+- **Escala:** nº de músicas, duração e equipe usam a **mesma** `.pill` (some o `.estag` próprio).
+- **Respiro 8pt:** padding/margens dos cards em múltiplos de 8 (`--sp-*`), raios e tipografia em
+  tokens (`--fs-*`, `--r-sm`/`--r-pill`) — fim dos `11/13,5/15px` soltos. Interno ≤ externo.
+- **175 verificações** (2 novas: songcard e escard na mesma gramática), zero erro de JS.
+
+---
+
 ## v0.30.0 — ⚙ Ajustes em seções (Onda 3 · M2)
 **Recurso (interface).** Primeiro item da Onda 3 do `PLANO-ui.md` (M2 de `ANALISE-ui.md`). O sheet
 "Ajustes da cifra" era uma lista vertical de 8 linhas com o mesmo peso visual — afinação, leitura e

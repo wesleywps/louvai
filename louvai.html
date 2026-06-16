@@ -112,21 +112,28 @@ input,textarea,select{font-family:inherit}
   border:1px solid var(--line);font-size:13.5px;color:var(--muted);font-weight:500}
 .chip.on{background:var(--gold);color:var(--accent-ink);border-color:transparent;font-weight:700}
 .count{font-size:12.5px;color:var(--muted);margin:2px 2px 12px;letter-spacing:.3px;text-transform:uppercase}
-.songcard{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:var(--r);
-  background:var(--panel);border:1px solid var(--line);margin-bottom:11px;transition:var(--dur)}
-.songcard:active{transform:scale(.985);background:var(--panel2)}
-.keytag{flex:0 0 auto;width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
-  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:17px;
+/* gramática de card UNIFICADA (.songcard × .escard, M4): título → sub → faixa de pílulas.
+   Mesma tipografia, mesmo respiro 8pt e o mesmo vocabulário de pílula nas duas telas irmãs. */
+.songcard,.escard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  margin-bottom:var(--sp-3);transition:var(--dur)}
+.songcard{display:flex;align-items:center;gap:14px;padding:var(--sp-3) var(--sp-4)}
+.escard{padding:var(--sp-3) var(--sp-4)}
+.songcard:active,.escard:active{transform:scale(.985);background:var(--panel2)}
+.keytag{flex:0 0 auto;width:46px;height:46px;border-radius:var(--r-sm);display:grid;place-items:center;
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:var(--fs-lg);
   background:linear-gradient(140deg,var(--panel2),var(--bg2));color:var(--gold);
   border:1px solid var(--line)}
 .songcard .meta{flex:1;min-width:0}
-.songcard .ttl{font-size:16.5px;font-weight:700;letter-spacing:-.2px;
+/* nível 1: título · nível 2: subtítulo (artista/data) · faixa de metadados em pílulas */
+.c-ttl{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.songcard .sub{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis;margin-top:2px}
-.songcard .tags{font-size:11.5px;color:var(--section);margin-top:3px}
-.songcard .played{font-size:11.5px;color:var(--muted);margin-top:3px}
-.songcard .played.never{color:var(--accent-soft)}   /* nunca tocada: leve destaque (boa pra dar vez) */
+.c-sub{font-size:var(--fs-sm);color:var(--muted);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;margin-top:var(--sp-1)}
+.c-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:var(--sp-2)}
+.pill{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-pill);
+  padding:3px 10px;font-size:var(--fs-xs);color:var(--muted);line-height:1.4;white-space:nowrap}
+.pill.tag{color:var(--section)}                      /* tag da cifra: leve cor de seção */
+.pill.never{color:var(--accent-soft);border-color:var(--accent-soft)}  /* nunca tocada: dar vez */
 .empty{text-align:center;padding:84px 24px;color:var(--muted);line-height:1.6}
 .empty .eic{line-height:0;margin-bottom:14px}   /* ícone SVG do estado vazio (injetado via icon()) */
 .empty .eic .ic-svg{width:42px;height:42px;color:var(--accent);opacity:.85;filter:drop-shadow(0 0 24px var(--accent-glow))}
@@ -285,14 +292,7 @@ input,textarea,select{font-family:inherit}
 
 /* (abas Cifras/Escalas agora vivem na .bottomnav, acima) */
 
-/* ---------- Escala cards (lista) ---------- */
-.escard{padding:15px 16px;border-radius:var(--r);background:var(--panel);
-  border:1px solid var(--line);margin-bottom:11px;transition:var(--dur)}
-.escard:active{transform:scale(.985);background:var(--panel2)}
-.escard .et{font-size:17px;font-weight:700;letter-spacing:-.2px}
-.escard .ed{font-size:13px;color:var(--muted);margin-top:3px}
-.escard .ex{font-size:12px;color:var(--section);margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
-.estag{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+/* ---------- Escala cards (lista) — usa a gramática unificada .c-ttl/.c-sub/.c-meta/.pill (M4) ---------- */
 
 /* ---------- Escala detail ---------- */
 .escala{padding:18px 16px 130px}
@@ -712,7 +712,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.30.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.31.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1241,13 +1241,13 @@ function renderLibrary(){
   list.forEach(s=>{
     const card=document.createElement("div");
     card.className="songcard";
-    const tags=(s.tags||[]).filter(Boolean).slice(0,3).join(" · ");
+    const tagPills=(s.tags||[]).filter(Boolean).slice(0,3).map(t=>'<span class="pill tag">'+esc(t)+'</span>').join("");
+    const meta=tagPills+playedPill(s.id,played,anyDone);
     card.innerHTML=
       '<div class="keytag">'+esc(s.key||"?")+'</div>'+
-      '<div class="meta"><div class="ttl">'+esc(s.title)+'</div>'+
-      (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+
-      (tags?'<div class="tags">'+esc(tags)+'</div>':'')+
-      playedLine(s.id,played,anyDone)+'</div>';
+      '<div class="meta"><div class="c-ttl">'+esc(s.title)+'</div>'+
+      (s.artist?'<div class="c-sub">'+esc(s.artist)+'</div>':'')+
+      (meta?'<div class="c-meta">'+meta+'</div>':'')+'</div>';
     card.onclick=()=>openPlayer(s.id);
     box.appendChild(card);
   });
@@ -2164,11 +2164,11 @@ function fmtPlayed(iso){
   if(d<365){ const m=Math.floor(d/30); return "tocada há "+m+(m===1?" mês":" meses"); }
   return "tocada há mais de um ano";
 }
-// linha pro card: "tocada há…" / "nunca tocada" (só quando há escala confirmada, p/ não poluir)
-function playedLine(songId, map, anyDone){
+// pílula pro card: "tocada há…" / "nunca tocada" (só quando há escala confirmada, p/ não poluir)
+function playedPill(songId, map, anyDone){
   const iso=map[songId];
   const txt=iso?fmtPlayed(iso):(anyDone?"nunca tocada":"");
-  return txt ? '<div class="played'+(iso?'':' never')+'">'+esc(txt)+'</div>' : '';
+  return txt ? '<span class="pill played'+(iso?'':' never')+'">'+esc(txt)+'</span>' : '';
 }
 
 /* ---- lista de escalas ---- */
@@ -2186,12 +2186,12 @@ function renderEscalas(){
   list.forEach(e=>{
     const nSongs=songItems(e).length, tot=escTotalMin(e);
     const card=document.createElement("div"); card.className="escard";
-    card.innerHTML='<div class="et">'+esc(e.title||"(sem título)")+'</div>'+
-      '<div class="ed">'+esc([fmtDate(e.date),e.time,e.type].filter(Boolean).join(" · "))+'</div>'+
-      '<div class="ex">'+
-        '<span class="estag">'+nSongs+' música'+(nSongs===1?'':'s')+'</span>'+
-        (tot?'<span class="estag">'+esc(fmtDur(tot))+'</span>':'')+
-        ((e.team||[]).length?'<span class="estag">'+e.team.length+' na equipe</span>':'')+
+    card.innerHTML='<div class="c-ttl">'+esc(e.title||"(sem título)")+'</div>'+
+      '<div class="c-sub">'+esc([fmtDate(e.date),e.time,e.type].filter(Boolean).join(" · "))+'</div>'+
+      '<div class="c-meta">'+
+        '<span class="pill">'+nSongs+' música'+(nSongs===1?'':'s')+'</span>'+
+        (tot?'<span class="pill">'+esc(fmtDur(tot))+'</span>':'')+
+        ((e.team||[]).length?'<span class="pill">'+e.team.length+' na equipe</span>':'')+
       '</div>';
     card.onclick=()=>openEscala(e.id);
     box.appendChild(card);
@@ -2386,9 +2386,10 @@ function renderPicker(q){
   const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
   list.forEach(s=>{
     const c=document.createElement("div"); c.className="songcard";
-    c.innerHTML='<div class="keytag">'+esc(s.key||"?")+'</div><div class="meta"><div class="ttl">'+esc(s.title)+'</div>'+
-      (s.artist?'<div class="sub">'+esc(s.artist)+'</div>':'')+
-      playedLine(s.id,played,anyDone)+'</div>';
+    const pp=playedPill(s.id,played,anyDone);
+    c.innerHTML='<div class="keytag">'+esc(s.key||"?")+'</div><div class="meta"><div class="c-ttl">'+esc(s.title)+'</div>'+
+      (s.artist?'<div class="c-sub">'+esc(s.artist)+'</div>':'')+
+      (pp?'<div class="c-meta">'+pp+'</div>':'')+'</div>';
     c.onclick=()=>{
       editEscala.items.push({kind:"song",songId:s.id,key:"",capo:0,momento:"",dur:0,note:""});
       closePicker(); renderItemsEditor(); toast("“"+s.title+"” adicionada");

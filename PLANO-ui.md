@@ -60,7 +60,7 @@ O maior salto "protótipo → produto" (ANALISE-icones §4, item **M1**). Risco 
 Médio esforço; cada um vira sua própria versão.
 
 - **M2** ✅ **v0.30.0** — Agrupar o ⚙ Ajustes em seções (Afinação / Leitura / Esta música).
-- **M4** — Unificar a linguagem de card (`.songcard` × `.escard`), respiro 8pt, 2 níveis de leitura.
+- **M4** ✅ **v0.31.0** — Unificar a linguagem de card (`.songcard` × `.escard`), respiro 8pt, 2 níveis de leitura.
 - **M5** — Reorganizar o `#reposheet` (Puxar × Publicar; token recolhido por padrão).
 - **M3** — Arrastar para fechar sheets (gesto no `.grip`, threshold, reduced-motion).
 - **M7** — Animação de entrada da lista (stagger sutil, 1ª pintura, reduced-motion).

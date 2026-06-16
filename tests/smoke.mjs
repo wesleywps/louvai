@@ -653,7 +653,7 @@ ok(lp.afterB === null, "Música fora da escala confirmada não fica marcada como
 await page.evaluate(() => { switchTab("songs"); renderLibrary(); });
 await page.waitForTimeout(100);
 const cards = await page.evaluate(() => [...document.querySelectorAll("#songlist .songcard")].map(c => ({
-  t: c.querySelector(".ttl").textContent, p: (c.querySelector(".played") || {}).textContent || "" })));
+  t: c.querySelector(".c-ttl").textContent, p: (c.querySelector(".played") || {}).textContent || "" })));
 ok(/tocada/.test((cards.find(c => c.t === "Cantai ao Senhor") || {}).p), "Card mostra 'tocada há…' na música tocada");
 ok(/nunca tocada/.test((cards.find(c => c.t === "Aleluia") || {}).p), "Card mostra 'nunca tocada' na que não tocou");
 // botão "Culto realizado" no detalhe alterna o estado e atualiza
@@ -898,6 +898,25 @@ ok(await page.evaluate(() => ["#s-tkey","#c-val","#f-down","#mode-page","#lyr-to
 // a linha de ações (Editar/Enviar) ocupa a largura
 ok(await page.evaluate(() => !!document.querySelector("#playersheet .ctrl.actions #p-edit")),
    "Editar/Enviar ficam na seção 'Esta música' como linha de ações");
+
+// ===== v0.31.0 — Onda 3 / M4: linguagem de card unificada (.songcard × .escard) =====
+const m4 = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id: "m4a", title: "Card Cifra", artist: "Artista X", key: "D", capo: 0, tags: ["lento", "ceia"], updatedAt: 1, body: "D\nx" });
+  escalas.push({ id: "m4e", title: "Culto M4", date: "2026-01-01", time: "", type: "Culto", team: [{ role: "Voz", name: "A" }], items: [{ kind: "song", songId: "m4a", key: "", capo: 0 }], updatedAt: 1 });
+  saveSongs(); saveEscalas();
+  switchTab("songs"); $("#search").value = ""; activeTag = null; renderLibrary();
+  const sc = document.querySelector("#songlist .songcard");
+  switchTab("escalas"); renderEscalas();
+  const ec = document.querySelector("#escalalist .escard");
+  return {
+    scOk: !!(sc.querySelector(".c-ttl") && sc.querySelector(".c-sub") && sc.querySelector(".c-meta .pill.tag")),
+    ecOk: !!(ec.querySelector(".c-ttl") && ec.querySelector(".c-sub") && ec.querySelector(".c-meta .pill")),
+    noEstag: !document.querySelector(".estag")
+  };
+});
+ok(m4.scOk, "songcard usa a gramática unificada (.c-ttl/.c-sub/.c-meta .pill.tag)");
+ok(m4.ecOk && m4.noEstag, "escard usa a MESMA gramática (.c-ttl/.c-sub/.c-meta .pill; sem .estag)");
 
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
