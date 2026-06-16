@@ -836,6 +836,31 @@ ok(/GitHub Pages/.test(await page.locator("#toast").textContent()), "Publicar co
 ok(await page.evaluate(() => { settings.ghToken = "x"; saveSettings(); document.getElementById("repo-forget").click(); return !settings.ghToken; }),
    "Remover token apaga o token do aparelho");
 
+// ===== v0.28.0 — Onda 1 de UI (tokens, Tom, toast tipado, vazios, ícones) =====
+// Tom destacado no player (mono+acento) — o span .tomhi existe e contém "Tom:"
+const tomhi = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id: "u1", title: "UI", key: "G", capo: 0, tags: [], updatedAt: 1, body: "G  C\nx" });
+  saveSongs(); openPlayer("u1");
+  const el = document.querySelector("#p-sub .tomhi");
+  return { has: !!el, txt: el ? el.textContent : "", accent: el ? getComputedStyle(el).color : "" };
+});
+ok(tomhi.has && /Tom:/.test(tomhi.txt), "Tom aparece em destaque (.tomhi) na linha do player");
+await page.evaluate(() => exitPlayer());
+// toast tipado: erro ganha a classe .err
+const tt = await page.evaluate(() => { toast("teste de erro", "err"); return document.getElementById("toast").className; });
+ok(/\berr\b/.test(tt), "toast(msg,'err') aplica a faixa de erro");
+// estado vazio de busca distinto + limpar
+await page.evaluate(() => { songs.length = 0; saveSongs(); switchTab("songs"); $("#search").value = "zzz-nao-existe"; renderLibrary(); });
+await page.waitForTimeout(80);
+ok(await page.evaluate(() => !!document.querySelector("#songlist .empty.search") && !!document.getElementById("empty-clear")),
+   "Busca sem resultado mostra estado vazio próprio + Limpar");
+await page.evaluate(() => { document.getElementById("empty-clear").click(); });
+ok(await page.evaluate(() => $("#search").value === ""), "Limpar busca zera o filtro");
+// ícone do Backup virou SVG e a entrada se chama "Repertório"
+ok(await page.evaluate(() => !!document.querySelector("#backupBtn .ic-svg")), "Botão de Backup usa ícone SVG (archive)");
+ok(await page.evaluate(() => document.getElementById("backupBtn").getAttribute("aria-label").includes("Repertório")), "Backup renomeado para 'Repertório' (aria-label)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

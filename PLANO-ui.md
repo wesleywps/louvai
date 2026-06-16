@@ -13,7 +13,10 @@ vanilla, offline-first, dois temas, alvos ≥48px, `prefers-reduced-motion`, pt-
 
 ---
 
-## Onda 1 — Ganhos rápidos + ícone do Backup  → **v0.28.0** (recomendada AGORA)
+## Onda 1 — Ganhos rápidos + ícone do Backup  → **✅ ENTREGUE na v0.28.0**
+> Tokens (fundação) + Tom destacado (G4) + toast tipado/acessível (G6) + estados vazios
+> certos (G7/G8) + acorde no claro (G9) + ícone Backup→"Repertório" (archive SVG) e ↧→download.
+> Opcionais (G5/G10/G11/G12) seguem disponíveis. **Próxima: Onda 2 (ícones SVG).**
 Baixo risco, alto retorno. CSS/ajuste fino + 1–2 ícones. É o "Top 5" da análise + a dor do dono.
 
 1. **Tokens de fundação (G1+G2+G3):** escala tipográfica (`--fs-*`), espaçamento 8pt (`--sp-*`) e

@@ -102,7 +102,7 @@ PLANO atualizado se aplicável · `npm test` verde.
     **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`) e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~157 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~163 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---

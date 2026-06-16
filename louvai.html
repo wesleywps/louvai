@@ -28,7 +28,13 @@
   --lyric:rgba(255,255,255,.84);         /* letra: um tom abaixo do branco puro */
   --section:#5eead4;
   --danger:#f87171; --shadow:0 18px 50px -20px rgba(0,0,0,.7);
+  --ok:var(--accent); --warn:#fbbf24;    /* feedback do toast: sucesso / aviso / erro(--danger) */
   --r:16px; --r-lg:24px; --dur:.2s;
+  /* === Fundação de design (v0.28.0) — escala tipográfica, grade 8pt e raios ===
+     usados pelos componentes; a cifra mono fica fora (tem sizing próprio por fontSize). */
+  --fs-xs:12px; --fs-sm:13px; --fs-md:15px; --fs-lg:17px; --fs-xl:20px; --fs-2xl:25px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-6:24px;
+  --r-sm:12px; --r-pill:999px;
   /* aliases da paleta antiga: o resto do CSS continua funcionando */
   --gold:var(--accent); --gold-soft:var(--accent-soft);
 }
@@ -40,8 +46,8 @@
   --accent-glow:rgba(124,58,237,.35);
   --glass:rgba(246,245,248,.82);
   --glass2:rgba(255,255,255,.92);
-  /* no claro o contraste já é bom: sem chip nem halo */
-  --chord:#6d28d9; --chord-bg:transparent; --chord-halo:transparent;
+  /* no claro o acorde ganha um chip violeta translúcido p/ não sumir com sol no palco (G9) */
+  --chord:#6d28d9; --chord-bg:rgba(124,58,237,.12); --chord-halo:rgba(124,58,237,.22);
   --lyric:#17131f;
   --section:#0f766e;
   --danger:#dc2626; --shadow:0 18px 50px -24px rgba(40,25,80,.18);
@@ -124,7 +130,14 @@ input,textarea,select{font-family:inherit}
 .empty{text-align:center;padding:84px 24px;color:var(--muted);line-height:1.6}
 .empty::before{content:"♪";display:block;font-size:34px;color:var(--accent);
   opacity:.85;margin-bottom:14px;text-shadow:0 0 24px var(--accent-glow)}
-.empty .big{font-size:19px;font-weight:700;letter-spacing:-.2px;color:var(--text);margin-bottom:8px}
+.empty .big{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.2px;color:var(--text);margin-bottom:var(--sp-2)}
+.empty.search::before{content:"🔎"}        /* busca sem resultado: ícone próprio */
+.empty.esc::before{content:"🗓"}            /* escalas: ícone próprio (não ♪) */
+.emptyact{margin-top:var(--sp-4)}
+.emptybtn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:var(--r);
+  font-weight:700;font-size:var(--fs-md);border:1px solid var(--line);background:var(--panel);color:var(--text)}
+.emptybtn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.emptybtn:active{transform:scale(.97)}
 
 /* ---------- Botões / FAB / bottom nav ---------- */
 .btn{flex:1;padding:16px;border-radius:15px;font-size:15.5px;font-weight:700;
@@ -200,6 +213,8 @@ input,textarea,select{font-family:inherit}
 .cifra .sec{color:var(--section);font-weight:700;font-style:normal;
   display:inline-block;margin-top:6px}
 .cifra .lyr{color:var(--lyric)}
+.tomhi{color:var(--accent);font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:700}
+.ic-svg{width:22px;height:22px;display:block}   /* ícone SVG dentro do .iconbtn (alvo 48px preservado) */
 .scrollbar-mini{position:fixed;left:0;right:0;bottom:0;z-index:24;max-width:860px;margin:0 auto;
   padding:12px 16px calc(14px + env(safe-area-inset-bottom));
   display:flex;align-items:center;gap:12px;
@@ -359,9 +374,13 @@ input,textarea,select{font-family:inherit}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
   background:var(--glass2);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border:1px solid var(--line);color:var(--text);
-  padding:13px 20px;border-radius:13px;font-size:14px;font-weight:600;z-index:60;
+  padding:13px 20px;border-radius:var(--r-sm);font-size:var(--fs-sm);font-weight:600;z-index:60;
+  border-left:3px solid transparent;   /* faixa de cor por tipo (sucesso/erro/aviso) */
   box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:90%}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-left-color:var(--ok)}
+.toast.err{border-left-color:var(--danger)}
+.toast.warn{border-left-color:var(--warn)}
 .sheetbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;opacity:0;transition:.2s;pointer-events:none}
 .sheetbg.show{opacity:1;pointer-events:auto}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;max-width:860px;margin:0 auto;
@@ -415,8 +434,8 @@ input,textarea,select{font-family:inherit}
       <div class="brand"><span class="dot"></span>Louvai<span class="ver" id="appVer"></span></div>
       <div class="spacer"></div>
       <button class="iconbtn" id="themeBtn" title="Tema" aria-label="Alternar tema claro/escuro">◐</button>
-      <button class="iconbtn" id="backupBtn" title="Backup" aria-label="Backup e compartilhamento">↥</button>
-      <button class="iconbtn" id="importBtn" title="Importar" aria-label="Importar arquivo">↧</button>
+      <button class="iconbtn" id="backupBtn" title="Repertório" aria-label="Repertório (backup, compartilhar, nuvem)"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg></button>
+      <button class="iconbtn" id="importBtn" title="Restaurar/Importar" aria-label="Importar arquivo"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
     </div>
     <div class="lib">
       <!-- aba Cifras -->
@@ -580,7 +599,7 @@ input,textarea,select{font-family:inherit}
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="sheetbg" id="sheetbg"></div>
 <div class="sheet" id="sheet">
   <div class="grip"></div>
@@ -679,7 +698,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.27.3";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.28.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1134,8 +1153,17 @@ function renderLibrary(){
   $("#count").textContent = list.length+(list.length===1?" cifra":" cifras");
   const box=$("#songlist"); box.innerHTML="";
   if(!list.length){
-    box.innerHTML='<div class="empty"><div class="big">Nada por aqui ainda</div>'+
-      'Toque em <b>＋ Nova cifra</b> para começar, ou <b>↧</b> para importar um arquivo do grupo.</div>';
+    if(q||activeTag){   // busca/tag sem resultado: mensagem certa + limpar (G7)
+      box.innerHTML='<div class="empty search"><div class="big">Nada encontrado</div>'+
+        'Tente outra busca ou toque na tag de novo.<div class="emptyact">'+
+        '<button class="emptybtn" id="empty-clear">Limpar busca</button></div></div>';
+      $("#empty-clear").onclick=()=>{ $("#search").value=""; activeTag=null; renderLibrary(); };
+    }else{              // repertório vazio de verdade: ação embutida (G8)
+      box.innerHTML='<div class="empty"><div class="big">Nada por aqui ainda</div>'+
+        'Crie a primeira cifra, ou importe um arquivo do grupo (↥ Repertório).<div class="emptyact">'+
+        '<button class="emptybtn primary" id="empty-new">＋ Nova cifra</button></div></div>';
+      $("#empty-new").onclick=()=>$("#newBtn").click();
+    }
     return;
   }
   const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
@@ -1213,10 +1241,10 @@ function drawPlayer(){
   const ctxShape = spellCtx(current.key, shapeShift());
   const sounding = transposeNote(origRoot, transp, ctxSound)+(minor?"m":"");
   const bits=[];
-  if(current.artist) bits.push(current.artist);
-  bits.push("Tom: "+sounding);
-  if(capo>0) bits.push("Capo "+capo+" (forma em "+(transposeNote(origRoot,shapeShift(),ctxShape)+(minor?"m":""))+")");
-  $("#p-sub").textContent=bits.join("  ·  ");   // linha fininha: artista · Tom atual · capo
+  if(current.artist) bits.push(esc(current.artist));
+  bits.push('<b class="tomhi">Tom: '+esc(sounding)+'</b>');   // Tom em destaque (mono+acento): info mais olhada no palco
+  if(capo>0) bits.push("Capo "+capo+" (forma em "+esc(transposeNote(origRoot,shapeShift(),ctxShape)+(minor?"m":""))+")");
+  $("#p-sub").innerHTML=bits.join("  ·  ");   // linha fininha: artista · Tom atual · capo
   $("#s-tkey").textContent=sounding;            // valor do Tom no ⚙ Ajustes (controle e indicador)
   $("#c-val").textContent=capo;
   const b=$("#p-body");
@@ -1578,7 +1606,7 @@ $("#e-save").onclick=()=>{
   };
   if(editingId){ Object.assign(songs.find(s=>s.id===editingId),data); }
   else{ data.id=uid(); songs.push(data); editingId=data.id; }
-  saveSongs(); openPlayer(editingId); toast("Salvo ✓");
+  saveSongs(); openPlayer(editingId); toast("Salvo","ok");
 };
 $("#e-delete").onclick=()=>{
   if(!editingId)return;
@@ -1713,7 +1741,7 @@ function shareSheet(song){
 $("#backupBtn").onclick=()=>{
   const env={type:"louvai-library",version:1,app:APP_VERSION,songs};
   const sendFile=()=>shareFile("repertorio-louvai.json",JSON.stringify(env),"Repertório Louvai");
-  openSheet("Backup e compartilhamento",[
+  openSheet("Repertório",[
     {ic:"↥",label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); recordBackup(); closeSheet(); }},
     {ic:"🔗",label:"Enviar link do repertório",fn:()=>{
       // repertório inteiro quase sempre passa do limite: o shareLink vai oferecer o
@@ -1737,7 +1765,7 @@ function exportFull(){
 }
 async function pullRepo(){
   const url=(settings.repoUrl||"").trim();
-  if(!url){ toast("Cole o link do repertório primeiro"); return; }
+  if(!url){ toast("Cole o link do repertório primeiro","warn"); return; }
   let txt;
   try{
     // fura-cache só em http(s) (data:/blob: não aceitam query); no-store reforça
@@ -1745,11 +1773,11 @@ async function pullRepo(){
     const res = await fetch(u,{cache:"no-store"});
     if(!res.ok) throw new Error("http "+res.status);
     txt = await res.text();
-  }catch(e){ toast("Não consegui buscar — sem internet?"); return; }
-  let data; try{ data=JSON.parse(txt); }catch(e){ toast("O link não tem um repertório válido"); return; }
+  }catch(e){ toast("Não consegui buscar — sem internet?","err"); return; }
+  let data; try{ data=JSON.parse(txt); }catch(e){ toast("O link não tem um repertório válido","err"); return; }
   const tp=String(data.type||"").replace(/^levita-/,"louvai-");
   if(!/^louvai-(full|library|escala|song)$/.test(tp) && !Array.isArray(data) && !(data.title&&data.body)){
-    toast("O link não tem um repertório válido"); return;
+    toast("O link não tem um repertório válido","err"); return;
   }
   settings.repoPulledAt=Date.now(); saveSettings();
   importJSON(txt);   // reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
@@ -1810,15 +1838,15 @@ function diffNote(d){
 // escreve o snapshot no louvai.json via API Contents do GitHub (token fino, do aparelho)
 async function publishRepo(){
   const token=(settings.ghToken||"").trim();
-  if(!token){ toast("Cole um token do GitHub primeiro"); return; }
+  if(!token){ toast("Cole um token do GitHub primeiro","warn"); return; }
   const r=ghRepoFromUrl((settings.repoUrl||"").trim());
-  if(!r){ toast("Publicar só funciona com URL do GitHub Pages"); return; }
+  if(!r){ toast("Publicar só funciona com URL do GitHub Pages","err"); return; }
   const api="https://api.github.com/repos/"+r.owner+"/"+r.repo+"/contents/"+r.path;
   const headers={Authorization:"Bearer "+token, Accept:"application/vnd.github+json"};
   const cur=await ghGetCurrent(api,headers);
-  if(cur==="__auth__"){ toast("Token inválido ou sem permissão"); return; }
-  if(cur==="__net__"){ toast("Não consegui publicar — sem internet?"); return; }
-  if(cur==="__err__"){ toast("Não consegui acessar o repositório"); return; }
+  if(cur==="__auth__"){ toast("Token inválido ou sem permissão","err"); return; }
+  if(cur==="__net__"){ toast("Não consegui publicar — sem internet?","err"); return; }
+  if(cur==="__err__"){ toast("Não consegui acessar o repositório","err"); return; }
   // mostra o diff (e protege contra publicar de um aparelho desatualizado: "−40 cifras" = pare)
   const d=diffRepo(cur.data, fullEnvelope());
   closeRepoSheet();   // fecha a folha da nuvem ANTES da confirmação (senão empilha por cima dela)
@@ -1844,16 +1872,16 @@ async function doPublish(api, headers, sha, d){
   const content=bytesToB64(new TextEncoder().encode(JSON.stringify(fullEnvelope())));
   const put=s=>{ const body={message:"atualiza louvai.json (v"+APP_VERSION+")",content}; if(s) body.sha=s;
     return fetch(api,{method:"PUT",headers,body:JSON.stringify(body)}); };
-  let res; try{ res=await put(sha); }catch(e){ toast("Não consegui publicar — sem internet?"); return; }
+  let res; try{ res=await put(sha); }catch(e){ toast("Não consegui publicar — sem internet?","err"); return; }
   if(res.status===409){                                       // mudou na nuvem: rebusca o sha e tenta 1x
     const cur2=await ghGetCurrent(api,headers);
-    if(typeof cur2==="string"){ toast("Mudou na nuvem — atualize e tente de novo"); return; }
-    try{ res=await put(cur2.sha); }catch(e){ toast("Não consegui publicar — sem internet?"); return; }
+    if(typeof cur2==="string"){ toast("Mudou na nuvem — atualize e tente de novo","err"); return; }
+    try{ res=await put(cur2.sha); }catch(e){ toast("Não consegui publicar — sem internet?","err"); return; }
   }
-  if(res.ok){ settings.repoPublishedAt=Date.now(); saveSettings(); toast("Publicado na nuvem ✓"+diffLabel(d)); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
-  else if(res.status===401||res.status===403) toast("Token inválido ou sem permissão");
-  else if(res.status===409) toast("Mudou na nuvem — atualize e tente de novo");
-  else toast("Não consegui publicar (erro "+res.status+")");
+  if(res.ok){ settings.repoPublishedAt=Date.now(); saveSettings(); toast("Publicado na nuvem"+diffLabel(d),"ok"); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
+  else if(res.status===401||res.status===403) toast("Token inválido ou sem permissão","err");
+  else if(res.status===409) toast("Mudou na nuvem — atualize e tente de novo","err");
+  else toast("Não consegui publicar (erro "+res.status+")","err");
 }
 function openRepoSheet(){
   $("#repo-url").value=settings.repoUrl||"";
@@ -1872,7 +1900,7 @@ $("#repo-publish").onclick=()=>{
   settings.repoUrl=$("#repo-url").value.trim(); settings.ghToken=$("#gh-token").value.trim(); saveSettings();
   publishRepo();   // mantém a folha aberta: mostra "Publicado ✓"/erro e permite reenviar no conflito
 };
-$("#repo-forget").onclick=()=>{ settings.ghToken=""; saveSettings(); $("#gh-token").value=""; toast("Token removido deste aparelho"); };
+$("#repo-forget").onclick=()=>{ settings.ghToken=""; saveSettings(); $("#gh-token").value=""; toast("Token removido deste aparelho","ok"); };
 
 $("#fileInput").onchange=e=>{
   const f=e.target.files[0]; if(!f)return;
@@ -1880,7 +1908,7 @@ $("#fileInput").onchange=e=>{
   r.onload=()=>{ importJSON(r.result); $("#fileInput").value=""; };
   // falha de leitura (arquivo travado/removido no mobile) não pode ficar silenciosa;
   // limpa o value nos dois caminhos p/ permitir re-selecionar o MESMO arquivo.
-  r.onerror=()=>{ toast("Não consegui ler o arquivo 😕"); $("#fileInput").value=""; };
+  r.onerror=()=>{ toast("Não consegui ler o arquivo","err"); $("#fileInput").value=""; };
   r.readAsText(f);
 };
 const normTitle=t=>String(t==null?"":t).trim().toLowerCase();
@@ -1919,7 +1947,7 @@ function mergeSongs(arr, policy){
   return {added,updated,remap};
 }
 function importJSON(text){
-  let data; try{data=JSON.parse(text);}catch(e){toast("Arquivo inválido 😕");return;}
+  let data; try{data=JSON.parse(text);}catch(e){toast("Arquivo inválido","err");return;}
   // arquivos da era "Levita" (nome antigo do app) continuam abrindo normalmente
   const tp=String(data.type||"").replace(/^levita-/,"louvai-");
   // descobre QUAIS cifras chegam (sem mexer em nada ainda) p/ detectar título repetido
@@ -2078,8 +2106,10 @@ function renderEscalas(){
   $("#escount").textContent=list.length+(list.length===1?" escala":" escalas");
   const box=$("#escalalist"); box.innerHTML="";
   if(!list.length){
-    box.innerHTML='<div class="empty"><div class="big">Nenhuma escala ainda</div>'+
-      'Toque em <b>＋ Nova escala</b> para montar a ordem do próximo culto.</div>';
+    box.innerHTML='<div class="empty esc"><div class="big">Nenhuma escala ainda</div>'+
+      'Monte a ordem do próximo culto.<div class="emptyact">'+
+      '<button class="emptybtn primary" id="empty-newesc">＋ Nova escala</button></div></div>';
+    $("#empty-newesc").onclick=()=>$("#newEscBtn").click();
     return;
   }
   list.forEach(e=>{
@@ -2354,9 +2384,11 @@ function closeSheet(){ closeS("#sheetbg","#sheet"); }
 $("#sheetbg").onclick=closeSheet;
 
 let toastT=null;
-function toast(msg){
-  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
-  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200);
+function toast(msg, type){   // type: "ok" | "err" | "warn" (faixa de cor + tempo). erro fica mais tempo.
+  const t=$("#toast");
+  t.classList.remove("ok","err","warn"); if(type) t.classList.add(type);
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"), type==="err"?3600:2200);
 }
 
 /* ---------- Tema ---------- */
@@ -2380,7 +2412,7 @@ window.addEventListener("hashchange",handleImportLink);
 // (não atropela uma importação por link em andamento, que usa o mesmo toast).
 updateBackupBadge();
 if(backupDue() && location.hash.indexOf("#imp=")!==0)
-  setTimeout(()=>{ if(backupDue()) toast("Faça backup do repertório ↥"); },700);
+  setTimeout(()=>{ if(backupDue()) toast("Faça backup do repertório","warn"); },700);
 </script>
 </body>
 </html>

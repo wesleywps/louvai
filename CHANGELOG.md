@@ -8,6 +8,26 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.28.0 — Polimento de UI, Onda 1 (cara de app pronto)
+**Recurso (interface).** Primeira onda do `PLANO-ui.md` (insumo: `ANALISE-ui.md`/`ANALISE-icones.md`).
+- **Fundação de tokens:** escala tipográfica (`--fs-*`), grade 8pt (`--sp-*`) e raios
+  (`--r-sm`/`--r-pill`) — aplicados nos componentes tocados (a cifra mono fica fora).
+- **Tom em destaque (G4):** na linha do player, o "Tom: X" vira mono + acento (`.tomhi`) — a
+  info mais olhada no palco para de se esconder no cinza.
+- **Toast tipado e acessível (G6):** `toast(msg, tipo)` com faixa de cor (sucesso/erro/aviso),
+  erro dura mais, `role="status"`/`aria-live`; principais toasts (nuvem/import/salvar) tipados,
+  sem depender de emoji.
+- **Estados vazios certos (G7/G8):** busca sem resultado tem mensagem própria + "Limpar busca";
+  vazios de cifras/escalas têm ícone próprio e **botão de ação embutido**.
+- **Acorde legível no claro (G9):** chip/halo violeta translúcido no `.light` — não some com sol
+  no palco de manhã.
+- **Ícone de Backup (1ª onda de ícones):** `↥` → **`archive` (SVG)** e a entrada renomeada para
+  **"Repertório"**; `↧` → `download` (SVG). Some a confusão do par de setas. (Migração total pra
+  SVG é a Onda 2.)
+- **163 verificações**, zero erro de JS.
+
+---
+
 ## v0.27.3 — Correção: folha de publicar empilhava e o "publicado" não aparecia
 **Bugfix (nuvem/UI).** Ao tocar "Publicar na nuvem", a confirmação (e os detalhes) abriam
 **atrás** da folha "Repertório na nuvem" — porque a folha **não era fechada** antes. Como o
