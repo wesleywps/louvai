@@ -8,6 +8,17 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.35.0 — Progresso do culto na Apresentação (Onda 3 · M8)
+**Recurso (interface).** Sexto item da Onda 3 (M8 de `ANALISE-ui.md`). No modo Apresentar dava pra
+saber a posição só lendo "2 de 5". Agora uma **barra fininha de progresso** no topo da `#presentbar`
+mostra **onde estamos no culto** de relance, sem ler número.
+- Faixa de 3px (`.pb-progress`) com preenchimento em acento; largura = (música atual / total).
+- Enche conforme avança pelas músicas da escala; cheia na última.
+- Atualizada no `updatePresentBar` (junto do "X de Y") — `aria-hidden` (o número já anuncia ao leitor).
+- **184 verificações** (2 novas: cheio na última, ~50% na 1ª de 2), zero erro de JS.
+
+---
+
 ## v0.34.0 — Entrada da lista com stagger (Onda 3 · M7)
 **Recurso (interface).** Quinto item da Onda 3 (M7 de `ANALISE-ui.md`). Os cards apareciam "secos",
 todos de uma vez. Agora a lista **entra com um stagger sutil** (opacidade + leve subida), dando a

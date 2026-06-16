@@ -253,8 +253,14 @@ await page.locator("#playerbg").click({ position: { x: 10, y: 10 } }); await pag
 // navegação ‹ › pela barra compacta
 await page.locator("#pv-next").click(); await page.waitForTimeout(200);
 ok((await page.locator("#pv-pos").textContent()) === "2 de 2", "‹ › avança a música na escala (2 de 2)");
+// v0.35.0 (M8): a barra de progresso enche na última música
+ok(await page.evaluate(() => { const f = document.querySelector("#pv-progress span"), t = document.getElementById("pv-progress"); return f.getBoundingClientRect().width >= t.getBoundingClientRect().width - 1; }),
+   "Progresso do culto fica cheio na última música (2 de 2)");
 await page.locator("#pv-prev").click(); await page.waitForTimeout(200);
 ok((await page.locator("#pv-pos").textContent()) === "1 de 2", "‹ › volta a música na escala (1 de 2)");
+// v0.35.0 (M8): na 1ª de 2, a barra fica ~50%
+ok(await page.evaluate(() => { const f = document.querySelector("#pv-progress span"), t = document.getElementById("pv-progress"); const r = f.getBoundingClientRect().width / t.getBoundingClientRect().width; return r > 0.4 && r < 0.6; }),
+   "Progresso do culto fica ~50% na 1ª de 2 músicas");
 // sair pela barra compacta volta pra escala e tira o .present
 await page.locator("#pv-back").click(); await page.waitForTimeout(200);
 ok(await page.locator("#view-escala").isVisible() &&

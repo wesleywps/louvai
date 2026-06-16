@@ -364,6 +364,10 @@ input,textarea,select{font-family:inherit}
   border-bottom:1px solid var(--line);
   padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top))}
 .pb-nav{display:flex;align-items:center;gap:8px}
+/* indicador de progresso no culto (M8): "onde estamos" de relance, sem ler números */
+.pb-progress{height:3px;border-radius:var(--r-pill);background:var(--line);overflow:hidden}
+.pb-progress>span{display:block;height:100%;width:0;background:var(--accent);
+  border-radius:var(--r-pill);transition:width var(--dur)}
 .pb-tom{display:flex;align-items:center;justify-content:center;gap:8px}
 .presentbar .pbtn{width:44px;height:44px;border-radius:11px;background:var(--panel2);
   border:1px solid var(--line);font-size:22px;font-weight:700;color:var(--gold);flex:0 0 auto}
@@ -503,6 +507,7 @@ input,textarea,select{font-family:inherit}
     </div>
     <!-- Apresentação: barra compacta de uma linha (o Tom mora no ⚙ Ajustes; o player normal usa .controls/.songhead acima) -->
     <div class="presentbar hidden" id="presentbar">
+      <div class="pb-progress" id="pv-progress" aria-hidden="true"><span></span></div>
       <div class="pb-nav">
         <button class="pbtn-sm" id="pv-back" aria-label="Voltar para a escala"></button>
         <button class="pbtn" id="pv-prev" aria-label="Música anterior"></button>
@@ -736,7 +741,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.34.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.35.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1314,6 +1319,8 @@ function updatePresentBar(){
   bar.classList.remove("hidden");
   $("#pv-title").textContent = current.title;             // título pequeno no meio da barra
   $("#pv-pos").textContent = (escalaCtx.idx+1)+" de "+escalaCtx.list.length;
+  const pct = escalaCtx.list.length>1 ? (escalaCtx.idx+1)/escalaCtx.list.length*100 : 100;
+  $("#pv-progress span").style.width = pct+"%";          // fração visual do culto (M8)
   $("#pv-prev").disabled = escalaCtx.idx<=0;
   $("#pv-next").disabled = escalaCtx.idx>=escalaCtx.list.length-1;
 }

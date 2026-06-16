@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.34.0**.
+seguir. Atualizado até a **v0.35.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -93,6 +93,7 @@ instalação complexa.
 | **v0.32.0** | recurso | **Polimento de UI (Onda 3 · M5):** `#reposheet` em dois cartões — **Baixar (equipe)** e **Publicar (líder)** recolhido por padrão (`<details>`; abre sozinho se há token). IDs preservados. Ver `PLANO-ui.md`. |
 | **v0.33.0** | recurso | **Polimento de UI (Onda 3 · M3):** arrastar para fechar sheets (gesto no grip/cabeçalho, limiar ~90px, volta com mola); respeita `prefers-reduced-motion`. Ver `PLANO-ui.md`. |
 | **v0.34.0** | recurso | **Polimento de UI (Onda 3 · M7):** entrada da lista com stagger sutil só na 1ª pintura (cifras/escalas); re-render por busca não re-anima; respeita `prefers-reduced-motion`. Ver `PLANO-ui.md`. |
+| **v0.35.0** | recurso | **Polimento de UI (Onda 3 · M8):** barra fininha de progresso do culto no topo da Apresentação (fração música atual/total) — "onde estamos" de relance. Ver `PLANO-ui.md`. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -268,4 +269,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.34.0.*
+*Última atualização deste roteiro: v0.35.0.*

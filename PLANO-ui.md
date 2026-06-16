@@ -64,7 +64,7 @@ Médio esforço; cada um vira sua própria versão.
 - **M5** ✅ **v0.32.0** — Reorganizar o `#reposheet` (Puxar × Publicar; token recolhido por padrão).
 - **M3** ✅ **v0.33.0** — Arrastar para fechar sheets (gesto no `.grip`, threshold, reduced-motion).
 - **M7** ✅ **v0.34.0** — Animação de entrada da lista (stagger sutil, 1ª pintura, reduced-motion).
-- **M8** — Indicador de progresso na Apresentação. · **M6** — Skeleton de cifra (cuidar p/ não
+- **M8** ✅ **v0.35.0** — Indicador de progresso na Apresentação. · **M6** — Skeleton de cifra (cuidar p/ não
   atrapalhar a medição do Modo Página).
 - **Acessibilidade contínua:** subir `--muted` no dark p/ folga a distância; `:focus-visible` em
   botões/cards; alvo da `.chip` da tagbar ≥44–48px.
