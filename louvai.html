@@ -431,6 +431,10 @@ input,textarea,select{font-family:inherit}
   border-bottom:2px solid currentColor;transform:rotate(45deg);margin-left:auto;transition:transform var(--dur)}
 .repo-pub[open]>summary::after{transform:rotate(-135deg)}
 .repo-pub[open]>summary{margin-bottom:var(--sp-2)}
+/* toggle "Sincronizar ao abrir" (auto-sync, v0.37.0) — checkbox nativo, acessível */
+.repo-auto{display:flex;align-items:center;gap:9px;margin-top:10px;font-size:var(--fs-sm);
+  color:var(--muted);cursor:pointer}
+.repo-auto input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
 /* pontinho de "backup devido" no botão ↥ (rede de segurança) */
 #backupBtn{position:relative}
 #backupBtn.due::after{content:"";position:absolute;top:7px;right:7px;width:9px;height:9px;
@@ -687,6 +691,7 @@ input,textarea,select{font-family:inherit}
     <input id="repo-url" class="search" inputmode="url" placeholder="https://…/louvai.json" style="width:100%;margin-bottom:8px">
     <div id="repo-status" class="sheetnote" style="margin:0 0 10px"></div>
     <button class="btn primary" id="repo-pull" style="width:100%">Atualizar do link</button>
+    <label class="repo-auto"><input type="checkbox" id="auto-pull"> Sincronizar ao abrir o app</label>
   </div>
 
   <!-- Publicar (líder): recolhido por padrão — a maioria da equipe só baixa -->
@@ -746,7 +751,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.36.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.37.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1871,11 +1876,12 @@ function exportFull(){
   shareFile("louvai.json",JSON.stringify(fullEnvelope()),"Louvai — repertório + escalas");
   recordBackup();   // snapshot completo também é um backup (o mais completo)
 }
-async function pullRepo(){
+async function pullRepo(opts){
+  const silent=!!(opts&&opts.silent);   // auto-sync: sem skeleton, sem erro barulhento, sem prompt de conflito
   const url=(settings.repoUrl||"").trim();
-  if(!url){ toast("Cole o link do repertório primeiro","warn"); return; }
-  const box=$("#songlist"); if(box) box.innerHTML=loadingSkeleton();   // M6: feedback de carregamento (rede)
-  const restore=()=>{ if(box) renderLibrary(); };                      // desfaz o skeleton se algo falhar
+  if(!url){ if(!silent) toast("Cole o link do repertório primeiro","warn"); return; }
+  const box=$("#songlist"); if(box&&!silent) box.innerHTML=loadingSkeleton();   // M6: feedback de carregamento (rede)
+  const restore=()=>{ if(box&&!silent) renderLibrary(); };                      // desfaz o skeleton se algo falhar
   let txt;
   try{
     // fura-cache só em http(s) (data:/blob: não aceitam query); no-store reforça
@@ -1883,14 +1889,20 @@ async function pullRepo(){
     const res = await fetch(u,{cache:"no-store"});
     if(!res.ok) throw new Error("http "+res.status);
     txt = await res.text();
-  }catch(e){ toast("Não consegui buscar — sem internet?","err"); restore(); return; }
-  let data; try{ data=JSON.parse(txt); }catch(e){ toast("O link não tem um repertório válido","err"); restore(); return; }
+  }catch(e){ if(!silent) toast("Não consegui buscar — sem internet?","err"); restore(); return; }
+  let data; try{ data=JSON.parse(txt); }catch(e){ if(!silent) toast("O link não tem um repertório válido","err"); restore(); return; }
   const tp=String(data.type||"").replace(/^levita-/,"louvai-");
   if(!/^louvai-(full|library|escala|song)$/.test(tp) && !Array.isArray(data) && !(data.title&&data.body)){
-    toast("O link não tem um repertório válido","err"); restore(); return;
+    if(!silent) toast("O link não tem um repertório válido","err"); restore(); return;
   }
   settings.repoPulledAt=Date.now(); saveSettings();
-  importJSON(txt);   // reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
+  importJSON(txt, {silent});   // reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
+}
+// auto-sync ao abrir (v0.37.0): pull silencioso se habilitado e há link; um link em importação tem prioridade
+function maybeAutoPull(){
+  if(!settings.autoPull || !(settings.repoUrl||"").trim()) return;
+  if(/[#&]imp=/.test(location.hash||"")) return;
+  return pullRepo({silent:true});
 }
 function repoStatus(){
   const a=settings.repoPulledAt?"baixou "+fmtAgo(settings.repoPulledAt):"";
@@ -1997,6 +2009,7 @@ function openRepoSheet(){
   $("#repo-url").value=settings.repoUrl||"";
   $("#gh-token").value=settings.ghToken||"";
   $("#repo-status").textContent=repoStatus();
+  const ap=$("#auto-pull"); if(ap) ap.checked=!!settings.autoPull;          // reflete o "Sincronizar ao abrir"
   const pub=$("#reposheet .repo-pub"); if(pub) pub.open=!!settings.ghToken;  // líder (com token) abre; equipe fica recolhida
   openS("#repobg","#reposheet","#repo-url");
 }
@@ -2006,6 +2019,8 @@ $("#repo-pull").onclick=()=>{
   settings.repoUrl=$("#repo-url").value.trim(); saveSettings();
   closeRepoSheet(); pullRepo();
 };
+$("#auto-pull").onchange=e=>{ settings.autoPull=e.target.checked; saveSettings();
+  toast(settings.autoPull?"Vai sincronizar ao abrir o app":"Sincronismo automático desligado","ok"); };
 $("#repo-export").onclick=()=>{ closeRepoSheet(); exportFull(); };
 $("#repo-publish").onclick=()=>{
   settings.repoUrl=$("#repo-url").value.trim(); settings.ghToken=$("#gh-token").value.trim(); saveSettings();
@@ -2057,8 +2072,9 @@ function mergeSongs(arr, policy){
   });
   return {added,updated,remap};
 }
-function importJSON(text){
-  let data; try{data=JSON.parse(text);}catch(e){toast("Arquivo inválido","err");return;}
+function importJSON(text, opts){
+  const silent=!!(opts&&opts.silent);
+  let data; try{data=JSON.parse(text);}catch(e){ if(!silent) toast("Arquivo inválido","err"); return;}
   // arquivos da era "Levita" (nome antigo do app) continuam abrindo normalmente
   const tp=String(data.type||"").replace(/^levita-/,"louvai-");
   // descobre QUAIS cifras chegam (sem mexer em nada ainda) p/ detectar título repetido
@@ -2072,7 +2088,7 @@ function importJSON(text){
   else{toast("Não reconheci esse arquivo");return;}
 
   const dups=collidingTitles(incoming);
-  if(dups.length){
+  if(dups.length && !silent){
     // "nada salvo no escuro": a mesma música pode ter nascido noutro aparelho (id
     // diferente). Avisa antes de mesclar e deixa o usuário escolher — não empilha
     // duplicata sem querer nem sobrescreve a versão dele silenciosamente.
@@ -2084,7 +2100,8 @@ function importJSON(text){
     ]);
     return;
   }
-  doImport(data,tp,incoming,"both");   // sem conflito: comportamento de sempre
+  // auto-sync (silent): nunca prompt nem duplica — "mine" mantém as minhas e remapeia as referências
+  doImport(data,tp,incoming, silent?"mine":"both", opts);
 }
 // funde UMA escala (dedup por id; só sobrescreve com updatedAt ≥). `remap` reescreve as
 // referências de cifra quando o usuário escolheu "manter as minhas". Retorna true se ADICIONOU.
@@ -2097,7 +2114,8 @@ function mergeEscala(inc, remap){
   if(!inc.id||escalas.some(x=>x.id===inc.id)) inc.id=uid();
   escalas.push(inc); return true;
 }
-function doImport(data,tp,incoming,policy){
+function doImport(data,tp,incoming,policy,opts){
+  const silent=!!(opts&&opts.silent);
   // Escala avulsa (traz as cifras junto)
   if(tp==="louvai-escala"&&data.escala){
     const {added,remap}=mergeSongs(incoming,policy);
@@ -2114,7 +2132,12 @@ function doImport(data,tp,incoming,policy){
     let escAdd=0;
     (data.escalas||[]).forEach(e=>{ if(mergeEscala(e, remap)) escAdd++; });
     saveSongs(); saveEscalas(); renderLibrary(); renderEscalas();
-    toast("Atualizado: "+added+" cifra(s)"+(updated?", "+updated+" atual.":"")+(escAdd?", "+escAdd+" escala(s)":""));
+    if(!silent){
+      toast("Atualizado: "+added+" cifra(s)"+(updated?", "+updated+" atual.":"")+(escAdd?", "+escAdd+" escala(s)":""));
+    }else if(added||updated||escAdd){   // auto-sync: avisa só quando há novidade de verdade
+      const parts=[]; if(added) parts.push("+"+added+" cifra(s)"); if(updated) parts.push(updated+" atualizada(s)"); if(escAdd) parts.push("+"+escAdd+" escala(s)");
+      toast("Sincronizado: "+parts.join(", "),"ok");
+    }
     return;
   }
   const {added,updated}=mergeSongs(incoming,policy);
@@ -2569,6 +2592,7 @@ window.addEventListener("hashchange",handleImportLink);
 updateBackupBadge();
 if(backupDue() && location.hash.indexOf("#imp=")!==0)
   setTimeout(()=>{ if(backupDue()) toast("Faça backup do repertório","warn"); },700);
+maybeAutoPull();   // auto-sync ao abrir (v0.37.0): pull silencioso se habilitado (settings.autoPull)
 </script>
 </body>
 </html>

@@ -8,6 +8,27 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.37.0 — Sincronizar ao abrir (auto-sync do repertório, habilitável)
+**Recurso (nuvem).** Opção para **puxar o repertório da nuvem automaticamente ao abrir o app** —
+assim a equipe pega as novidades (cifras **e escalas**) sem precisar lembrar de "Atualizar do link".
+- **Toggle "Sincronizar ao abrir o app"** no cartão *Baixar* do Repertório na nuvem
+  (`settings.autoPull`, **desligado por padrão**).
+- No boot, se ligado e houver link salvo, roda um **pull silencioso** (`maybeAutoPull` →
+  `pullRepo({silent:true})`): **sem skeleton**, **sem folha de conflito**, **sem erro barulhento**
+  se estiver offline; toast discreto **só quando há novidade** ("Sincronizado: +2 cifras, +1 escala").
+- **Não-interativo e idempotente:** usa a política "manter as minhas" (não duplica cifras de título
+  repetido, remapeia a referência da escala) — abrir o app várias vezes não cria cópias.
+- **Mão única** preservada (puxa, nunca escreve sozinho). Um link `#imp=` em importação tem
+  prioridade (o auto-sync não atropela).
+- **Por que também ajuda no "publiquei e a escala não apareceu":** o snapshot da nuvem **sempre**
+  trouxe cifras + escalas (`fullEnvelope`/`louvai-full`); o que costuma falhar é **operacional** —
+  esquecer de puxar, ou cancelar a folha de conflito de título no "Atualizar do link". O pull
+  automático e não-interativo remove essas duas armadilhas.
+- **190 verificações** (4 novas: traz escala, silencioso/sem duplicar, idempotente, toggle persiste),
+  zero erro de JS.
+
+---
+
 ## v0.36.1 — Limpeza pós-auditoria (coerência da fonte única de ícones)
 **Correção (interface/coerência).** Auditoria das Ondas 1–3 (planejado × entregue) não achou gaps
 funcionais; apontou só um resíduo cosmético: os dois `<span class="mag">` ainda traziam o emoji `🔍`

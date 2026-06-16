@@ -997,6 +997,36 @@ const m6 = await page.evaluate(async () => {
 ok(m6.hasSkel, "Atualizar do link mostra skeleton de carregamento enquanto busca");
 ok(m6.skelGone, "Skeleton some quando o repertório chega");
 
+// ===== v0.37.0 — Auto-sync ao abrir (pull silencioso, habilitável; traz cifras E escalas) =====
+const auto = await page.evaluate(async () => {
+  const real = window.fetch;
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id: "keep1", title: "Mesma Musica", key: "C", capo: 0, tags: [], updatedAt: 5, body: "C" }); // título que vai colidir
+  saveSongs(); saveEscalas();
+  const snap = { type: "louvai-full",
+    songs: [{ id: "remote1", title: "Mesma Musica", key: "D", capo: 0, tags: [], updatedAt: 9, body: "D" }],
+    escalas: [{ id: "e-remote", title: "Culto Nuvem", date: "2026-02-01", time: "", type: "Culto", team: [], items: [{ kind: "song", songId: "remote1", key: "", capo: 0 }], updatedAt: 9 }] };
+  window.fetch = async () => ({ ok: true, status: 200, text: async () => JSON.stringify(snap) });
+  settings.autoPull = true; settings.repoUrl = "https://x.github.io/louvai/louvai.json"; saveSettings();
+  await maybeAutoPull();                                 // pull silencioso
+  const noSheet = !document.getElementById("sheet").classList.contains("show");
+  const escAdded = escalas.some(e => e.id === "e-remote");
+  const songCount = songs.filter(s => s.title === "Mesma Musica").length;
+  const esc = escalas.find(e => e.id === "e-remote");
+  const remapped = esc && esc.items[0].songId === "keep1";  // referência da escala remapeada p/ a cifra local
+  await maybeAutoPull();                                 // 2ª vez: idempotente (não duplica)
+  const stillOne = songs.filter(s => s.title === "Mesma Musica").length === 1 && escalas.filter(e => e.id === "e-remote").length === 1;
+  window.fetch = real; settings.autoPull = false; saveSettings();
+  return { noSheet, escAdded, songCount, remapped, stillOne };
+});
+ok(auto.escAdded, "Auto-sync traz a escala da nuvem (cifras E escalas)");
+ok(auto.noSheet && auto.songCount === 1 && auto.remapped, "Auto-sync é silencioso e não duplica (mantém a cifra local e remapeia a escala)");
+ok(auto.stillOne, "Auto-sync é idempotente (abrir de novo não duplica)");
+// o toggle persiste em settings.autoPull e o openRepoSheet reflete o estado
+const autoTog = await page.evaluate(() => { settings.autoPull = true; saveSettings(); openRepoSheet();
+  const checked = document.getElementById("auto-pull").checked; closeRepoSheet(); settings.autoPull = false; saveSettings(); return checked; });
+ok(autoTog, "Toggle 'Sincronizar ao abrir' reflete settings.autoPull no sheet");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

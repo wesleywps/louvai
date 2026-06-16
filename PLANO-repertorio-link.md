@@ -11,11 +11,22 @@
 > subseção "Repertório na nuvem". **138 verificações** (export-tudo, import full, pull por
 > `data:` URL, erro tratado).
 >
+> **Extensão — auto-sync ao abrir (v0.37.0):** toggle `settings.autoPull` (cartão *Baixar*,
+> desligado por padrão); no boot, `maybeAutoPull()` → `pullRepo({silent:true})`. O modo silencioso
+> **não** mostra skeleton, **não** abre a folha de conflito de título (usa política "mine" =
+> não duplica, remapeia a escala) e **não** mostra erro quando offline; toast discreto só quando
+> há novidade. Idempotente (abrir várias vezes não cria cópias). Um link `#imp=` em importação
+> tem prioridade. Confirma o caminho: o snapshot **sempre** levou cifras **e** escalas; o "não
+> apareceu" do usuário era operacional (esquecer de puxar / cancelar a folha de conflito) — o
+> auto-sync remove as duas armadilhas. **190 verificações.**
+>
 > **Armadilhas/decisões registradas:**
 > - **Fura-cache só em http(s):** `data:`/`blob:` não aceitam query — o teste usa `data:` URL.
 > - `pullRepo` valida que o conteúdo é um tipo de repertório **antes** do `importJSON` (link
 >   que devolve HTML/lixo → "não tem um repertório válido", sem quebrar).
 > - `importJSON` reusa o **aviso de título duplicado** (v0.22.0) também no `louvai-full`.
+> - **Auto-sync não pode prompt nem duplicar** (roda a cada abertura): silencioso = política "mine",
+>   idempotente; senão viraria explosão de cópias ou um prompt a cada boot.
 >
 > *(Plano original abaixo; decisões mantidas.)* App estava na v0.25.0 ao planejar.
 
