@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.32.0**.
+seguir. Atualizado até a **v0.33.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -91,6 +91,7 @@ instalação complexa.
 | **v0.30.0** | recurso | **Polimento de UI (Onda 3 · M2):** sheet ⚙ Ajustes agrupado em três seções — **Afinação** / **Leitura** / **Esta música** — com subtítulos discretos; Editar/Enviar viram linha de ações. IDs preservados. Ver `PLANO-ui.md`. |
 | **v0.31.0** | recurso | **Polimento de UI (Onda 3 · M4):** linguagem de card unificada entre cifras (`.songcard`) e escalas (`.escard`) — mesma gramática **título → subtítulo → faixa de pílulas** (`.c-ttl`/`.c-sub`/`.c-meta`/`.pill`), respiro 8pt, dois níveis de leitura. Ver `PLANO-ui.md`. |
 | **v0.32.0** | recurso | **Polimento de UI (Onda 3 · M5):** `#reposheet` em dois cartões — **Baixar (equipe)** e **Publicar (líder)** recolhido por padrão (`<details>`; abre sozinho se há token). IDs preservados. Ver `PLANO-ui.md`. |
+| **v0.33.0** | recurso | **Polimento de UI (Onda 3 · M3):** arrastar para fechar sheets (gesto no grip/cabeçalho, limiar ~90px, volta com mola); respeita `prefers-reduced-motion`. Ver `PLANO-ui.md`. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -266,4 +267,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.32.0.*
+*Última atualização deste roteiro: v0.33.0.*

@@ -935,6 +935,27 @@ ok(m5.pullCard && m5.idsInside, "#reposheet tem cartão Baixar + bloco Publicar 
 ok(m5.collapsedNoToken, "Publicar fica recolhido por padrão (equipe sem token)");
 ok(m5.openWithToken, "Publicar abre sozinho quando já há token salvo (líder)");
 
+// ===== v0.33.0 — Onda 3 / M3: arrastar para fechar sheets =====
+const m3 = await page.evaluate(() => {
+  const drag = (dist) => {
+    openSheet("Arraste", [{ ic: icon("x"), label: "x", fn() {} }]);
+    const sheet = document.getElementById("sheet"), grip = sheet.querySelector(".grip");
+    sheet.classList.add("show");   // openS adiciona .show via rAF (não dispara no evaluate síncrono)
+    const r = grip.getBoundingClientRect();
+    const ev = (type, y) => new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, clientX: r.x + 5, clientY: y });
+    grip.dispatchEvent(ev("pointerdown", r.y));
+    sheet.dispatchEvent(ev("pointermove", r.y + dist));
+    sheet.dispatchEvent(ev("pointerup", r.y + dist));
+    return sheet.classList.contains("show");
+  };
+  const closedAfterFar = !drag(140);   // arraste longo → fecha
+  const stillOpenNear = drag(25);      // arraste curto → volta (mola), continua aberto
+  closeSheet();
+  return { closedAfterFar, stillOpenNear };
+});
+ok(m3.closedAfterFar, "Arrastar o sheet pra baixo além do limiar fecha");
+ok(m3.stillOpenNear, "Arraste curto volta com mola (sheet continua aberto)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

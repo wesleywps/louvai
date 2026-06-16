@@ -733,7 +733,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.32.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.33.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -2462,6 +2462,35 @@ function openS(bgSel,sheetSel,focusSel){
   if(focusSel) setTimeout(()=>$(focusSel).focus(),200);
 }
 function closeS(bgSel,sheetSel){ $(sheetSel).classList.remove("show"); $(bgSel).classList.remove("show"); }
+
+/* arrastar para fechar (M3): pega no grip OU no cabeçalho (h3) — nunca no corpo rolável.
+   Segue o dedo 1:1 (sem transição); ao soltar, fecha se passou do limiar ou volta com mola.
+   A volta/fechamento usam a transição do CSS, então já respeitam prefers-reduced-motion. */
+const SHEET_BG={sheet:"#sheetbg",playersheet:"#playerbg",reposheet:"#repobg",picksheet:"#pickbg",pastesheet:"#pastebg"};
+const SHEET_CLOSE_DY=90;
+function enableSheetDrag(sheet){
+  let startY=0, dy=0, dragging=false;
+  sheet.addEventListener("pointerdown",e=>{
+    const t=e.target;
+    if(!(t.classList.contains("grip")||t.tagName==="H3")) return;  // só o "puxador"/topo
+    dragging=true; startY=e.clientY; dy=0;
+    sheet.style.transition="none";
+    try{ sheet.setPointerCapture(e.pointerId); }catch(_){}   // ponteiro sintético (teste) pode não capturar
+  });
+  sheet.addEventListener("pointermove",e=>{
+    if(!dragging) return;
+    dy=Math.max(0,e.clientY-startY);            // só para baixo
+    sheet.style.transform="translateY("+dy+"px)";
+  });
+  const end=()=>{
+    if(!dragging) return; dragging=false;
+    sheet.style.transition="";                  // devolve a transição ao CSS
+    sheet.style.transform="";                   // volta pro translateY(0) (mola) — anima
+    if(dy>SHEET_CLOSE_DY){ const bg=SHEET_BG[sheet.id]||"#sheetbg"; closeS(bg,"#"+sheet.id); }
+  };
+  sheet.addEventListener("pointerup",end);
+  sheet.addEventListener("pointercancel",end);
+}
 function openSheet(title,items,note){
   $("#sheet-title").textContent=title;
   const n=$("#sheet-note"); if(n){ n.textContent=note||""; n.classList.toggle("hidden",!note); }
@@ -2499,6 +2528,7 @@ $("#search").oninput=renderLibrary;
 /* ---------- Boot ---------- */
 $("#appVer").textContent="v"+APP_VERSION;
 paintIcons();   // pinta os ícones SVG dos botões estáticos (fonte única: ICONS/icon())
+document.querySelectorAll(".sheet").forEach(enableSheetDrag);   // arrastar para fechar (M3)
 load(); applyTheme(); renderLibrary(); show("lib");
 // link auto-importável: após carregar/render, trata #imp= do boot e de links tocados depois
 handleImportLink();

@@ -8,6 +8,20 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.33.0 — Arrastar para fechar sheets (Onda 3 · M3)
+**Recurso (interface).** Quarto item da Onda 3 (M3 de `ANALISE-ui.md`). O `.grip` (a alcinha no topo
+de cada sheet) sugeria que dava pra arrastar, mas o sheet só fechava pelo fundo escuro — uma
+promessa de affordance não cumprida.
+- **Gesto de arrastar para fechar** em todos os sheets (Ajustes, Compartilhar, Repertório, seletor,
+  colar): segura no **grip** ou no **cabeçalho** e puxa pra baixo. Segue o dedo 1:1.
+- **Limiar de ~90px:** passou disso, fecha; soltou antes, **volta com mola**.
+- Pega só no grip/cabeçalho — **nunca** sequestra a rolagem do corpo do sheet nem os campos/botões.
+- A volta/fechamento usam a transição do CSS, então **respeitam `prefers-reduced-motion`**
+  (sob "reduzir movimento" o gesto continua funcionando, sem animação).
+- **180 verificações** (2 novas: arraste longo fecha, arraste curto volta), zero erro de JS.
+
+---
+
 ## v0.32.0 — Repertório na nuvem reorganizado (Onda 3 · M5)
 **Recurso (interface).** Terceiro item da Onda 3 (M5 de `ANALISE-ui.md`). O `#reposheet` era o sheet
 mais longo e denso do app: link, exportar, token e publicar empilhados num scroll só, sem hierarquia
