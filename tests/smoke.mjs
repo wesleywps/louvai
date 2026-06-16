@@ -887,6 +887,18 @@ await page.evaluate(() => { songs.length = 0; saveSongs(); switchTab("songs"); $
 await page.waitForTimeout(60);
 ok(await page.evaluate(() => !!document.querySelector("#songlist .empty .eic .ic-svg")), "Estado vazio mostra ícone SVG (.eic)");
 
+// ===== v0.30.0 — Onda 3 / M2: ⚙ Ajustes agrupado em seções =====
+const sec = await page.evaluate(() => [...document.querySelectorAll("#playersheet .sheetsec")].map(e => e.textContent));
+ok(sec.length === 3 && /Afina/.test(sec[0]) && /Leitura/.test(sec[1]) && /música/i.test(sec[2]),
+   "⚙ Ajustes tem 3 seções (Afinação · Leitura · Esta música)");
+// IDs dos controles preservados após reordenar
+ok(await page.evaluate(() => ["#s-tkey","#c-val","#f-down","#mode-page","#lyr-toggle","#tabs-toggle","#scrollbar-toggle","#p-edit","#p-share"]
+     .every(s => !!document.querySelector(s))),
+   "Controles do Ajustes mantêm os IDs (Tom/Capo/Fonte/Modo/toggles/Editar/Enviar)");
+// a linha de ações (Editar/Enviar) ocupa a largura
+ok(await page.evaluate(() => !!document.querySelector("#playersheet .ctrl.actions #p-edit")),
+   "Editar/Enviar ficam na seção 'Esta música' como linha de ações");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

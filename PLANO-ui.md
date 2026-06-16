@@ -59,7 +59,7 @@ O maior salto "protótipo → produto" (ANALISE-icones §4, item **M1**). Risco 
 ## Onda 3 — Incrementos de UI maiores  → **v0.30.0+** (um por vez)
 Médio esforço; cada um vira sua própria versão.
 
-- **M2** — Agrupar o ⚙ Ajustes em seções (Afinação / Leitura / Esta música).
+- **M2** ✅ **v0.30.0** — Agrupar o ⚙ Ajustes em seções (Afinação / Leitura / Esta música).
 - **M4** — Unificar a linguagem de card (`.songcard` × `.escard`), respiro 8pt, 2 níveis de leitura.
 - **M5** — Reorganizar o `#reposheet` (Puxar × Publicar; token recolhido por padrão).
 - **M3** — Arrastar para fechar sheets (gesto no `.grip`, threshold, reduced-motion).

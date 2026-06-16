@@ -189,11 +189,19 @@ input,textarea,select{font-family:inherit}
   background:var(--panel);border:1px solid var(--line);border-radius:13px;
   font-size:13.5px;font-weight:700;color:var(--text);transition:var(--dur)}
 .settingsbtn:active{background:var(--panel2)}
-/* controles dentro do sheet Ajustes: lista vertical, rótulo à esquerda */
+/* controles dentro do sheet Ajustes: lista vertical, rótulo à esquerda, agrupada por seção (M2) */
 .sheetctrls{display:flex;flex-direction:column;gap:10px;padding:4px 2px 8px}
 .sheetctrls .ctrl{justify-content:space-between;padding-left:6px}
 .sheetctrls .ctrl .lbl{font-size:12.5px;letter-spacing:.4px}
 .sheetctrls .grp{display:flex;align-items:center;flex:0 0 auto}
+/* subtítulo de seção: Afinação / Leitura / Esta música (encontra o controle certo na penumbra) */
+.sheetsec{font-size:var(--fs-xs);font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  color:var(--accent-soft);margin-top:8px;padding:12px 4px 0;border-top:1px solid var(--line)}
+.sheetctrls>.sheetsec:first-child{margin-top:0;padding-top:0;border-top:none}
+/* linha de ações (Editar/Enviar): os dois botões preenchem a largura */
+.sheetctrls .ctrl.actions{justify-content:stretch;padding-left:0}
+.sheetctrls .ctrl.actions .grp{flex:1;gap:8px}
+.sheetctrls .ctrl.actions .grp button{flex:1}
 /* título da música na barra de UMA linha (player normal); some no modo Apresentar */
 .p-titlebar{flex:1;min-width:0;font-size:16px;font-weight:700;letter-spacing:-.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
@@ -667,17 +675,19 @@ input,textarea,select{font-family:inherit}
   <div class="grip"></div>
   <h3>Ajustes da cifra</h3>
   <div class="sheetctrls">
+    <div class="sheetsec">Afinação</div>
     <div class="ctrl"><span class="lbl">Tom</span>
       <span class="grp"><button id="s-tdown" aria-label="Descer meio tom">♭</button><span class="val" id="s-tkey">C</span><button id="s-tup" aria-label="Subir meio tom">♯</button></span>
-    </div>
-    <div class="ctrl"><span class="lbl">Modo de leitura</span>
-      <span class="grp seg"><button id="mode-scroll" class="on">Rolagem</button><button id="mode-page">Página</button></span>
     </div>
     <div class="ctrl"><span class="lbl">Capo</span>
       <span class="grp"><button id="c-down" aria-label="Diminuir capotraste">−</button><span class="val" id="c-val">0</span><button id="c-up" aria-label="Aumentar capotraste">＋</button></span>
     </div>
     <div class="ctrl"><span class="lbl">Tamanho da fonte</span>
       <span class="grp"><button id="f-down" aria-label="Diminuir fonte">A−</button><button id="f-up" aria-label="Aumentar fonte">A＋</button></span>
+    </div>
+    <div class="sheetsec">Leitura</div>
+    <div class="ctrl"><span class="lbl">Modo de leitura</span>
+      <span class="grp seg"><button id="mode-scroll" class="on">Rolagem</button><button id="mode-page">Página</button></span>
     </div>
     <div class="ctrl toggle"><span class="lbl">Só letra (esconde acordes)</span>
       <span class="grp"><button id="lyr-toggle" aria-label="Só letra (esconde acordes)" aria-pressed="false"></button></span>
@@ -688,7 +698,8 @@ input,textarea,select{font-family:inherit}
     <div class="ctrl toggle" id="scrollbar-ctrl"><span class="lbl">Mostrar barra de auto-scroll</span>
       <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false"></button></span>
     </div>
-    <div class="ctrl"><span class="lbl">Música</span>
+    <div class="sheetsec">Esta música</div>
+    <div class="ctrl actions">
       <span class="grp"><button id="p-edit" aria-label="Editar cifra">Editar</button><button id="p-share" aria-label="Compartilhar cifra">Enviar</button></span>
     </div>
   </div>
@@ -701,7 +712,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.29.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.30.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];

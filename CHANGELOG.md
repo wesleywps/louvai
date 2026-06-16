@@ -8,6 +8,21 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.30.0 — ⚙ Ajustes em seções (Onda 3 · M2)
+**Recurso (interface).** Primeiro item da Onda 3 do `PLANO-ui.md` (M2 de `ANALISE-ui.md`). O sheet
+"Ajustes da cifra" era uma lista vertical de 8 linhas com o mesmo peso visual — afinação, leitura e
+ações misturadas. Por que importa: no palco, na penumbra, achar o controle certo de relance fica
+mais rápido quando eles estão agrupados.
+- **Três seções com subtítulo:** **Afinação** (Tom · Capo · Tamanho da fonte), **Leitura** (Modo de
+  leitura · Só letra · Tablaturas · Barra de auto-scroll) e **Esta música** (Editar · Enviar).
+- Subtítulos discretos (`.sheetsec`, caixa-alta, acento suave, divisória fina no topo de cada grupo).
+- **Editar/Enviar** viram uma **linha de ações** que ocupa a largura (`.ctrl.actions`), em vez do
+  rótulo redundante "Música".
+- **IDs e handlers preservados** (só reordenação + subtítulos) — nada de comportamento mudou.
+- **173 verificações** (3 novas: 3 seções, IDs preservados, linha de ações), zero erro de JS.
+
+---
+
 ## v0.29.0 — Ícones SVG inline unificados, Onda 2 (cara de app pronto)
 **Recurso (interface).** Segunda onda do `PLANO-ui.md` (item M1 de `ANALISE-icones.md`): o
 maior salto "protótipo → produto". Por que: o app misturava **emoji coloridos** (`🔗 ☁ 🗑 🎵 🔍`,
