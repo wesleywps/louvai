@@ -128,11 +128,9 @@ input,textarea,select{font-family:inherit}
 .songcard .played{font-size:11.5px;color:var(--muted);margin-top:3px}
 .songcard .played.never{color:var(--accent-soft)}   /* nunca tocada: leve destaque (boa pra dar vez) */
 .empty{text-align:center;padding:84px 24px;color:var(--muted);line-height:1.6}
-.empty::before{content:"♪";display:block;font-size:34px;color:var(--accent);
-  opacity:.85;margin-bottom:14px;text-shadow:0 0 24px var(--accent-glow)}
+.empty .eic{line-height:0;margin-bottom:14px}   /* ícone SVG do estado vazio (injetado via icon()) */
+.empty .eic .ic-svg{width:42px;height:42px;color:var(--accent);opacity:.85;filter:drop-shadow(0 0 24px var(--accent-glow))}
 .empty .big{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.2px;color:var(--text);margin-bottom:var(--sp-2)}
-.empty.search::before{content:"🔎"}        /* busca sem resultado: ícone próprio */
-.empty.esc::before{content:"🗓"}            /* escalas: ícone próprio (não ♪) */
 .emptyact{margin-top:var(--sp-4)}
 .emptybtn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:var(--r);
   font-weight:700;font-size:var(--fs-md);border:1px solid var(--line);background:var(--panel);color:var(--text)}
@@ -214,7 +212,9 @@ input,textarea,select{font-family:inherit}
   display:inline-block;margin-top:6px}
 .cifra .lyr{color:var(--lyric)}
 .tomhi{color:var(--accent);font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:700}
-.ic-svg{width:22px;height:22px;display:block}   /* ícone SVG dentro do .iconbtn (alvo 48px preservado) */
+.ic-svg{width:22px;height:22px;display:inline-block;vertical-align:middle}   /* ícone SVG (única fonte: ICONS/icon()); alvo de toque preservado pelo botão */
+.ic-tx{width:19px;height:19px;margin-right:7px;vertical-align:-.18em}         /* ícone seguido de rótulo (botões com texto) */
+.mag .ic-svg{width:18px;height:18px}             /* lupa da busca: um pouco menor */
 .scrollbar-mini{position:fixed;left:0;right:0;bottom:0;z-index:24;max-width:860px;margin:0 auto;
   padding:12px 16px calc(14px + env(safe-area-inset-bottom));
   display:flex;align-items:center;gap:12px;
@@ -331,6 +331,8 @@ input,textarea,select{font-family:inherit}
 .irow.itemkind{border-style:dashed}
 .irow .ihead{display:flex;align-items:center;gap:9px;margin-bottom:9px}
 .irow .ihead .ic{font-size:15px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.irow .move,.irow .rm,.prow .rm{display:grid;place-items:center}
+.prow .rm{width:42px;height:42px;color:var(--danger);font-size:18px;flex:0 0 auto;background:transparent;border:1px solid var(--line);border-radius:10px}
 .irow .move{width:44px;height:44px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);
   display:grid;place-items:center;font-size:15px;font-weight:700;flex:0 0 auto}
 .irow .move:active{background:var(--line)}
@@ -356,6 +358,7 @@ input,textarea,select{font-family:inherit}
   border:1px solid var(--line);font-size:22px;font-weight:700;color:var(--gold);flex:0 0 auto}
 .presentbar .pbtn-sm{width:40px;height:40px;border-radius:10px;background:var(--panel2);
   border:1px solid var(--line);font-size:17px;font-weight:700;color:var(--text);flex:0 0 auto}
+.presentbar .pbtn,.presentbar .pbtn-sm{display:grid;place-items:center}
 .presentbar .pbtn:active,.presentbar .pbtn-sm:active{background:var(--line)}
 .presentbar .pbtn:disabled{opacity:.35}
 .presentbar .pinfo{flex:1;min-width:0;text-align:center;line-height:1.2}
@@ -433,9 +436,9 @@ input,textarea,select{font-family:inherit}
     <div class="topbar">
       <div class="brand"><span class="dot"></span>Louvai<span class="ver" id="appVer"></span></div>
       <div class="spacer"></div>
-      <button class="iconbtn" id="themeBtn" title="Tema" aria-label="Alternar tema claro/escuro">◐</button>
-      <button class="iconbtn" id="backupBtn" title="Repertório" aria-label="Repertório (backup, compartilhar, nuvem)"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg></button>
-      <button class="iconbtn" id="importBtn" title="Restaurar/Importar" aria-label="Importar arquivo"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
+      <button class="iconbtn" id="themeBtn" title="Tema" aria-label="Alternar tema claro/escuro"></button>
+      <button class="iconbtn" id="backupBtn" title="Repertório" aria-label="Repertório (backup, compartilhar, nuvem)"></button>
+      <button class="iconbtn" id="importBtn" title="Restaurar/Importar" aria-label="Importar arquivo"></button>
     </div>
     <div class="lib">
       <!-- aba Cifras -->
@@ -470,20 +473,20 @@ input,textarea,select{font-family:inherit}
     <!-- Player normal: barra de UMA linha, prioriza a cifra (Tom/Editar/Compartilhar moram no ⚙ Ajustes) -->
     <div class="controls">
       <div class="topbar" style="position:static;background:none;border:none;backdrop-filter:none;padding:6px 0 8px">
-        <button class="iconbtn" id="p-back" aria-label="Voltar">←</button>
+        <button class="iconbtn" id="p-back" aria-label="Voltar"></button>
         <div class="p-titlebar" id="p-title"></div>
-        <button class="iconbtn" id="p-struct" title="Estrutura da música" aria-label="Estrutura da música">☰</button>
-        <button class="iconbtn" id="p-settings" aria-label="Ajustes">⚙</button>
+        <button class="iconbtn" id="p-struct" title="Estrutura da música" aria-label="Estrutura da música"></button>
+        <button class="iconbtn" id="p-settings" aria-label="Ajustes"></button>
       </div>
     </div>
     <!-- Apresentação: barra compacta de uma linha (o Tom mora no ⚙ Ajustes; o player normal usa .controls/.songhead acima) -->
     <div class="presentbar hidden" id="presentbar">
       <div class="pb-nav">
-        <button class="pbtn-sm" id="pv-back" aria-label="Voltar para a escala">←</button>
-        <button class="pbtn" id="pv-prev" aria-label="Música anterior">‹</button>
+        <button class="pbtn-sm" id="pv-back" aria-label="Voltar para a escala"></button>
+        <button class="pbtn" id="pv-prev" aria-label="Música anterior"></button>
         <div class="pinfo"><span id="pv-title"></span><span id="pv-pos"></span></div>
-        <button class="pbtn" id="pv-next" aria-label="Próxima música">›</button>
-        <button class="pbtn-sm" id="pv-settings" aria-label="Ajustes">⚙</button>
+        <button class="pbtn" id="pv-next" aria-label="Próxima música"></button>
+        <button class="pbtn-sm" id="pv-settings" aria-label="Ajustes"></button>
       </div>
     </div>
     <div class="songhead">
@@ -491,7 +494,7 @@ input,textarea,select{font-family:inherit}
     </div>
     <div class="cifra" id="p-body"></div>
     <div class="scrollbar-mini" id="scrollbar-mini">
-      <button class="scrollbtn" id="scroll-toggle" aria-label="Rolar a tela">▶</button>
+      <button class="scrollbtn" id="scroll-toggle" aria-label="Rolar a tela"></button>
       <div class="speed"><span>Velocidade</span>
         <input type="range" id="scroll-speed" min="1" max="10" value="4" aria-label="Velocidade da rolagem">
       </div>
@@ -502,13 +505,13 @@ input,textarea,select{font-family:inherit}
   <!-- ===== EDITOR VIEW ===== -->
   <div id="view-editor" class="hidden">
     <div class="topbar">
-      <button class="iconbtn" id="e-cancel" aria-label="Cancelar">✕</button>
+      <button class="iconbtn" id="e-cancel" aria-label="Cancelar"></button>
       <div class="brand" style="font-size:19px"><span id="e-mode">Nova cifra</span></div>
       <div class="spacer"></div>
       <button class="iconbtn gold" id="e-save" style="width:auto;padding:0 18px;font-size:15px">Salvar</button>
     </div>
     <div class="editor">
-      <button class="addrow hidden" id="e-paste" style="margin-bottom:14px">📋 Colar cifra pronta (Cifra Club…)</button>
+      <button class="addrow hidden" id="e-paste" style="margin-bottom:14px">Colar cifra pronta (Cifra Club…)</button>
       <div class="field"><label>Título</label><input id="e-title" placeholder="Ex.: Tua Graça Me Basta"></div>
       <div class="field"><label>Artista / autor</label><input id="e-artist" placeholder="Opcional"></div>
       <div class="row2">
@@ -530,24 +533,24 @@ input,textarea,select{font-family:inherit}
         </div>
         <div class="lint" id="e-lint"></div>
       </div>
-      <button class="deletebtn hidden" id="e-delete">🗑 Excluir esta cifra</button>
+      <button class="deletebtn hidden" id="e-delete">Excluir esta cifra</button>
     </div>
   </div>
 
   <!-- ===== ESCALA DETAIL VIEW ===== -->
   <div id="view-escala" class="hidden">
     <div class="topbar">
-      <button class="iconbtn" id="es-back" aria-label="Voltar">←</button>
+      <button class="iconbtn" id="es-back" aria-label="Voltar"></button>
       <div class="spacer"></div>
-      <button class="iconbtn" id="es-edit" title="Editar" aria-label="Editar escala">✎</button>
-      <button class="iconbtn gold" id="es-share" title="Compartilhar" aria-label="Compartilhar escala">↗</button>
+      <button class="iconbtn" id="es-edit" title="Editar" aria-label="Editar escala"></button>
+      <button class="iconbtn gold" id="es-share" title="Compartilhar" aria-label="Compartilhar escala"></button>
     </div>
     <div class="escala">
       <div class="es-head">
         <div class="es-title" id="es-title"></div>
         <div class="es-meta" id="es-meta"></div>
       </div>
-      <button class="btn primary present-btn" id="es-present">▶ Apresentar</button>
+      <button class="btn primary present-btn" id="es-present">Apresentar</button>
       <button class="es-done-btn" id="es-done">Marcar culto como realizado</button>
       <div id="es-team"></div>
       <div class="es-order-h" id="es-order-h">Ordem do culto</div>
@@ -559,7 +562,7 @@ input,textarea,select{font-family:inherit}
   <!-- ===== ESCALA EDITOR VIEW ===== -->
   <div id="view-escala-edit" class="hidden">
     <div class="topbar">
-      <button class="iconbtn" id="ee-cancel" aria-label="Cancelar">✕</button>
+      <button class="iconbtn" id="ee-cancel" aria-label="Cancelar"></button>
       <div class="brand" style="font-size:19px"><span id="ee-mode">Nova escala</span></div>
       <div class="spacer"></div>
       <button class="iconbtn gold" id="ee-save" style="width:auto;padding:0 18px;font-size:15px">Salvar</button>
@@ -594,7 +597,7 @@ input,textarea,select{font-family:inherit}
       <div class="field"><label>Observações do culto</label>
         <textarea id="ee-notes" style="min-height:90px;white-space:pre-wrap;font-family:inherit;font-size:15px" placeholder="Tema, avisos gerais, transições…"></textarea></div>
 
-      <button class="deletebtn hidden" id="ee-delete">🗑 Excluir esta escala</button>
+      <button class="deletebtn hidden" id="ee-delete">Excluir esta escala</button>
     </div>
   </div>
 </div>
@@ -647,15 +650,15 @@ input,textarea,select{font-family:inherit}
   </div>
   <input id="repo-url" class="search" inputmode="url" placeholder="https://…/louvai.json" style="width:100%;margin-bottom:8px">
   <div id="repo-status" class="sheetnote" style="margin:0 2px 12px"></div>
-  <button class="btn primary" id="repo-pull" style="width:100%">↓ Atualizar do link</button>
-  <button class="btn" id="repo-export" style="width:100%;margin-top:8px">↥ Exportar tudo (pra publicar)</button>
+  <button class="btn primary" id="repo-pull" style="width:100%">Atualizar do link</button>
+  <button class="btn" id="repo-export" style="width:100%;margin-top:8px">Exportar tudo (pra publicar)</button>
   <div class="repo-div">Publicar (líder)</div>
   <div class="hint" style="margin:0 2px 8px">
     Cole um <b>token fino</b> do GitHub (Contents: escrever). Ele fica <b>só neste aparelho</b>
     e só conversa direto com o GitHub. Você pode revogá-lo no GitHub quando quiser.
   </div>
   <input id="gh-token" class="search" type="password" autocomplete="off" placeholder="github_pat_… (token)" style="width:100%;margin-bottom:8px">
-  <button class="btn primary" id="repo-publish" style="width:100%">☁ Publicar na nuvem</button>
+  <button class="btn primary" id="repo-publish" style="width:100%">Publicar na nuvem</button>
   <button class="btn" id="repo-forget" style="width:100%;margin-top:8px">Remover token deste aparelho</button>
 </div>
 <!-- Ajustes do player (capo, fonte, só-letra, tabs, ♯/♭) — IDs preservados -->
@@ -677,16 +680,16 @@ input,textarea,select{font-family:inherit}
       <span class="grp"><button id="f-down" aria-label="Diminuir fonte">A−</button><button id="f-up" aria-label="Aumentar fonte">A＋</button></span>
     </div>
     <div class="ctrl toggle"><span class="lbl">Só letra (esconde acordes)</span>
-      <span class="grp"><button id="lyr-toggle" aria-label="Só letra (esconde acordes)" aria-pressed="false">𝄞</button></span>
+      <span class="grp"><button id="lyr-toggle" aria-label="Só letra (esconde acordes)" aria-pressed="false"></button></span>
     </div>
     <div class="ctrl toggle"><span class="lbl">Tablaturas</span>
-      <span class="grp"><button id="tabs-toggle" aria-label="Mostrar/ocultar tablaturas" aria-pressed="false">≣</button></span>
+      <span class="grp"><button id="tabs-toggle" aria-label="Mostrar/ocultar tablaturas" aria-pressed="false"></button></span>
     </div>
     <div class="ctrl toggle" id="scrollbar-ctrl"><span class="lbl">Mostrar barra de auto-scroll</span>
-      <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false">▶</button></span>
+      <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false"></button></span>
     </div>
     <div class="ctrl"><span class="lbl">Música</span>
-      <span class="grp"><button id="p-edit" aria-label="Editar cifra">✎ Editar</button><button id="p-share" aria-label="Compartilhar cifra">↗ Enviar</button></span>
+      <span class="grp"><button id="p-edit" aria-label="Editar cifra">Editar</button><button id="p-share" aria-label="Compartilhar cifra">Enviar</button></span>
     </div>
   </div>
 </div>
@@ -698,7 +701,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.28.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.29.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1064,7 +1067,7 @@ function uid(){ return "s"+Date.now().toString(36)+Math.random().toString(36).sl
 
 function demoSong(){
   return {
-    id:uid(), title:"Cifra de Exemplo", artist:"Toque pra abrir · edite no lápis ✎",
+    id:uid(), title:"Cifra de Exemplo", artist:"Toque pra abrir · edite no lápis",
     key:"G", capo:0, tags:["exemplo"], updatedAt:Date.now(),
     body:
 `[Intro]
@@ -1083,8 +1086,8 @@ E o ▶ embaixo rola a tela sozinho
 [Refrão]
 C            G
 Toque o lápis pra editar
-      D                 Em
-Toque ↗ pra mandar pro grupo
+      D                  Em
+Toque Compartilhar pra mandar
 C           G
 Crie quantas quiser sem internet
         D            C        G
@@ -1095,6 +1098,63 @@ Tudo fica salvo aqui no seu aparelho`
 /* ---------- Estado da tela ---------- */
 let view="lib", current=null, transp=0, capo=0, fontSize=15, showChords=true, activeTag=null;
 const $=s=>document.querySelector(s);
+
+/* ---------- Ícones (fonte única da verdade, como o parseChord é p/ acordes) ----------
+   SVG inline (Lucide, MIT) — traço 2px, currentColor: herda o tema nos dois modos e some
+   a mistura emoji+glifo. icon(name[,cls]) devolve o <svg>; paintIcons() pinta os botões
+   estáticos no boot. Exceções deliberadas que ficam TEXTO (língua do músico): ♯ ♭ (tom),
+   A−/A＋ (fonte), −/＋ (capo) e o ＋ de "Novo". */
+const ICONS={
+  archive:'<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
+  "arrow-left":'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  "chevron-left":'<path d="m15 18-6-6 6-6"/>',
+  "chevron-right":'<path d="m9 18 6-6-6-6"/>',
+  "chevron-up":'<path d="m18 15-6-6-6 6"/>',
+  "chevron-down":'<path d="m6 9 6 6 6-6"/>',
+  "list-music":'<path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/>',
+  sliders:'<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',
+  x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  pencil:'<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  "share-2":'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  copy:'<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  "trash-2":'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  cloud:'<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+  "cloud-upload":'<path d="M12 13v8"/><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="m8 17 4-4 4 4"/>',
+  "file-down":'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  play:'<polygon points="6 3 20 12 6 21 6 3"/>',
+  pause:'<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>',
+  music:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  "calendar-days":'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  type:'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/>',
+  tabs:'<line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/>',
+  clipboard:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+  eye:'<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+  user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+};
+function icon(name,cls){
+  return '<svg class="ic-svg'+(cls?" "+cls:"")+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||"")+'</svg>';
+}
+/* botões só-ícone (innerHTML=ícone) e botões ícone+rótulo (prefixa o ícone, mantém o texto do HTML) */
+const ICON_ONLY={"#backupBtn":"archive","#importBtn":"download","#p-back":"arrow-left","#es-back":"arrow-left",
+  "#pv-back":"arrow-left","#p-struct":"list-music","#p-settings":"sliders","#pv-settings":"sliders",
+  "#pv-prev":"chevron-left","#pv-next":"chevron-right","#e-cancel":"x","#ee-cancel":"x","#es-edit":"pencil",
+  "#es-share":"share-2","#lyr-toggle":"type","#tabs-toggle":"tabs","#scrollbar-toggle":"play","#scroll-toggle":"play"};
+const ICON_TX={"#es-present":"play","#e-delete":"trash-2","#ee-delete":"trash-2","#e-paste":"clipboard",
+  "#repo-pull":"download","#repo-export":"file-down","#repo-publish":"cloud-upload","#p-edit":"pencil","#p-share":"share-2"};
+function paintIcons(){
+  for(const s in ICON_ONLY){ const e=$(s); if(e) e.innerHTML=icon(ICON_ONLY[s]); }
+  for(const s in ICON_TX){ const e=$(s); if(e) e.insertAdjacentHTML("afterbegin",icon(ICON_TX[s],"ic-tx")); }
+  document.querySelectorAll(".mag").forEach(e=>e.innerHTML=icon("search"));
+  const ns=$("#tab-songs .nic"), ne=$("#tab-escalas .nic");
+  if(ns) ns.innerHTML=icon("music"); if(ne) ne.innerHTML=icon("calendar-days");
+}
 
 function show(v){
   view=v;
@@ -1154,13 +1214,13 @@ function renderLibrary(){
   const box=$("#songlist"); box.innerHTML="";
   if(!list.length){
     if(q||activeTag){   // busca/tag sem resultado: mensagem certa + limpar (G7)
-      box.innerHTML='<div class="empty search"><div class="big">Nada encontrado</div>'+
+      box.innerHTML='<div class="empty search"><div class="eic">'+icon("search")+'</div><div class="big">Nada encontrado</div>'+
         'Tente outra busca ou toque na tag de novo.<div class="emptyact">'+
         '<button class="emptybtn" id="empty-clear">Limpar busca</button></div></div>';
       $("#empty-clear").onclick=()=>{ $("#search").value=""; activeTag=null; renderLibrary(); };
     }else{              // repertório vazio de verdade: ação embutida (G8)
-      box.innerHTML='<div class="empty"><div class="big">Nada por aqui ainda</div>'+
-        'Crie a primeira cifra, ou importe um arquivo do grupo (↥ Repertório).<div class="emptyact">'+
+      box.innerHTML='<div class="empty"><div class="eic">'+icon("music")+'</div><div class="big">Nada por aqui ainda</div>'+
+        'Crie a primeira cifra, ou importe um arquivo do grupo (no Repertório).<div class="emptyact">'+
         '<button class="emptybtn primary" id="empty-new">＋ Nova cifra</button></div></div>';
       $("#empty-new").onclick=()=>$("#newBtn").click();
     }
@@ -1328,7 +1388,7 @@ function applyScrollbar(){
   if(!on) stopScroll();
 }
 function startScroll(){
-  $("#scroll-toggle").textContent="❚❚"; $("#scroll-toggle").setAttribute("aria-label","Pausar rolagem");
+  $("#scroll-toggle").innerHTML=icon("pause"); $("#scroll-toggle").setAttribute("aria-label","Pausar rolagem");
   let last=performance.now(),acc2=0;
   const step=now=>{
     const dt=now-last; last=now;
@@ -1339,7 +1399,7 @@ function startScroll(){
   };
   scrollRAF=requestAnimationFrame(step);
 }
-function stopScroll(){ if(scrollRAF){cancelAnimationFrame(scrollRAF);scrollRAF=null;} $("#scroll-toggle").textContent="▶"; $("#scroll-toggle").setAttribute("aria-label","Rolar a tela"); }
+function stopScroll(){ if(scrollRAF){cancelAnimationFrame(scrollRAF);scrollRAF=null;} $("#scroll-toggle").innerHTML=icon("play"); $("#scroll-toggle").setAttribute("aria-label","Rolar a tela"); }
 $("#scroll-toggle").onclick=()=>{ scrollRAF?stopScroll():startScroll(); };
 
 /* ========================================================================
@@ -1711,9 +1771,9 @@ async function shareLink(envelopeObj, title, fileFn){
   // \u00e9 longo demais pra mensagem, avisa e oferece o arquivo \u2014 que n\u00e3o sofre esse corte.
   if(url.length>LINK_MAX && fileFn){
     openSheet("Link longo (~"+Math.round(url.length/1024)+" KB)",[
-      {ic:"\ud83d\udcc4",label:"Enviar como arquivo (recomendado)",fn:()=>{ closeSheet(); fileFn(); }},
-      {ic:"\ud83d\udd17",label:"Enviar link mesmo assim",fn:()=>{ closeSheet(); sendLink(url,title); }},
-      {ic:"\u2715",label:"Cancelar",fn:closeSheet},
+      {ic:icon("file-down"),label:"Enviar como arquivo (recomendado)",fn:()=>{ closeSheet(); fileFn(); }},
+      {ic:icon("link"),label:"Enviar link mesmo assim",fn:()=>{ closeSheet(); sendLink(url,title); }},
+      {ic:icon("x"),label:"Cancelar",fn:closeSheet},
     ]);
     return;
   }
@@ -1724,33 +1784,33 @@ function shareSheet(song){
   const env={type:"louvai-song",version:1,app:APP_VERSION,song};
   const sendFile=()=>shareFile(slug(song.title)+".louvai.json",JSON.stringify(env),"Cifra: "+song.title);
   openSheet("Compartilhar “"+song.title+"”",[
-    {ic:"🔗",label:"Enviar link da cifra",fn:()=>{
+    {ic:icon("link"),label:"Enviar link da cifra",fn:()=>{
       closeSheet();
       shareLink(env,"Cifra: "+song.title,sendFile);
     }},
-    {ic:"↗",label:"Enviar esta cifra (.json)",fn:()=>{ sendFile(); closeSheet(); }},
-    {ic:"✎",label:"Editar cifra",fn:()=>{closeSheet();openEditor(song.id);}},
-    {ic:"⧉",label:"Copiar texto da cifra",fn:async()=>{
+    {ic:icon("file-down"),label:"Enviar esta cifra (.json)",fn:()=>{ sendFile(); closeSheet(); }},
+    {ic:icon("pencil"),label:"Editar cifra",fn:()=>{closeSheet();openEditor(song.id);}},
+    {ic:icon("copy"),label:"Copiar texto da cifra",fn:async()=>{
       try{await navigator.clipboard.writeText(song.body);toast("Texto copiado ✓");}
       catch(e){toast("Não consegui copiar");}
       closeSheet();
     }},
-    {ic:"🗑",label:"Excluir",danger:true,fn:()=>{closeSheet();openEditor(song.id);$("#e-delete").click();}},
+    {ic:icon("trash-2"),label:"Excluir",danger:true,fn:()=>{closeSheet();openEditor(song.id);$("#e-delete").click();}},
   ]);
 }
 $("#backupBtn").onclick=()=>{
   const env={type:"louvai-library",version:1,app:APP_VERSION,songs};
   const sendFile=()=>shareFile("repertorio-louvai.json",JSON.stringify(env),"Repertório Louvai");
   openSheet("Repertório",[
-    {ic:"↥",label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); recordBackup(); closeSheet(); }},
-    {ic:"🔗",label:"Enviar link do repertório",fn:()=>{
+    {ic:icon("file-down"),label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); recordBackup(); closeSheet(); }},
+    {ic:icon("link"),label:"Enviar link do repertório",fn:()=>{
       // repertório inteiro quase sempre passa do limite: o shareLink vai oferecer o
       // arquivo (caminho primário do repertório) em vez de um link fadado a ser cortado.
       closeSheet();
       shareLink(env,"Repertório Louvai",sendFile);
     }},
-    {ic:"↧",label:"Restaurar de um arquivo (.json)",fn:()=>{closeSheet();$("#fileInput").click();}},
-    {ic:"☁",label:"Repertório na nuvem (link)…",fn:()=>{closeSheet();openRepoSheet();}},
+    {ic:icon("upload"),label:"Restaurar de um arquivo (.json)",fn:()=>{closeSheet();$("#fileInput").click();}},
+    {ic:icon("cloud"),label:"Repertório na nuvem (link)…",fn:()=>{closeSheet();openRepoSheet();}},
   ],backupNote());
 };
 $("#importBtn").onclick=()=>$("#fileInput").click();
@@ -1851,16 +1911,16 @@ async function publishRepo(){
   const d=diffRepo(cur.data, fullEnvelope());
   closeRepoSheet();   // fecha a folha da nuvem ANTES da confirmação (senão empilha por cima dela)
   openSheet(d.first?"Publicar pela 1ª vez?":"Publicar na nuvem?",[
-    {ic:"☁",label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,cur.sha,d); }},
-    {ic:"👁",label:"Ver detalhes (nomes)",fn:()=>{ closeSheet(); showPublishDetails(api,headers,cur.sha,d); }},
-    {ic:"✕",label:"Cancelar",fn:closeSheet},
+    {ic:icon("cloud-upload"),label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,cur.sha,d); }},
+    {ic:icon("eye"),label:"Ver detalhes (nomes)",fn:()=>{ closeSheet(); showPublishDetails(api,headers,cur.sha,d); }},
+    {ic:icon("x"),label:"Cancelar",fn:closeSheet},
   ], diffNote(d));
 }
 // folha rolável com os NOMES que entram (+) e saem (−, em vermelho); ainda dá pra publicar dali
 function showPublishDetails(api, headers, sha, d){
   const rows=[
-    {ic:"☁",label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,sha,d); }},
-    {ic:"✕",label:"Cancelar",fn:closeSheet},
+    {ic:icon("cloud-upload"),label:"Publicar"+diffLabel(d),fn:()=>{ closeSheet(); doPublish(api,headers,sha,d); }},
+    {ic:icon("x"),label:"Cancelar",fn:closeSheet},
   ];
   const CAP=60, push=(arr,sign,pre)=>arr.slice(0,CAP).forEach(t=>rows.push({ic:sign,label:(pre||"")+t,danger:sign==="−"}));
   push(d.sAddN,"+"); push(d.sRemN,"−");
@@ -1967,9 +2027,9 @@ function importJSON(text){
     // duplicata sem querer nem sobrescreve a versão dele silenciosamente.
     const names=dups.slice(0,3).join(", ")+(dups.length>3?` +${dups.length-3}`:"");
     openSheet("Você já tem: "+names,[
-      {ic:"👤",label:"Manter as minhas (não duplicar)",fn:()=>{closeSheet();doImport(data,tp,incoming,"mine");}},
-      {ic:"⧉",label:"Importar como cópias (ficar com as duas)",fn:()=>{closeSheet();doImport(data,tp,incoming,"both");}},
-      {ic:"✕",label:"Cancelar importação",fn:closeSheet},
+      {ic:icon("user"),label:"Manter as minhas (não duplicar)",fn:()=>{closeSheet();doImport(data,tp,incoming,"mine");}},
+      {ic:icon("copy"),label:"Importar como cópias (ficar com as duas)",fn:()=>{closeSheet();doImport(data,tp,incoming,"both");}},
+      {ic:icon("x"),label:"Cancelar importação",fn:closeSheet},
     ]);
     return;
   }
@@ -2041,8 +2101,8 @@ async function handleImportLink(){
   // "nada salvo no escuro": dado vindo de link é não-confiável — confirma antes de mesclar
   // (o esc() da v0.13.2 ainda blinda XSS na exibição depois de importado).
   openSheet("Importar deste link?",[
-    {ic:"↧",label:"Importar "+label,fn:()=>{ closeSheet(); importJSON(jsonText); }},
-    {ic:"✕",label:"Cancelar",fn:closeSheet},
+    {ic:icon("download"),label:"Importar "+label,fn:()=>{ closeSheet(); importJSON(jsonText); }},
+    {ic:icon("x"),label:"Cancelar",fn:closeSheet},
   ]);
 }
 
@@ -2106,7 +2166,7 @@ function renderEscalas(){
   $("#escount").textContent=list.length+(list.length===1?" escala":" escalas");
   const box=$("#escalalist"); box.innerHTML="";
   if(!list.length){
-    box.innerHTML='<div class="empty esc"><div class="big">Nenhuma escala ainda</div>'+
+    box.innerHTML='<div class="empty esc"><div class="eic">'+icon("calendar-days")+'</div><div class="big">Nenhuma escala ainda</div>'+
       'Monte a ordem do próximo culto.<div class="emptyact">'+
       '<button class="emptybtn primary" id="empty-newesc">＋ Nova escala</button></div></div>';
     $("#empty-newesc").onclick=()=>$("#newEscBtn").click();
@@ -2221,7 +2281,7 @@ function renderTeamEditor(){
     row.innerHTML=
       '<select class="rolesel">'+FUNCOES.map(f=>'<option'+(f===t.role?' selected':'')+'>'+f+'</option>').join("")+'</select>'+
       '<input class="nameinp" placeholder="Nome" value="'+esc(t.name||"")+'">'+
-      '<button class="rm" title="Remover">✕</button>';
+      '<button class="rm" aria-label="Remover" title="Remover">'+icon("x")+'</button>';
     row.querySelector(".rolesel").onchange=e=>{editEscala.team[i].role=e.target.value;};
     row.querySelector(".nameinp").oninput=e=>{editEscala.team[i].name=e.target.value;};
     row.querySelector(".rm").onclick=()=>{editEscala.team.splice(i,1);renderTeamEditor();};
@@ -2235,7 +2295,7 @@ function renderItemsEditor(){
   (editEscala.items||[]).forEach((it,i)=>{
     const row=document.createElement("div");
     row.className="irow"+(it.kind==="item"?" itemkind":"");
-    const moveBtns='<button class="move" data-d="-1" aria-label="Mover para cima">↑</button><button class="move" data-d="1" aria-label="Mover para baixo">↓</button><button class="rm" aria-label="Remover item" title="Remover">✕</button>';
+    const moveBtns='<button class="move" data-d="-1" aria-label="Mover para cima">'+icon("chevron-up")+'</button><button class="move" data-d="1" aria-label="Mover para baixo">'+icon("chevron-down")+'</button><button class="rm" aria-label="Remover item" title="Remover">'+icon("x")+'</button>';
     const momSel='<select class="f-mom">'+MOMENTOS.map(m=>'<option'+(m===(it.momento||"")?' selected':'')+'>'+(m||"— momento —")+'</option>').join("")+'</select>';
     if(it.kind==="song"){
       const s=songById(it.songId);
@@ -2243,7 +2303,7 @@ function renderItemsEditor(){
         KEYS.map(k=>'<option'+(k===it.key?' selected':'')+'>'+k+'</option>').join("")+'</select>';
       const capoSel='<select class="f-capo">'+Array.from({length:12},(_,c)=>'<option'+(c===(it.capo||0)?' selected':'')+'>'+c+'</option>').join("")+'</select>';
       row.innerHTML=
-        '<div class="ihead"><span class="ic">🎵 '+esc(s?s.title:"(cifra removida)")+'</span>'+moveBtns+'</div>'+
+        '<div class="ihead"><span class="ic">'+icon("music","ic-tx")+esc(s?s.title:"(cifra removida)")+'</span>'+moveBtns+'</div>'+
         '<div class="igrid three">'+
           '<div class="fld"><label>Tom (escala)</label>'+keySel+'</div>'+
           '<div class="fld"><label>Capo</label>'+capoSel+'</div>'+
@@ -2334,13 +2394,13 @@ function shareEscalaSheet(id){
   const env={type:"louvai-escala",version:1,app:APP_VERSION,escala:e,songs:bundle};
   const sendFile=()=>shareFile(slug(e.title)+".escala.louvai.json",JSON.stringify(env),"Escala: "+e.title);
   openSheet("Compartilhar “"+(e.title||"escala")+"”",[
-    {ic:"🔗",label:"Enviar link (escala + cifras)",fn:()=>{
+    {ic:icon("link"),label:"Enviar link (escala + cifras)",fn:()=>{
       closeSheet();
       shareLink(env,"Escala: "+(e.title||"escala"),sendFile);
     }},
-    {ic:"↗",label:"Enviar escala + cifras (.json)",fn:()=>{ sendFile(); closeSheet(); }},
-    {ic:"✎",label:"Editar escala",fn:()=>{closeSheet();openEscalaEditor(id);}},
-    {ic:"🗑",label:"Excluir",danger:true,fn:()=>{closeSheet();openEscalaEditor(id);$("#ee-delete").click();}},
+    {ic:icon("file-down"),label:"Enviar escala + cifras (.json)",fn:()=>{ sendFile(); closeSheet(); }},
+    {ic:icon("pencil"),label:"Editar escala",fn:()=>{closeSheet();openEscalaEditor(id);}},
+    {ic:icon("trash-2"),label:"Excluir",danger:true,fn:()=>{closeSheet();openEscalaEditor(id);$("#ee-delete").click();}},
   ]);
 }
 
@@ -2394,7 +2454,7 @@ function toast(msg, type){   // type: "ok" | "err" | "warn" (faixa de cor + temp
 /* ---------- Tema ---------- */
 function applyTheme(){
   document.body.classList.toggle("light",settings.theme==="light");
-  $("#themeBtn").textContent=settings.theme==="light"?"◑":"◐";
+  $("#themeBtn").innerHTML=icon(settings.theme==="light"?"moon":"sun");
   document.querySelector('meta[name=theme-color]').setAttribute("content",settings.theme==="light"?"#f6f5f8":"#121212");
 }
 $("#themeBtn").onclick=()=>{settings.theme=settings.theme==="light"?"dark":"light";saveSettings();applyTheme();};
@@ -2404,6 +2464,7 @@ $("#search").oninput=renderLibrary;
 
 /* ---------- Boot ---------- */
 $("#appVer").textContent="v"+APP_VERSION;
+paintIcons();   // pinta os ícones SVG dos botões estáticos (fonte única: ICONS/icon())
 load(); applyTheme(); renderLibrary(); show("lib");
 // link auto-importável: após carregar/render, trata #imp= do boot e de links tocados depois
 handleImportLink();

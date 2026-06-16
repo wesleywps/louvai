@@ -11,15 +11,17 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.28.0)
+## Recursos (v0.29.0)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
+  **Ícones SVG coesos** (traço único, herdam o tema nos dois modos) no lugar da
+  mistura de emoji e setas parecidas.
 - Repertório com busca e tags; criar/editar cifras; **importar colando do Cifra Club**.
   Importar arquivo/link **avisa antes de mesclar** quando uma cifra tem título repetido
   (manter as suas sem duplicar, ficar com as duas, ou cancelar).
 - **Rede de segurança do backup:** registra a data do último backup, marca quando há
-  mudanças desde então, **lembra de exportar** (pontinho no ↥ + aviso ao abrir quando
-  atrasado) e tem **"Restaurar de um arquivo"** claro. Tudo local (sem nuvem).
+  mudanças desde então, **lembra de exportar** (pontinho no botão **Repertório** + aviso ao
+  abrir quando atrasado) e tem **"Restaurar de um arquivo"** claro. Tudo local (sem nuvem).
 - **Repertório na nuvem (link):** o líder publica um snapshot `louvai.json` (cifras + escalas)
   no GitHub Pages e a equipe puxa com **"Atualizar do link"** — celular novo pega tudo de um
   link. O líder pode **"Publicar na nuvem"** direto do celular (escreve o `louvai.json` via API
@@ -29,9 +31,9 @@ para ter um ícone e abrir como app.
 - Player em **barra de uma linha** (prioriza a cifra): transposição com **grafia fiel
   ao tom** — preserva o que você escreveu e, ao subir/abaixar, escolhe ♯/♭ sozinho
   pelo tom de destino (Bb nunca vira A#, mesmo em acordes emprestados), capo, fonte,
-  modo escuro/claro, só-letra, ocultar tablaturas (tudo no ⚙ Ajustes), **modos de
+  modo escuro/claro, só-letra, ocultar tablaturas (tudo no Ajustes), **modos de
   leitura** (rolagem com auto-scroll opcional **ou** página, virando com
-  toque/deslize), **navegação por estrutura** (☰), **diagrama de acorde ao tocar no acorde**
+  toque/deslize), **navegação por estrutura**, **diagrama de acorde ao tocar no acorde**
   (pegada no violão, com pestana e casa-base; mostra a forma que você faz com o capô) e
   **tela sempre acesa** (Wake Lock).
 - **Escalas/Setlists**: ordem do culto, tom por escala, equipe, tempo total,
@@ -80,10 +82,10 @@ O passo a passo detalhado (com a conta do dono) está em `PLANO-compartilhar-lin
 Depois de hospedar, dá pra ter um **repertório compartilhado** sem backend, **mão única**
 (o líder publica, a equipe baixa):
 
-1. **Líder publica:** no app, **↥ → Repertório na nuvem → "Exportar tudo (pra publicar)"**
+1. **Líder publica:** no app, **Repertório → Repertório na nuvem → "Exportar tudo (pra publicar)"**
    gera um `louvai.json` (cifras **+** escalas). Suba esse arquivo no mesmo repositório do
    app (Add file → Upload files → Commit) — ele vira `https://<seu-site>/louvai.json`.
-2. **Equipe configura uma vez:** **↥ → Repertório na nuvem**, cola o link e toca
+2. **Equipe configura uma vez:** **Repertório → Repertório na nuvem**, cola o link e toca
    **"Atualizar do link"**. Baixa o repertório e as escalas e **mescla** no aparelho
    (cifras/escalas repetidas não duplicam; o app avisa se um título bater).
 3. **Atualizar depois:** o líder repete o passo 1 (sobe o `louvai.json` novo); a equipe toca
@@ -93,7 +95,7 @@ Depois de hospedar, dá pra ter um **repertório compartilhado** sem backend, **
 direto pelo app. Uma vez, crie um **token fino** no GitHub:
 *Settings → Developer settings → **Fine-grained tokens** → Generate new token* → **Only select
 repositories** = o repo do app → **Permissions → Contents: Read and write** → defina uma
-validade → Generate → copie. No app: **↥ → Repertório na nuvem → cole o token → "Publicar na
+validade → Generate → copie. No app: **Repertório → Repertório na nuvem → cole o token → "Publicar na
 nuvem"** (a 1ª publicação cria o `louvai.json`). O token fica **só no aparelho** (dá pra
 **revogar** no GitHub quando quiser); a equipe continua só puxando.
 

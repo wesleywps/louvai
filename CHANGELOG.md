@@ -8,6 +8,33 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.29.0 — Ícones SVG inline unificados, Onda 2 (cara de app pronto)
+**Recurso (interface).** Segunda onda do `PLANO-ui.md` (item M1 de `ANALISE-icones.md`): o
+maior salto "protótipo → produto". Por que: o app misturava **emoji coloridos** (`🔗 ☁ 🗑 🎵 🔍`,
+que mudam de desenho entre Android/iOS/Windows e fogem da paleta) com **glifos monocromáticos**
+e uma **família de setas quase idênticas** (`↥ ↧ ↗ ↑ ↓`) usadas para coisas diferentes — a maior
+fonte de ambiguidade no palco com pouca luz.
+- **Fonte única de ícones:** objeto `ICONS` (paths Lucide, MIT) + helper `icon(name[,cls])` que
+  devolve um `<svg class="ic-svg" stroke="currentColor">` — assim como `parseChord` é a fonte
+  única dos acordes. `currentColor` faz o ícone **herdar o tema** nos dois modos, sem emoji fora
+  de paleta. `paintIcons()` pinta os botões estáticos no boot.
+- **Conjunto coeso (traço 2px):** voltar `arrow-left`, estrutura `list-music` (não confunde com
+  "menu"), ajustes `sliders`, compartilhar `share-2` (some o `↗` de "abrir externo"), enviar
+  arquivo `file-down`, link `link`, nuvem `cloud`/`cloud-upload`, editar `pencil`, apresentar/
+  rolar `play`/`pause`, tema `sun`↔`moon`, excluir `trash-2`, buscar `search`, copiar `copy`,
+  mover `chevron-up`/`down`, importar `download`/restaurar `upload`, abas `music`/`calendar-days`.
+- **Ambíguos resolvidos:** `𝄞` (só-letra) → `type` (texto), `≣` (tabs) → linhas de tablatura;
+  `↗` vs `🔗` nos sheets viram `file-down` (arquivo) vs `link` (link), distintos.
+- **Exceções deliberadas (língua do músico, ficam texto):** `♯`/`♭` (tom), `A−`/`A＋` (fonte),
+  `−`/`＋` (capo) e o `＋` de "Novo".
+- **Acessibilidade:** `aria-hidden` no `<svg>`, `aria-label` no `<button>`; toggles seguem com
+  `aria-pressed`; alvo de toque ≥48px preservado (o SVG menor não reduz a área).
+- **Teste:** o smoke valida `icon()`/`ICONS`, botões só-ícone sem glifo de texto, botões
+  ícone+rótulo (`.ic-tx`) com texto preservado, abas/lupa/itens de sheet em SVG e o ícone do
+  estado vazio (`.eic`). **170 verificações**, zero erro de JS.
+
+---
+
 ## v0.28.0 — Polimento de UI, Onda 1 (cara de app pronto)
 **Recurso (interface).** Primeira onda do `PLANO-ui.md` (insumo: `ANALISE-ui.md`/`ANALISE-icones.md`).
 - **Fundação de tokens:** escala tipográfica (`--fs-*`), grade 8pt (`--sp-*`) e raios

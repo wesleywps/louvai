@@ -861,6 +861,32 @@ ok(await page.evaluate(() => $("#search").value === ""), "Limpar busca zera o fi
 ok(await page.evaluate(() => !!document.querySelector("#backupBtn .ic-svg")), "Botão de Backup usa ícone SVG (archive)");
 ok(await page.evaluate(() => document.getElementById("backupBtn").getAttribute("aria-label").includes("Repertório")), "Backup renomeado para 'Repertório' (aria-label)");
 
+// ===== v0.29.0 — Onda 2: ícones SVG inline unificados (Lucide) via icon()/ICONS =====
+// o helper icon() é a fonte única e devolve um <svg class="ic-svg">
+ok(await page.evaluate(() => typeof icon === "function" && /^<svg class="ic-svg"/.test(icon("archive")) && icon("archive").length > 30),
+   "icon(name) devolve um <svg class=ic-svg> a partir do ICONS");
+// botões só-ícone foram pintados com SVG no boot (sem glifo de texto sobrando)
+ok(await page.evaluate(() => ["#themeBtn","#backupBtn","#importBtn","#p-back","#p-struct","#p-settings","#es-share","#es-edit"]
+     .every(s => { const e=document.querySelector(s); return e && e.querySelector(".ic-svg") && e.textContent.trim()===""; })),
+   "Botões só-ícone usam SVG (sem glifo de texto)");
+// botões ícone+rótulo mantêm o texto e ganham o SVG prefixado (.ic-tx)
+ok(await page.evaluate(() => { const e=document.querySelector("#es-present"); return !!(e && e.querySelector(".ic-tx") && /Apresentar/.test(e.textContent)); }),
+   "Botões ícone+rótulo prefixam SVG e preservam o texto (es-present)");
+// abas inferiores e lupa da busca migraram pra SVG
+ok(await page.evaluate(() => !!document.querySelector("#tab-songs .nic .ic-svg") && !!document.querySelector("#tab-escalas .nic .ic-svg")),
+   "Abas inferiores (Cifras/Escalas) usam ícone SVG");
+ok(await page.evaluate(() => [...document.querySelectorAll(".mag")].every(m => !!m.querySelector(".ic-svg"))),
+   "Lupa da busca usa ícone SVG");
+// itens de sheet renderizam o SVG dentro do .ic (label segue casando por texto)
+ok(await page.evaluate(() => { openSheet("t", [{ ic: icon("link"), label: "Item de teste", fn(){} }]);
+     return !!document.querySelector("#sheet-body .sheetitem .ic .ic-svg") && /Item de teste/.test(document.querySelector("#sheet-body .sheetitem").textContent); }),
+   "Itens de sheet renderizam SVG no .ic (texto do label preservado)");
+await page.evaluate(() => closeSheet());
+// estado vazio injeta o ícone via icon() (não mais ::before)
+await page.evaluate(() => { songs.length = 0; saveSongs(); switchTab("songs"); $("#search").value = ""; activeTag = null; renderLibrary(); });
+await page.waitForTimeout(60);
+ok(await page.evaluate(() => !!document.querySelector("#songlist .empty .eic .ic-svg")), "Estado vazio mostra ícone SVG (.eic)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

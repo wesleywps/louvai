@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.28.0**.
+seguir. Atualizado até a **v0.29.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -87,6 +87,7 @@ instalação complexa.
 | **v0.27.2** | recurso | **"Ver detalhes" no diff:** folha rolável com os **nomes** das cifras/escalas que entram (+) e saem (−, em vermelho) antes de publicar. |
 | **v0.27.3** | correção | **Folha de publicar empilhava:** a confirmação abria atrás da folha "Repertório na nuvem" e o toast "Publicado" não aparecia. Agora a folha fecha antes da confirmação e o toast de sucesso fica visível. |
 | **v0.28.0** | recurso | **Polimento de UI (Onda 1):** fundação de tokens (tipografia/8pt/raios), Tom em destaque no player, toast tipado + acessível, estados vazios certos (busca/ação embutida), acorde legível no tema claro, e ícone de Backup → "Repertório" (archive SVG). Ver `PLANO-ui.md`. |
+| **v0.29.0** | recurso | **Polimento de UI (Onda 2):** ícones SVG inline unificados (Lucide) via fonte única `ICONS`/`icon()` + `paintIcons()` — some a mistura emoji+glifo e a família de setas ambíguas; herda o tema por `currentColor`. `♯/♭`, `A−/A＋`, `−/＋` e `＋` ficam texto (língua do músico). Ver `PLANO-ui.md`. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -134,6 +135,10 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   bottom nav + FAB único, player de palco com sheet Ajustes, vidro fosco e
   microinterações. Falta apenas a **aprovação visual do dono** nas telas reais
   (celular) antes de distribuir.
+- [~] **Polimento "cara de app pronto"** (`PLANO-ui.md`, em ondas): **Onda 1 ✅** (v0.28.0 —
+  tokens, Tom em destaque, toast tipado, vazios, acorde no claro, ícone do Backup);
+  **Onda 2 ✅** (v0.29.0 — ícones SVG inline unificados via `ICONS`/`icon()`); **Onda 3** pendente
+  (sheets/cards/gestos, um por vez). Falta a **validação visual no celular** (dark/light).
 
 ### Tema A — Segurança dos dados
 - [ ] **PWA instalável de verdade** (ícone, 100% offline inclusive fontes;
@@ -215,8 +220,10 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 3. **PWA instalável** — fecha o offline 100% do app hospedado (manifest + service worker)
    e destrava "Abrir com Louvai" pra importar arquivo em 1 toque. **Encerra a regra
    "arquivo único"** (ver `CLAUDE.md`, seção "Horizonte").
-4. **Ordenar por menos tocadas** (usa a recência da v0.24.0) e **QR Code** — alto valor percebido.
-5. **PWA instalável** (Tema A) — fecha o offline do app hospedado e encerra a regra "arquivo único".
+4. **Onda 3 do `PLANO-ui.md`** (incrementos de UI maiores, **um por vez**): seções do ⚙ Ajustes,
+   unificar linguagem de card, reorganizar o `#reposheet`, arrastar-pra-fechar sheets, etc.
+5. **Ordenar por menos tocadas** (usa a recência da v0.24.0) e **QR Code** — alto valor percebido.
+6. **PWA instalável** (Tema A) — fecha o offline do app hospedado e encerra a regra "arquivo único".
 
 > ✅ **Modos de leitura no player** (auto-scroll opcional + Modo Página) concluídos
 > nas v0.14.0–v0.15.0 — ver `PLANO-modos-leitura.md`.
@@ -234,6 +241,9 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > **repertório + escalas por link** (pull de um snapshot do GitHub Pages) na v0.26.0;
 > **publicar na nuvem** (escrever o snapshot do celular via token do GitHub) na v0.27.0,
 > com **diff +/− e confirmação** ao publicar na v0.27.1 (e **"ver detalhes"** com os nomes na v0.27.2).
+> ✅ **Polimento de UI**: Onda 1 (tokens, Tom, toast, vazios, acorde no claro) na v0.28.0 e
+> **Onda 2** (ícones SVG inline unificados via `ICONS`/`icon()`) na v0.29.0 — falta a Onda 3 e a
+> validação visual no celular.
 
 ---
 
@@ -253,4 +263,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.28.0.*
+*Última atualização deste roteiro: v0.29.0.*

@@ -1,7 +1,7 @@
 # Plano — Polimento de UI + ícones ("cara de app pronto")
 
-> **Como retomar:** abra o Claude Code nesta pasta e peça *"vamos executar a Onda 1 do PLANO-ui.md"*.
-> **Status: PLANO EM ONDAS — AGUARDANDO OK PRA EXECUTAR A ONDA 1.** App na v0.27.0.
+> **Como retomar:** abra o Claude Code nesta pasta e peça *"vamos executar a Onda 3 do PLANO-ui.md"*.
+> **Status: ONDAS 1 e 2 ✅ ENTREGUES (v0.28.0 / v0.29.0). PRÓXIMA: ONDA 3 (um incremento por vez).**
 > Insumo (decidido, não reabrir): `ANALISE-ui.md` (itens **G1–G12**, **M1–M8**) e
 > `ANALISE-icones.md` (inventário, abordagem, conjunto SVG). Este plano **prioriza e sequencia**.
 
@@ -38,19 +38,23 @@ Baixo risco, alto retorno. CSS/ajuste fino + 1–2 ícones. É o "Top 5" da aná
 - **Testes:** estado de busca-vazia; toast com tipo + `aria-live`; Tom destacado no `#p-sub`;
   `#backupBtn` com `aria-label` e SVG; regressões dos fluxos atuais verdes.
 
-## Onda 2 — Ícones SVG inline unificados (Lucide)  → **v0.29.0**
+## Onda 2 — Ícones SVG inline unificados (Lucide)  → **✅ ENTREGUE na v0.29.0**
 O maior salto "protótipo → produto" (ANALISE-icones §4, item **M1**). Risco médio (mecânico).
 
-- Helper **`icon(name)`** + objeto `ICONS` (paths Lucide, MIT) — uma fonte da verdade de ícones,
-  como o `parseChord` é dos acordes. `.iconbtn` passa a conter um `<svg>` 22px, `stroke-width:2`,
-  `stroke="currentColor"` (herda tema), `aria-hidden` no svg + `aria-label` no botão.
-- Converter `.iconbtn`, `.sheetitem .ic`, `.move`, busca, e os botões da nuvem; aplicar o
-  **conjunto coeso** da tabela (voltar, estrutura `list-music`, ajustes `sliders`, compartilhar
-  `share-2`, link, nuvem, editar, apresentar, tema sun/moon, excluir, etc.).
-- **Polir os ambíguos:** `𝄞` (só-letra) e `≣` (tabs) → ícones óbvios; distinguir `↗`/`🔗` nos
-  sheets (`file`/`link`). Eliminar a mistura emoji+glifo.
-- **Atenção (armadilha de teste):** o `smoke` valida alguns botões por `textContent` de glifo →
-  migrar essas asserções para `aria-label`/seletor. Fazer num incremento próprio, testado.
+- ✅ Helper **`icon(name[,cls])`** + objeto `ICONS` (paths Lucide, MIT) — uma fonte da verdade de
+  ícones, como o `parseChord` é dos acordes. `paintIcons()` pinta os botões estáticos no boot;
+  `<svg class="ic-svg">` 22px, `stroke-width:2`, `stroke="currentColor"` (herda tema),
+  `aria-hidden` no svg + `aria-label` no botão. Variante `.ic-tx` p/ botões ícone+rótulo.
+- ✅ Convertidos `.iconbtn`, `.sheetitem .ic` (via campo `ic:`), `.move`/`.rm`, `.mag`, abas
+  (`.nic`), botões da nuvem e os estados vazios (`.eic`); aplicado o **conjunto coeso** (voltar
+  `arrow-left`, estrutura `list-music`, ajustes `sliders`, compartilhar `share-2`, link, nuvem,
+  editar `pencil`, apresentar/rolar `play`/`pause`, tema `sun`/`moon`, excluir `trash-2`, etc.).
+- ✅ Ambíguos resolvidos: `𝄞` (só-letra) → `type`, `≣` (tabs) → linhas; `↗`/`🔗` nos sheets →
+  `file-down`/`link` distintos. Mistura emoji+glifo eliminada.
+- ✅ **Armadilha de teste:** o `smoke` **não** casava botões por glifo (só por label/visibilidade),
+  então não houve asserção a migrar; foram **adicionadas** asserções novas (`icon()`/`ICONS`,
+  botões só-ícone sem texto, `.ic-tx`, abas/lupa/itens de sheet em SVG, `.eic`). 170 verificações.
+- **Exceções mantidas como texto** (língua do músico): `♯`/`♭`, `A−`/`A＋`, `−`/`＋` e o `＋` de Novo.
 
 ## Onda 3 — Incrementos de UI maiores  → **v0.30.0+** (um por vez)
 Médio esforço; cada um vira sua própria versão.
