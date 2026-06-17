@@ -751,7 +751,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.38.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.39.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1879,6 +1879,25 @@ function exportFull(){
   shareFile("louvai.json",JSON.stringify(fullEnvelope()),"Louvai — repertório + escalas");
   recordBackup();   // snapshot completo também é um backup (o mais completo)
 }
+// busca o snapshot da nuvem (v0.39.0): quando é GitHub, lê o COMMIT ATUAL via API Contents —
+// reflete a publicação NA HORA, sem o atraso do rebuild/CDN do GitHub Pages. Cai pro link como
+// está (Pages / qualquer host / data:) em rate-limit (403), erro, 404 ou repo não-GitHub.
+async function getRepoText(url){
+  const r=ghRepoFromUrl(url);
+  if(r){
+    const api="https://api.github.com/repos/"+r.owner+"/"+r.repo+"/contents/"+r.path+"?t="+Date.now();
+    const headers={Accept:"application/vnd.github+json"};
+    const tok=(settings.ghToken||"").trim(); if(tok) headers.Authorization="Bearer "+tok;   // líder evita o limite de 60/h
+    const cur=await ghGetCurrent(api,headers);
+    if(cur && typeof cur==="object" && cur.data) return JSON.stringify(cur.data);            // commit atual ✓
+    // "__auth__"(403 limite/privado) / "__net__" / "__err__" / 404 → tenta o link mesmo
+  }
+  // fura-cache só em http(s) (data:/blob: não aceitam query); no-store reforça
+  const u = /^https?:/i.test(url) ? url+(url.includes("?")?"&":"?")+"t="+Date.now() : url;
+  const res = await fetch(u,{cache:"no-store"});
+  if(!res.ok) throw new Error("http "+res.status);
+  return res.text();
+}
 async function pullRepo(opts){
   const silent=!!(opts&&opts.silent);   // auto-sync: sem skeleton, sem erro barulhento, sem prompt de conflito
   const url=(settings.repoUrl||"").trim();
@@ -1886,19 +1905,17 @@ async function pullRepo(opts){
   const box=$("#songlist"); if(box&&!silent) box.innerHTML=loadingSkeleton();   // M6: feedback de carregamento (rede)
   const restore=()=>{ if(box&&!silent) renderLibrary(); };                      // desfaz o skeleton se algo falhar
   let txt;
-  try{
-    // fura-cache só em http(s) (data:/blob: não aceitam query); no-store reforça
-    const u = /^https?:/i.test(url) ? url+(url.includes("?")?"&":"?")+"t="+Date.now() : url;
-    const res = await fetch(u,{cache:"no-store"});
-    if(!res.ok) throw new Error("http "+res.status);
-    txt = await res.text();
-  }catch(e){ if(!silent) toast("Não consegui buscar — sem internet?","err"); restore(); return; }
+  try{ txt = await getRepoText(url); }
+  catch(e){ if(!silent) toast("Não consegui buscar — sem internet?","err"); restore(); return; }
   let data; try{ data=JSON.parse(txt); }catch(e){ if(!silent) toast("O link não tem um repertório válido","err"); restore(); return; }
   const tp=String(data.type||"").replace(/^levita-/,"louvai-");
   if(!/^louvai-(full|library|escala|song)$/.test(tp) && !Array.isArray(data) && !(data.title&&data.body)){
     if(!silent) toast("O link não tem um repertório válido","err"); restore(); return;
   }
-  settings.repoPulledAt=Date.now(); saveSettings();
+  settings.repoPulledAt=Date.now();
+  if(data.app) settings.repoCloudApp=String(data.app);        // versão do snapshot que veio da nuvem
+  settings.repoCloudAt=data.publishedAt||null;                // quando foi publicado (se o snapshot tiver o carimbo)
+  saveSettings();
   importJSON(txt, {silent});   // reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
 }
 // auto-sync (v0.37.0): pull silencioso se habilitado e há link; um link em importação tem prioridade.
@@ -1915,7 +1932,9 @@ function maybeAutoPull(opts){
 function repoStatus(){
   const a=settings.repoPulledAt?"baixou "+fmtAgo(settings.repoPulledAt):"";
   const b=settings.repoPublishedAt?"publicou "+fmtAgo(settings.repoPublishedAt):"";
-  return [a,b].filter(Boolean).join(" · ") || "Sem atividade ainda.";
+  // versão/idade do snapshot que está na nuvem (v0.39.0) — confiança visual de que veio o atual
+  const c=settings.repoCloudApp?("nuvem v"+settings.repoCloudApp+(settings.repoCloudAt?" · publicada "+fmtAgo(settings.repoCloudAt):"")):"";
+  return [a,b,c].filter(Boolean).join(" · ") || "Sem atividade ainda.";
 }
 // deriva owner/repo/path da URL de pull (GitHub Pages). Site de projeto: /REPO/PATH;
 // site de usuário (OWNER.github.io/PATH): repo = OWNER.github.io.
@@ -1999,7 +2018,8 @@ function showPublishDetails(api, headers, sha, d){
   openSheet("O que vai mudar"+diffLabel(d), rows);
 }
 async function doPublish(api, headers, sha, d){
-  const content=bytesToB64(new TextEncoder().encode(JSON.stringify(fullEnvelope())));
+  const env=fullEnvelope(); env.publishedAt=Date.now();   // carimbo p/ a equipe ver a IDADE do snapshot ao puxar (v0.39.0)
+  const content=bytesToB64(new TextEncoder().encode(JSON.stringify(env)));
   const put=s=>{ const body={message:"atualiza louvai.json (v"+APP_VERSION+")",content}; if(s) body.sha=s;
     return fetch(api,{method:"PUT",headers,body:JSON.stringify(body)}); };
   let res; try{ res=await put(sha); }catch(e){ toast("Não consegui publicar — sem internet?","err"); return; }
@@ -2008,7 +2028,7 @@ async function doPublish(api, headers, sha, d){
     if(typeof cur2==="string"){ toast("Mudou na nuvem — atualize e tente de novo","err"); return; }
     try{ res=await put(cur2.sha); }catch(e){ toast("Não consegui publicar — sem internet?","err"); return; }
   }
-  if(res.ok){ settings.repoPublishedAt=Date.now(); saveSettings(); toast("Publicado na nuvem"+diffLabel(d),"ok"); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
+  if(res.ok){ settings.repoPublishedAt=Date.now(); settings.repoCloudApp=APP_VERSION; settings.repoCloudAt=env.publishedAt; saveSettings(); toast("Publicado na nuvem"+diffLabel(d),"ok"); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
   else if(res.status===401||res.status===403) toast("Token inválido ou sem permissão","err");
   else if(res.status===409) toast("Mudou na nuvem — atualize e tente de novo","err");
   else toast("Não consegui publicar (erro "+res.status+")","err");

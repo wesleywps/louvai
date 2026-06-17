@@ -985,7 +985,7 @@ const m6 = await page.evaluate(async () => {
   const real = window.fetch;
   let release;
   window.fetch = () => new Promise(r => { release = () => r({ ok: true, status: 200, text: async () => JSON.stringify({ type: "louvai-full", songs: [], escalas: [] }) }); });
-  settings.repoUrl = "https://x.github.io/louvai/louvai.json"; saveSettings();
+  settings.repoUrl = "https://louvai-teste.example/louvai.json"; saveSettings();   // host não-GitHub: pull por fetch direto (stub sem .json())
   switchTab("songs");
   const p = pullRepo();                                  // não await: a rede fica pendente
   const hasSkel = !!document.querySelector("#songlist .skel .skel-card");
@@ -1009,7 +1009,7 @@ const auto = await page.evaluate(async () => {
     songs: [{ id: "remote1", title: "Mesma Musica", key: "D", capo: 0, tags: [], updatedAt: 9, body: "D" }],
     escalas: [{ id: "e-remote", title: "Culto Nuvem", date: "2026-02-01", time: "", type: "Culto", team: [], items: [{ kind: "song", songId: "remote1", key: "", capo: 0 }], updatedAt: 9 }] };
   window.fetch = async () => ({ ok: true, status: 200, text: async () => JSON.stringify(snap) });
-  settings.autoPull = true; settings.repoUrl = "https://x.github.io/louvai/louvai.json"; saveSettings();
+  settings.autoPull = true; settings.repoUrl = "https://louvai-teste.example/louvai.json"; saveSettings();   // host não-GitHub: fetch direto (stub sem .json())
   await maybeAutoPull();                                 // pull silencioso
   const noSheet = !document.getElementById("sheet").classList.contains("show");
   const escAdded = escalas.some(e => e.id === "e-remote");
@@ -1036,7 +1036,7 @@ const vis = await page.evaluate(async () => {
   songs.length = 0; escalas.length = 0; saveSongs(); saveEscalas();
   let snap = { type: "louvai-full", songs: [], escalas: [{ id: "e-vis", title: "Culto Visível", date: "2026-03-01", time: "", type: "Culto", team: [], items: [], updatedAt: 9 }] };
   window.fetch = async () => ({ ok: true, status: 200, text: async () => JSON.stringify(snap) });
-  settings.autoPull = true; settings.repoUrl = "https://x.github.io/louvai/louvai.json"; saveSettings();
+  settings.autoPull = true; settings.repoUrl = "https://louvai-teste.example/louvai.json"; saveSettings();   // host não-GitHub: fetch direto (stub sem .json())
   lastAutoSync = 0;                                          // libera o throttle p/ o 1º retorno
   document.dispatchEvent(new Event("visibilitychange"));     // "voltou pro app"
   await new Promise(r => setTimeout(r, 40));
@@ -1051,6 +1051,44 @@ const vis = await page.evaluate(async () => {
 });
 ok(vis.pulledOnReturn, "Auto-sync puxa ao voltar pro app (visibilitychange)");
 ok(vis.throttled, "Throttle: reabrir de novo logo em seguida não busca de novo");
+
+// ===== v0.39.0 — pull lê o COMMIT ATUAL via Contents API (sem atraso do GitHub Pages) =====
+const commitPull = await page.evaluate(async () => {
+  const real = window.fetch;
+  songs.length = 0; escalas.length = 0; saveSongs(); saveEscalas();
+  history.replaceState(null, "", location.href.split("#")[0]);
+  // snapshot "do commit" servido pela Contents API (content em base64 + carimbo publishedAt)
+  const snap = { type: "louvai-full", app: "9.9.9", publishedAt: 1781000000000,
+    songs: [{ id: "commit1", title: "Do Commit", key: "C", capo: 0, tags: [], updatedAt: 9, body: "C" }], escalas: [] };
+  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(snap))));
+  let calls = [];
+  window.fetch = async (u) => {
+    calls.push(String(u));
+    if (/api\.github\.com\/repos\//.test(String(u))) return { ok: true, status: 200, json: async () => ({ sha: "s1", content: b64 }) };
+    // o link do Pages devolveria algo VELHO — se for usado, o teste falha
+    return { ok: true, status: 200, text: async () => JSON.stringify({ type: "louvai-full", app: "0.0.1", songs: [], escalas: [] }) };
+  };
+  settings.repoUrl = "https://x.github.io/louvai/louvai.json"; settings.ghToken = ""; saveSettings();
+  await pullRepo({ silent: true });
+  window.fetch = real;
+  return { usedApi: calls.some(u => /api\.github\.com/.test(u)),
+    got: songs.some(s => s.id === "commit1"), cloudApp: settings.repoCloudApp, cloudAt: settings.repoCloudAt };
+});
+ok(commitPull.usedApi && commitPull.got, "Pull lê o commit atual pela Contents API do GitHub (não o link do Pages)");
+ok(commitPull.cloudApp === "9.9.9" && commitPull.cloudAt === 1781000000000, "Pull guarda versão/idade do snapshot da nuvem (repoStatus)");
+// fallback: host NÃO-GitHub continua puxando pelo link direto
+const fallbackPull = await page.evaluate(async () => {
+  const real = window.fetch;
+  songs.length = 0; escalas.length = 0; saveSongs(); saveEscalas();
+  window.fetch = async (u) => /api\.github\.com/.test(String(u))
+    ? { ok: false, status: 404, json: async () => ({}) }   // (não deve nem ser chamado p/ host não-GitHub)
+    : { ok: true, status: 200, text: async () => JSON.stringify({ type: "louvai-full", app: "1.2.3", songs: [{ id: "viafile", title: "Via Link", key: "C", capo: 0, tags: [], updatedAt: 9, body: "C" }], escalas: [] }) };
+  settings.repoUrl = "https://meusite.com/louvai.json"; saveSettings();
+  await pullRepo({ silent: true });
+  window.fetch = real; settings.repoUrl = ""; settings.repoCloudApp = ""; saveSettings();
+  return songs.some(s => s.id === "viafile");
+});
+ok(fallbackPull, "Host não-GitHub continua puxando pelo link direto (fallback preservado)");
 
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));

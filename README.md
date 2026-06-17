@@ -11,7 +11,7 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.38.0)
+## Recursos (v0.39.0)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
   **Ícones SVG coesos** (traço único, herdam o tema nos dois modos) no lugar da
@@ -33,7 +33,9 @@ para ter um ícone e abrir como app.
   e rede de segurança. Mão única (líder publica, equipe puxa), sem backend. Dá pra ligar
   **"Sincronizar ao abrir o app"**: a equipe pega as novidades (cifras e escalas) automaticamente
   na abertura **e ao voltar pro app**, em silêncio (não duplica nada, falha sem barulho se estiver
-  offline; busca no máximo uma vez por minuto ao reabrir).
+  offline; busca no máximo uma vez por minuto ao reabrir). O download lê o **commit atual** do
+  GitHub (não o link do Pages), então reflete a publicação **na hora** — sem esperar o site
+  reconstruir. O status mostra a versão e a idade do que está na nuvem.
 - Player em **barra de uma linha** (prioriza a cifra): transposição com **grafia fiel
   ao tom** — preserva o que você escreveu e, ao subir/abaixar, escolhe ♯/♭ sozinho
   pelo tom de destino (Bb nunca vira A#, mesmo em acordes emprestados), capo, fonte,

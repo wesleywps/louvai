@@ -21,6 +21,13 @@
 > auto-sync remove as duas armadilhas. **190 verificações.**
 > **v0.38.0:** o pull silencioso também roda no `visibilitychange` (voltar pro app), com throttle
 > de 1 min (`AUTO_SYNC_COOLDOWN`/`lastAutoSync`) — boot sem throttle, retorno com throttle. **192 verificações.**
+> **v0.39.0:** `getRepoText(url)` lê o **commit atual** via API Contents (`api.github.com`, reusa
+> `ghRepoFromUrl`/`ghGetCurrent`) quando a URL é do GitHub — elimina o atraso do rebuild/CDN do Pages
+> (a causa do "sincronizei e veio velho"). Fallback p/ `fetch` do link em 403/erro/404/host não-GitHub.
+> `doPublish` carimba `publishedAt`; o pull guarda `repoCloudApp`/`repoCloudAt` e o `repoStatus` mostra
+> "nuvem vX · publicada há Y". **Armadilha de teste:** stubs que não implementam `.json()` forçam o
+> fallback e, com promessa pendente (M6), travam o `await` num 2º fetch — por isso os testes de pull
+> silencioso usam host **não-GitHub** e o caminho GitHub tem teste próprio (`commitPull`). **195 verificações.**
 >
 > **Armadilhas/decisões registradas:**
 > - **Fura-cache só em http(s):** `data:`/`blob:` não aceitam query — o teste usa `data:` URL.

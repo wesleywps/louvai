@@ -8,6 +8,26 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.39.0 — Pull lê o commit atual (sem atraso do GitHub Pages)
+**Recurso/correção (nuvem).** Resolve o "sincronizei e veio o arquivo velho". O pull lia o **link do
+GitHub Pages**, que é servido por CDN **e** depende de um *rebuild* do site após cada commit — logo
+após "Publicar", o Pages ainda entrega a versão anterior por um tempo, mesmo com fura-cache. (Não
+era cache do navegador: o fetch do app já usa `cache:"no-store"` + `?t=` único.)
+- **`getRepoText(url)`:** quando a URL é do GitHub, o pull lê o **conteúdo do commit atual** pela
+  **API Contents** (`api.github.com`, reusa `ghRepoFromUrl`/`ghGetCurrent`) — reflete a publicação
+  **na hora**, sem esperar o rebuild do Pages. Usa o token se houver (líder; evita o limite de 60/h).
+- **Fallback preservado:** em rate-limit (403), erro, arquivo inexistente (404) ou host **não-GitHub**,
+  cai para o `fetch` do link como antes — nunca fica pior que hoje.
+- **Indicador de versão/idade:** "Publicar" carimba `publishedAt` no snapshot; ao puxar, o app guarda
+  `repoCloudApp`/`repoCloudAt` e o status mostra **"nuvem vX · publicada há Y"** — confiança visual de
+  que veio o atual.
+- Vale para o pull manual **e** para o auto-sync (boot + voltar pro app).
+- **195 verificações** (3 novas: lê pelo commit, guarda versão/idade, fallback não-GitHub), zero erro
+  de JS. (Stubs dos testes M6/auto/voltar passaram a usar host não-GitHub, já que o caminho GitHub
+  agora fala com a Contents API — coberto pelo teste próprio.)
+
+---
+
 ## v0.38.0 — Auto-sync também ao voltar pro app
 **Recurso (nuvem).** Estende o "Sincronizar ao abrir" (v0.37.0): além do boot, o pull silencioso
 também roda **ao voltar para o app** (quando a aba/janela fica visível de novo), no
