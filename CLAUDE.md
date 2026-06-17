@@ -106,7 +106,7 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
     **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`) e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~195 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~201 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -247,6 +247,10 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`).
+- **Ordenar a lista (v0.40.0):** `settings.sortMode` (`az`/`recent`/`played`); botão `#sortBtn` no
+  `.libhead` abre `openSortSheet` (folha "Ordenar por", 3 modos, atual com ✓). O sort vive no
+  `renderLibrary` (usa `buildLastPlayed`): `recent` = data desc (nunca tocada por último), `played` =
+  asc (nunca tocada no topo), `az` = título. Rótulos em `SORT_LABEL`. Persiste.
 - **"Última vez que tocamos" (v0.24.0):** recência derivada **só de escalas confirmadas**
   (`e.done`, botão `#es-done` "Culto realizado" — a escala é plano, ajustes no ensaio).
   `buildLastPlayed()` → mapa `songId→data` das escalas `done` com data; `fmtPlayed`/`playedLine`
@@ -292,7 +296,7 @@ Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
 1. **Validação visual no celular** (dark/light) das Ondas 1–3 — Tom destacado, toast colorido,
    estados vazios, acorde no claro, o conjunto de ícones SVG, as seções do ⚙, os cards unificados,
    arrastar-pra-fechar e o progresso da Apresentação só se confirmam na tela do palco.
-2. **Ordenar por menos tocadas** (usa a recência da v0.24.0) e **QR Code**.
+2. ✅ **Ordenar a lista** (alfabética/recência/menos tocadas — v0.40.0); falta o **QR Code**.
 3. **PWA instalável** — fecha o offline do app hospedado e **encerra a regra "arquivo único"**
    (ver seção "Horizonte"). Acessibilidade contínua que sobrou da análise: `:focus-visible` em
    botões/cards, subir `--muted` no dark, alvo da `.chip` da tagbar ≥44–48px.

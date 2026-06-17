@@ -1090,6 +1090,40 @@ const fallbackPull = await page.evaluate(async () => {
 });
 ok(fallbackPull, "Host não-GitHub continua puxando pelo link direto (fallback preservado)");
 
+// ===== v0.40.0 — Ordenar por menos tocadas (usa a recência da v0.24.0) =====
+const sortT = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id: "z", title: "Zeta", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });   // nunca tocada
+  songs.push({ id: "a", title: "Alpha", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });  // tocada há mais tempo
+  songs.push({ id: "m", title: "Mega", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });   // tocada recente
+  escalas.push({ id: "e1", title: "E1", date: "2026-01-01", done: true, team: [], items: [{ kind: "song", songId: "a", key: "", capo: 0 }], updatedAt: 1 });
+  escalas.push({ id: "e2", title: "E2", date: "2026-06-01", done: true, team: [], items: [{ kind: "song", songId: "m", key: "", capo: 0 }], updatedAt: 1 });
+  saveSongs(); saveEscalas();
+  switchTab("songs"); $("#search").value = ""; activeTag = null;
+  const titles = () => [...document.querySelectorAll("#songlist .songcard .c-ttl")].map(e => e.textContent);
+  settings.sortMode = "az"; saveSettings(); renderLibrary();
+  const az = titles();
+  settings.sortMode = "played"; saveSettings(); renderLibrary();
+  const played = titles();
+  settings.sortMode = "recent"; saveSettings(); renderLibrary();
+  const recent = titles();
+  const label = document.getElementById("sortBtn").textContent;
+  // a folha de escolha abre e marca o modo atual; escolher um modo aplica e persiste
+  document.getElementById("sortBtn").click();
+  const sheetTitle = document.getElementById("sheet-title").textContent;
+  const items = [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent);
+  [...document.querySelectorAll("#sheet-body .sheetitem")].find(e => /Alfab/.test(e.textContent)).click();
+  const persisted = settings.sortMode;
+  settings.sortMode = "az"; saveSettings();
+  return { az, played, recent, label, sheetTitle, items, persisted };
+});
+ok(JSON.stringify(sortT.az) === JSON.stringify(["Alpha", "Mega", "Zeta"]), "Ordem alfabética (A–Z)");
+ok(JSON.stringify(sortT.played) === JSON.stringify(["Zeta", "Alpha", "Mega"]), "Menos tocadas: nunca tocada no topo, depois da mais antiga p/ a mais recente");
+ok(JSON.stringify(sortT.recent) === JSON.stringify(["Mega", "Alpha", "Zeta"]), "Recentes: tocada há menos tempo no topo, nunca tocada por último");
+ok(/Recentes/.test(sortT.label), "Botão mostra o modo atual");
+ok(/Ordenar por/.test(sortT.sheetTitle) && sortT.items.length === 3, "Folha 'Ordenar por' oferece os 3 modos");
+ok(sortT.persisted === "az", "Escolher na folha aplica e persiste em settings.sortMode");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

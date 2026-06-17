@@ -112,6 +112,14 @@ input,textarea,select{font-family:inherit}
   border:1px solid var(--line);font-size:13.5px;color:var(--muted);font-weight:500}
 .chip.on{background:var(--gold);color:var(--accent-ink);border-color:transparent;font-weight:700}
 .count{font-size:12.5px;color:var(--muted);margin:2px 2px 12px;letter-spacing:.3px;text-transform:uppercase}
+/* cabeçalho da lista de cifras: contagem à esquerda, ordenação à direita (v0.40.0) */
+.libhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 2px 12px}
+.libhead .count{margin:0}
+.sortbtn{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-pill);
+  padding:6px 12px;font-size:var(--fs-xs);font-weight:600;color:var(--muted);
+  display:inline-flex;align-items:center;white-space:nowrap;flex:0 0 auto}
+.sortbtn:active{transform:scale(.96)}
+.sortbtn .ic-tx{width:15px;height:15px;margin-right:5px}
 /* gramática de card UNIFICADA (.songcard × .escard, M4): título → sub → faixa de pílulas.
    Mesma tipografia, mesmo respiro 8pt e o mesmo vocabulário de pílula nas duas telas irmãs. */
 .songcard,.escard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
@@ -483,7 +491,10 @@ input,textarea,select{font-family:inherit}
           <input class="search" id="search" placeholder="Buscar música, artista, tom…">
         </div>
         <div class="tagbar" id="tagbar"></div>
-        <div class="count" id="count"></div>
+        <div class="libhead">
+          <div class="count" id="count"></div>
+          <button class="sortbtn" id="sortBtn" aria-label="Mudar a ordem da lista"></button>
+        </div>
         <div id="songlist"></div>
       </div>
 
@@ -751,7 +762,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.39.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.40.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1185,7 +1196,9 @@ const ICONS={
   tabs:'<line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/>',
   clipboard:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
   eye:'<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
-  user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+  user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  "arrow-up-down":'<path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>'
 };
 function icon(name,cls){
   return '<svg class="ic-svg'+(cls?" "+cls:"")+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
@@ -1244,6 +1257,17 @@ function allTags(){
   songs.forEach(s=>(s.tags||[]).forEach(t=>t&&set.add(t)));
   return [...set].sort((a,b)=>a.localeCompare(b,"pt"));
 }
+// ordenação da lista (v0.40.0): rótulos curtos (botão) e a folha de escolha
+const SORT_LABEL={az:"A–Z", recent:"Recentes", played:"Menos tocadas"};
+function openSortSheet(){
+  const cur=settings.sortMode||"az";
+  const opt=(mode,label)=>({ic:icon(cur===mode?"check":"arrow-up-down"),label,fn:()=>{ settings.sortMode=mode; saveSettings(); closeSheet(); renderLibrary(); }});
+  openSheet("Ordenar por",[
+    opt("az","Alfabética (A–Z)"),
+    opt("recent","Tocadas recentemente"),
+    opt("played","Menos tocadas (dar vez)"),
+  ]);
+}
 function renderLibrary(){
   // tags
   const tags=allTags();
@@ -1257,12 +1281,23 @@ function renderLibrary(){
       tb.appendChild(c);
     });
   }
-  // filtro
+  // recência (v0.24.0) — calculada antes p/ poder ordenar "menos tocadas"
+  const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
+  // filtro + ordenação (v0.40.0): A–Z · tocadas recentemente · menos tocadas (dá vez ao esquecido)
   const q=$("#search").value.trim().toLowerCase();
-  let list=songs.slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),"pt"));
+  const byTitle=(a,b)=>String(a.title||"").localeCompare(String(b.title||""),"pt");
+  const mode=settings.sortMode||"az";
+  let list=songs.slice();
+  if(mode==="recent")        // por recência: tocadas há menos tempo no topo; nunca tocada ("") por último
+    list.sort((a,b)=>{ const ra=played[a.id]||"", rb=played[b.id]||""; return ra!==rb ? (ra<rb?1:-1) : byTitle(a,b); });
+  else if(mode==="played")   // menos tocadas: nunca tocada no topo; depois da mais antiga p/ a mais recente
+    list.sort((a,b)=>{ const ra=played[a.id]||"", rb=played[b.id]||""; return ra!==rb ? (ra<rb?-1:1) : byTitle(a,b); });
+  else
+    list.sort(byTitle);
   if(activeTag) list=list.filter(s=>(s.tags||[]).includes(activeTag));
   if(q) list=list.filter(s=>(s.title+" "+(s.artist||"")+" "+s.key+" "+(s.tags||[]).join(" ")).toLowerCase().includes(q));
 
+  $("#sortBtn").innerHTML = icon("arrow-up-down","ic-tx") + (SORT_LABEL[mode]||SORT_LABEL.az);
   $("#count").textContent = list.length+(list.length===1?" cifra":" cifras");
   const box=$("#songlist"); box.innerHTML="";
   if(!list.length){
@@ -1279,7 +1314,6 @@ function renderLibrary(){
     }
     return;
   }
-  const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
   list.forEach(s=>{
     const card=document.createElement("div");
     card.className="songcard";
@@ -2606,6 +2640,8 @@ $("#themeBtn").onclick=()=>{settings.theme=settings.theme==="light"?"dark":"ligh
 
 /* ---------- Busca ---------- */
 $("#search").oninput=renderLibrary;
+/* ordenação da lista (v0.40.0): abre a folha de escolha (A–Z · recentes · menos tocadas); persiste */
+$("#sortBtn").onclick=openSortSheet;
 
 /* ---------- Boot ---------- */
 $("#appVer").textContent="v"+APP_VERSION;

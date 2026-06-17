@@ -8,6 +8,20 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.40.0 — Ordenar a lista de cifras (alfabética · recência · menos tocadas)
+**Recurso (biblioteca).** Um seletor de ordem na lista de cifras, usando a recência da v0.24.0
+("última vez que tocamos", derivada das escalas confirmadas).
+- Botão **`#sortBtn`** no cabeçalho da lista (ao lado da contagem) abre a folha **"Ordenar por"**
+  com três modos (o atual marcado com ✓):
+  - **Alfabética (A–Z)** — padrão.
+  - **Tocadas recentemente** — as tocadas há menos tempo no topo; nunca tocadas por último.
+  - **Menos tocadas (dar vez)** — nunca tocadas no topo, depois da mais antiga para a mais recente.
+- A preferência **persiste** (`settings.sortMode`); o botão mostra o modo atual com ícone `arrow-up-down`.
+- Reusa `buildLastPlayed()`; nada de dado novo. Degrada bem sem escalas confirmadas (recência vira A–Z).
+- **201 verificações** (6 novas: os 3 modos, rótulo do botão, folha com 3 opções, persistência), zero erro de JS.
+
+---
+
 ## v0.39.0 — Pull lê o commit atual (sem atraso do GitHub Pages)
 **Recurso/correção (nuvem).** Resolve o "sincronizei e veio o arquivo velho". O pull lia o **link do
 GitHub Pages**, que é servido por CDN **e** depende de um *rebuild* do site após cada commit — logo
