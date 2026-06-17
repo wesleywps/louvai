@@ -217,6 +217,10 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   `settings.repoCloudApp`/`repoCloudAt` e `repoStatus` mostra "nuvem vX · publicada há Y". ⚠️ **Teste:**
   stubs sem `.json()` forçam o fallback (e travam num 2º fetch no padrão de promessa pendente) → os
   testes de pull silencioso usam host **não-GitHub**; o caminho GitHub tem teste próprio (`commitPull`).
+  **Decisão (2026-06):** o GitHub Pages deixou de ser essencial pro sync (a API faz tudo), mas **fica
+  mantido** — é o fallback, a URL que o `ghRepoFromUrl` entende, e dá pra inspecionar no navegador.
+  Para largar o Pages: estender `ghRepoFromUrl` p/ `github.com/owner/repo` + repo público + abrir mão
+  do fallback. Detalhe em `PLANO-repertorio-link.md`.
 - **Auto-sync ao abrir/voltar (v0.37.0–v0.38.0):** `settings.autoPull` (toggle `#auto-pull` no cartão
   *Baixar*, **off por padrão**). Boot chama `maybeAutoPull()` → `pullRepo({silent:true})`; o
   `visibilitychange` (voltar pro app) chama `maybeAutoPull({throttle:true})` com cooldown de 1 min

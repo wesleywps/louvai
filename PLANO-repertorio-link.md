@@ -29,6 +29,14 @@
 > fallback e, com promessa pendente (M6), travam o `await` num 2º fetch — por isso os testes de pull
 > silencioso usam host **não-GitHub** e o caminho GitHub tem teste próprio (`commitPull`). **195 verificações.**
 >
+> **Decisão registrada (2026-06):** depois da v0.39.0, o **GitHub Pages deixou de ser essencial** para
+> o sincronismo — publicar e puxar falam direto com a **API Contents** do repositório. **Decidimos
+> MANTER o Pages assim mesmo** (custo zero; é o **fallback** quando a API falha/limita; é a **URL que
+> o app entende hoje** — `ghRepoFromUrl` só parseia `owner.github.io/repo/path`; e dá pra inspecionar
+> o arquivo no navegador). Para **largar** o Pages no futuro seria preciso: (a) estender `ghRepoFromUrl`
+> p/ aceitar `github.com/owner/repo`; (b) manter o repo **público** (equipe puxa sem token); (c) abrir
+> mão do fallback pelo link. Enquanto isso não for decidido, **o Pages fica**.
+>
 > **Armadilhas/decisões registradas:**
 > - **Fura-cache só em http(s):** `data:`/`blob:` não aceitam query — o teste usa `data:` URL.
 > - `pullRepo` valida que o conteúdo é um tipo de repertório **antes** do `importJSON` (link
