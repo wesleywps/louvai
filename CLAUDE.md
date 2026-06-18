@@ -105,8 +105,9 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
     **grafia fiel ao tom**, parser de acordes, importação por colagem, escalas e
     **modo Apresentar** (barra compacta, Tom no Ajustes, "livro" entre músicas),
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
-    (`#imp=`) e a compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~201 verificações.)
+    (`#imp=`), **contagem ao sincronizar**, **detecção/validação de tom** e a
+    compatibilidade com o nome antigo.
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~244 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -146,9 +147,10 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
 ## Anatomia do `louvai.html` (onde mexer)
 - **Música/teoria:** `SHARP`/`FLAT`, `QUAL_RX`, `parseChord`, `transposeChord`,
   `transposeNote`, `isChord`, `isChordLine`, `isSectionLine`.
-- **Detecção de tom (v0.42.0):** `detectKey(chords)` (contagem diatônica ponderada nas 24
-  tonalidades; tabelas `DIA_MAJ`/`DIA_MIN`=natural∪harmônica; pesos `KW_*`/`KB_*` ajustáveis;
-  bônus de cadência decide relativas), `compareKey(informado,det)` (`ok|relative|mismatch|lowconf`
+- **Detecção de tom (v0.42.0, calibrada na v0.42.1):** `detectKey(chords)` (contagem diatônica
+  ponderada nas 24 tonalidades; tabelas `DIA_MAJ`/`DIA_MIN`=natural∪harmônica; pesos `KW_*`/`KB_*`
+  ajustáveis + penalidade `KW_OFF` p/ acorde fora do tom — evita alarme falso em cifra terminando
+  no IV/V; bônus de cadência decide relativas), `compareKey(informado,det)` (`ok|relative|mismatch|lowconf`
   — relativa e baixa confiança não alarmam), `songChords(body)`, `triadOf`/`isDomChord` (reusam
   `chordIntervals`). UI: toggle `#checkkey-toggle` (`settings.checkKey`, off) no ⚙ Afinação +
   aviso `#keycheck` pintado em `updateKeyCheck()` (no fim do `drawPlayer`). Reusa `parseChord`

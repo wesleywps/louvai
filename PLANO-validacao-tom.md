@@ -25,8 +25,9 @@ sem nunca alterar nada sozinho ("nada salvo no escuro"). Ajuda no domingo: cifra
   empatam na contagem crua. O **desempate é a tônica/cadência**: o **último acorde** é quase
   sempre a tônica (Wikipedia *Relative key*; AP Music Theory). Daí o bônus de cadência.
 - **Emprestados/secundários:** acordes de fora do diatônico "duram pouco e não mudam o centro
-  tonal" — então **não pontuam, mas também não penalizam** (peso 0). Um `Bb` no tom de C ou um
-  `A7` (V/ii) não jogam a detecção pra outro tom.
+  tonal". Levam uma **pequena penalidade** (`KW_OFF`, ver "armadilha v0.42.1" abaixo) — leve o
+  bastante para que um `Bb` no tom de C ou um `A7` (V/ii) **não** joguem a detecção pra outro tom
+  (a tônica/cadência do tom certo compensa; e progressão muito cromática vira `lowconf`).
 - **Krumhansl-Schmuckler** é a referência conceitual (correlacionar distribuição observada ×
   perfil-modelo por tom), mas trabalha com **notas/duração** e ignora **ordem temporal**. Numa
   cifra só temos a **sequência de acordes**; por isso usamos **contagem diatônica ponderada por
@@ -49,19 +50,30 @@ sem nunca alterar nada sozinho ("nada salvo no escuro"). Ajuda no domingo: cifra
 
 ### Pesos calibrados (ajustáveis — os testes travam o COMPORTAMENTO, não os números)
 ```
-KW_TONIC = 2   // acorde de tônica (grau 0)
-KW_DOM   = 2   // dominante (grau 7) — +0.5 se for V7 de fato
-KW_DIA   = 1   // demais graus diatônicos (inclui IV — sem peso extra)
-KB_FIRST = 1   // 1º acorde == tônica
-KB_LAST  = 4   // último acorde == tônica  ← desempate dominante entre relativas
+KW_TONIC = 2    // acorde de tônica (grau 0)
+KW_DOM   = 2    // dominante (grau 7) — +0.5 se for V7 de fato
+KW_DIA   = 1    // demais graus diatônicos (inclui IV — sem peso extra)
+KW_OFF   = -2   // acorde FORA do diatônico (penalidade leve) — v0.42.1
+KB_FIRST = 2    // 1º acorde == tônica
+KB_LAST  = 4    // último acorde == tônica
 ```
-> **Armadilha aprendida (calibragem):** os pesos de exemplo do desenho original
+> **Armadilha 1 (calibragem inicial):** os pesos de exemplo do desenho original
 > (tônica 3 / dom 2.5 / subdom 1.5 / bônus 1·2) **não** decidiam a relativa pela cadência — o
-> peso extra de subdominante (IV) enviesa sistematicamente pro **maior** (o IV/V do maior são
-> funções "fortes"; o VI/VII do menor não), empatando ou vencendo o bônus do último acorde.
-> **Correção:** tirar o peso especial do IV (vira `KW_DIA`) e **subir `KB_LAST` para 4**, de modo
-> que o **último acorde** (≈ tônica) seja o desempate decisivo entre relativas. Verificado:
-> `C F G Am`→Am e `Am F G C`→C (mesmos acordes, decide pela cadência).
+> peso extra de subdominante (IV) enviesa pro **maior**. **Correção:** tirar o peso especial do IV
+> (vira `KW_DIA`) e dar peso ao **último acorde** (`KB_LAST=4`) como desempate de relativas.
+>
+> **Armadilha 2 (validação adversarial, v0.42.1) — FALSO ALARME:** com `KB_LAST=4` e acorde de fora
+> valendo **0**, uma cifra que termina no **IV** ou no **V** (a folha de louvor mais comum,
+> I–V–vi–IV escrita uma vez: `C G Am F`) elegia o **IV** como tônica — o último acorde (F) ganhava
+> 4 pontos como "tônica de F maior" e vencia o tom verdadeiro C, gerando `mismatch` num tom **certo**
+> (~13% das cifras testadas). O `PLANO` só tinha verificado casos que **terminam na tônica**
+> (`C F G Am`→Am), nunca o simétrico. **Correção:** penalizar levemente acorde fora do diatônico
+> (`KW_OFF=-2`) — assim a tonalidade que encaixa **todos** os acordes vence a que "erra" um (no
+> `C G Am F`, F-maior tem o **G** como não-diatônico) — e equiparar `KB_FIRST=2` (o 1º acorde é
+> pista de tônica tão confiável quanto o último e **não** sofre com a folha listar só um ciclo).
+> Verificado contra as 6 progressões I–V–vi–IV / vi–IV–I–V mais comuns (todas viram `ok`/`lowconf`,
+> nunca `mismatch`), mantendo `C F G Am`→Am, `Am F G C`→C e o mismatch genuíno (diz G, é D → avisa).
+> **Lição:** validar a detecção contra cifras que terminam fora da tônica, não só nas que resolvem.
 
 ## UI (sinalização discreta — só sugestão)
 - Toggle **`#checkkey-toggle`** em **⚙ Ajustes da cifra → Afinação** ("Conferir tom pelos

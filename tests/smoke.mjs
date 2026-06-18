@@ -1281,6 +1281,52 @@ ok(keyUI.okHidden, "Conferir tom ON mas tom certo (C, acordes em C): sem aviso")
 const keyImport = await page.evaluate(() => parseImport("Minha Canção\n\nG  Am  F  C\nLetra\nG  C").key);
 ok(keyImport === "C", "parseImport sem 'Tom:' usa detectKey: sugere a tônica C (não o 1º acorde G)");
 
+// ===== v0.42.1 — correções pós-validação: alarme falso (IV/V terminal) + idempotência do sync =====
+const noFalseAlarm = await page.evaluate(() => {
+  // loops de louvor MUITO comuns, com o tom CORRETO informado, terminando no IV ou no V:
+  // o recurso NÃO pode acusar mismatch (era o bug da v0.42.0 — KB_LAST elegia o IV/V como tônica).
+  const cases = [
+    ["C", ["C","G","Am","F"]],    // I–V–vi–IV (termina no IV)
+    ["C", ["Am","F","C","G"]],    // vi–IV–I–V (termina no V)
+    ["D", ["D","A","Bm","G"]],
+    ["A", ["A","E","F#m","D"]],
+    ["E", ["E","B","C#m","A"]],
+    ["G", ["G","D","Em","C"]],
+  ];
+  const offenders = cases.filter(([k, prog]) => compareKey(k, detectKey(prog)).status === "mismatch")
+                         .map(([k, prog]) => k + ": " + prog.join(" "));
+  const real = compareKey("G", detectKey(["D","G","A","D"]));         // mismatch GENUÍNO (diz G, é D) ainda acusa
+  const invalid = compareKey("", detectKey(["C","F","G","C"])).status;   // tom vazio não opina
+  const garbage = compareKey("xyz", detectKey(["C","F","G","C"])).status; // tom inválido não assume "C"
+  return { offenders, realStatus: real.status, realProb: real.probableName, invalid, garbage };
+});
+ok(noFalseAlarm.offenders.length === 0, "Sem alarme falso em loops terminando no IV/V com tom certo" + (noFalseAlarm.offenders.length ? ": " + noFalseAlarm.offenders.join(" | ") : ""));
+ok(noFalseAlarm.realStatus === "mismatch" && noFalseAlarm.realProb === "D", "Mismatch genuíno (diz G, é D) ainda é sinalizado (recurso não cegou)");
+ok(noFalseAlarm.invalid === "lowconf" && noFalseAlarm.garbage === "lowconf", "Tom informado vazio/inválido → lowconf (não assume C, não mascara mismatch)");
+
+const syncIdem = await page.evaluate(async () => {
+  const real = window.fetch;
+  history.replaceState(null, "", location.href.split("#")[0]);
+  const T = () => document.getElementById("toast").textContent;
+  const snap = { type:"louvai-full",
+    songs:[{id:"i1",title:"Idem",key:"C",capo:0,tags:[],updatedAt:5,body:"C"}],
+    escalas:[{id:"ie1",title:"IdemE",date:"2026-01-01",team:[],items:[],updatedAt:5}] };
+  window.fetch = async () => ({ ok:true, status:200, text: async () => JSON.stringify(snap) });
+  settings.repoUrl = "https://louvai-teste.example/louvai.json"; settings.autoPull = false; saveSettings();
+  songs.length = 0; escalas.length = 0; saveSongs(); saveEscalas(); closeSheet();
+  await pullRepo(); const first = T();           // 1º pull: traz tudo
+  await pullRepo(); const second = T();          // 2º pull do MESMO snapshot (updatedAt iguais) → nada novo
+  const tEl = document.getElementById("toast"); tEl.classList.remove("show"); tEl.textContent = "SENTINELA";
+  settings.autoPull = true; saveSettings(); lastAutoSync = 0;
+  await maybeAutoPull();                          // auto-sync silencioso no estado estável
+  const silentTxt = tEl.textContent, silentShown = tEl.classList.contains("show");
+  window.fetch = real; settings.autoPull = false; settings.repoUrl = ""; saveSettings();
+  return { first, second, silentTxt, silentShown };
+});
+ok(/Sincronizado: \+1 música, \+1 escala/.test(syncIdem.first), "1º pull traz a novidade (+1 música, +1 escala)");
+ok(syncIdem.second === "Já está tudo sincronizado", "Re-pull idêntico (timestamps iguais) → 'Já está tudo sincronizado' (não 'atualizada')");
+ok(syncIdem.silentTxt === "SENTINELA" && !syncIdem.silentShown, "Auto-sync silencioso no estado estável não emite toast (silêncio real)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

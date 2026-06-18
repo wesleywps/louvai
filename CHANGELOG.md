@@ -8,6 +8,33 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.42.1 — Correções pós-validação (alarme falso de tom · sync idempotente)
+**Correção.** Uma rodada de validação adversarial (3 validadores) pegou dois defeitos reais nas
+entregas v0.41.0/v0.42.0, além de dois ajustes finos:
+- **Alarme falso de tom (grave) — cifra terminando no IV ou no V.** A v0.42.0 dava o bônus de
+  cadência ao acorde final como se ele fosse a tônica. Na folha de louvor mais comum (I–V–vi–IV
+  escrita uma vez, ex.: `C G Am F`), o **IV** (F) ganhava o bônus e era eleito tônica → o recurso
+  acusava "Tom informado: C · provável: F" numa cifra de **tom certo** (taxa medida ~13% dos casos;
+  pior nas músicas mais tocadas no domingo). **Causa:** acorde de fora do diatônico tinha peso 0; o
+  tom verdadeiro (que encaixa **todos** os acordes) não se distinguia do IV-como-tônica (que "erra"
+  um acorde). **Correção:** pequena **penalidade** para acorde fora do diatônico (`KW_OFF`) + bônus
+  do **1º acorde** equiparado ao do último (`KB_FIRST` 1→2). Agora a tonalidade que encaixa tudo
+  vence, e os loops ambíguos caem em `lowconf` (sem alarme). Bateria de regressão com as 6 progressões
+  I–V–vi–IV / vi–IV–I–V mais comuns + guarda de que o **mismatch genuíno** continua sinalizando.
+- **Sync "criava" novidade falsa (médio).** `mergeSongs`/`mergeEscala` contavam como "atualizada"
+  qualquer item com `updatedAt ≥` o local — então **re-puxar o mesmo snapshot** (timestamps iguais)
+  contava atualização e o **auto-sync silencioso** soltava um toast a **cada reabertura** do app,
+  contrariando a promessa da v0.41.0. **Correção:** sobrescreve no empate (nuvem ganha), mas só
+  **conta** quando é **estritamente mais novo**. Re-pull idêntico → "Já está tudo sincronizado"
+  (manual) e **silêncio** (auto-sync). Teste: dois pulls do mesmo snapshot.
+- **`compareKey` com tom informado vazio/inválido** assumia "C" (podia mascarar um mismatch real) →
+  agora retorna `lowconf` (não opina).
+- **Contraste do aviso de tom no tema claro:** o `#keycheck` em âmbar herdava a cor de fundo escuro;
+  no claro usa um âmbar mais escuro (legível com sol no palco), sem mexer no `--warn` do toast.
+- **244 verificações** (6 novas), zero erro de JS. Detalhe da calibragem em `PLANO-validacao-tom.md`.
+
+---
+
 ## v0.42.0 — Conferir o tom pelos acordes (recurso opcional)
 **Recurso (música/teoria).** Confere se o **tom informado** da música (`song.key`) condiz com os
 **acordes escritos** na cifra e, quando não condiz, avisa de forma discreta **qual o informado e

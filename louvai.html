@@ -227,6 +227,8 @@ input,textarea,select{font-family:inherit}
 .sheetctrls .ctrl.actions .grp button{flex:1}
 /* aviso discreto de divergência de tom (recurso opcional "Conferir tom"): é SUGESTÃO, cor de aviso suave (não vermelho) */
 .keyhint{font-size:12.5px;line-height:1.45;color:var(--warn);padding:6px 4px 2px}
+/* no claro, âmbar mais escuro p/ contraste legível com sol no palco (sem mexer no --warn do toast) */
+body.light .keyhint{color:#b45309}
 /* título da música na barra de UMA linha (player normal); some no modo Apresentar */
 .p-titlebar{flex:1;min-width:0;font-size:16px;font-weight:700;letter-spacing:-.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
@@ -768,7 +770,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.42.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.42.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -980,13 +982,18 @@ function transposeChord(tok, semis, ctx){
    24 tonalidades (12 maiores + 12 menores) — tônica e dominante pesam mais; o 1º e
    (sobretudo) o ÚLTIMO acorde dão bônus de cadência. Esse bônus é o que separa uma
    tonalidade da sua RELATIVA (compartilham os mesmos acordes — só muda quem é a tônica).
-   Acorde de fora não pontua mas NÃO penaliza (emprestado/secundário não derruba a detecção).
+   Acorde de fora do diatônico leva uma PEQUENA penalidade (`KW_OFF`): distingue a tonalidade que
+   encaixa TODOS os acordes daquela que "erra" um. Sem isso, a folha de louvor mais comum (I–V–vi–IV
+   escrita uma vez, ex.: C G Am F) termina no IV e o bônus do último acorde elegia o IV como tônica
+   (F) → alarme falso num tom CERTO (corrigido na v0.42.1). A penalidade é leve e compensada pela
+   tônica/cadência do tom certo; com muitos acordes de fora a confiança cai → `lowconf` (sem alarme),
+   então emprestado/secundário ainda não derruba a detecção.
    Reusa parseChord/chordIntervals (fonte da verdade, regra nº3) — sem regex de acorde própria.
    Os pesos são heurísticos e ajustáveis; os testes travam o COMPORTAMENTO, não os números. */
 const DIA_MAJ = {0:"maj",2:"min",4:"min",5:"maj",7:"maj",9:"min",11:"dim"};
 // menor = união natural ∪ harmônica; grau 7 aceita V maior (harmônica) E v menor (natural)
 const DIA_MIN = {0:"min",2:"dim",3:"maj",5:"min",7:"maj",8:"maj",10:"maj",11:"dim"};
-const KW_TONIC=2, KW_DOM=2, KW_DIA=1, KB_FIRST=1, KB_LAST=4;   // pesos por função + bônus de cadência
+const KW_TONIC=2, KW_DOM=2, KW_DIA=1, KW_OFF=-2, KB_FIRST=2, KB_LAST=4;   // função + penalidade fora-do-tom + cadência
 // reduz o sufixo de um acorde à tríade {maj,min,dim,aug,sus} via chordIntervals (trata sus/add/7…)
 function triadOf(suffix){
   const iv=chordIntervals(suffix), has=n=>iv.includes(n);
@@ -1019,7 +1026,7 @@ function chordWeight(ch, tonic, mode){
   let ok;
   if(mode && deg===7) ok = (ch.triad==="maj"||ch.triad==="min"||ch.triad==="sus");   // V maior OU v menor do tom menor
   else { const exp=(mode?DIA_MIN:DIA_MAJ)[deg]; ok = exp && (ch.triad===exp || ch.triad==="sus"); }
-  if(!ok) return 0;
+  if(!ok) return KW_OFF;   // acorde fora do diatônico: pequena penalidade (vê o IV/V-terminal certo)
   if(deg===0) return KW_TONIC;
   if(deg===7) return KW_DOM + (ch.dom?0.5:0);
   return KW_DIA;
@@ -1053,7 +1060,9 @@ function keyName(pc,minor){ return minor?PREF_MIN[pc]:PREF_MAJ[pc]; }
 // relativa (mesmas notas) e baixa confiança NUNCA viram alarme (honestidade > falso-positivo).
 function compareKey(informed, det){
   if(!det || det.lowData || det.confidence<0.15) return {status:"lowconf"};
-  const iPc=NOTE_IDX[keyRoot(String(informed||""))], iMin=keyIsMinor(String(informed||""));
+  const inf=String(informed||"");
+  if(!/^[A-G][#b]?/.test(inf)) return {status:"lowconf"};   // tom informado vazio/inválido → não opina (não assume "C")
+  const iPc=NOTE_IDX[keyRoot(inf)], iMin=keyIsMinor(inf);
   if(iPc==null) return {status:"lowconf"};
   if(iPc===det.pc && iMin===det.minor) return {status:"ok", informedName:keyName(iPc,iMin), probableName:det.key};
   if(iMin!==det.minor){                                   // uma maior, outra menor → pode ser relativa
@@ -2284,7 +2293,10 @@ function mergeSongs(arr, policy){
     if(s.artist!=null) s.artist=String(s.artist);
     s.tags=s.tags||[]; s.capo=s.capo||0; s.updatedAt=s.updatedAt||Date.now();
     const ex=s.id&&songs.find(x=>x.id===s.id);
-    if(ex){ if((s.updatedAt||0)>=(ex.updatedAt||0)){Object.assign(ex,s);updated++;} return; }
+    // sobrescreve com updatedAt ≥ (nuvem ganha empate), mas só CONTA como atualizada se for
+    // ESTRITAMENTE mais nova — senão re-puxar o mesmo snapshot (timestamps iguais) "criaria" novidade
+    // falsa e o auto-sync silencioso falaria a cada reabertura (v0.42.1).
+    if(ex){ if((s.updatedAt||0)>=(ex.updatedAt||0)){ if((s.updatedAt||0)>(ex.updatedAt||0)) updated++; Object.assign(ex,s); } return; }
     // sem match por id: pode ser título repetido (mesma música, id diferente).
     if(policy==="mine"){
       const byTitle=songs.find(x=>normTitle(x.title)===normTitle(s.title));
@@ -2334,7 +2346,7 @@ function mergeEscala(inc, remap){
   inc.updatedAt=inc.updatedAt||Date.now();
   if(Array.isArray(inc.items)) inc.items.forEach(it=>{ if(it&&it.songId&&remap&&remap[it.songId]) it.songId=remap[it.songId]; });
   const ix=inc.id?escalas.findIndex(x=>x.id===inc.id):-1;
-  if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)){ escalas[ix]=inc; return "upd"; } return ""; }
+  if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)){ const upd=(inc.updatedAt||0)>(escalas[ix].updatedAt||0); escalas[ix]=inc; return upd?"upd":""; } return ""; }   // só conta "upd" se ESTRITAMENTE mais nova (re-pull idêntico = sem novidade, v0.42.1)
   if(!inc.id||escalas.some(x=>x.id===inc.id)) inc.id=uid();
   escalas.push(inc); return "add";
 }
