@@ -8,6 +8,32 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.41.0 — Sincronizar diz quantas músicas e escalas vieram/foram
+**Recurso (nuvem).** Ao sincronizar, o app agora informa **a contagem** — tanto no **download**
+("Atualizar do link" / auto-sync) quanto no **upload** ("Publicar na nuvem"). Antes o pull dizia
+"Atualizado: N cifra(s)" e o publish só "Publicado na nuvem"; faltava clareza de quanto rolou.
+- **Download (pull):** com novidade, `toast` **"Sincronizado: +2 músicas, +1 escala"** (ordem:
+  músicas novas → músicas atualizadas → escalas novas → escalas atualizadas). Sem nada novo, o pull
+  **manual** diz **"Já está tudo sincronizado"** (antes mostrava "Atualizado: 0 cifra(s)", confuso);
+  o **auto-sync silencioso** continua **calado** quando não há novidade (só fala quando há).
+- **Upload (publish):** no sucesso, `toast` **"Publicado: 12 músicas e 3 escalas"** (o total que foi
+  pra nuvem — responde "quantas foram") + um **delta opcional** entre parênteses quando há entradas/
+  saídas: **"(cifras +1 · escalas −1)"**.
+- **Plural pt-BR** correto via helper `pl(n,sing,plur)` ("1 música" vs "3 músicas", "1 escala" vs
+  "2 escalas").
+- **Como:** as contagens já existiam — `mergeSongs` devolve `{added, updated}`, `diffRepo` conta
+  cifras/escalas +/− por id. Faltava (a) contar **escalas atualizadas**: `mergeEscala` passa a
+  devolver `"add"|"upd"|""` (em vez de booleano) e o `doImport` soma `escUpd`; e (b) surfaçar tudo
+  nos toasts via `pl()` e o novo `pubLabel(d)`.
+- **Assimetria honesta:** o **upload não reporta "atualizadas"** — o `diffRepo` compara presença de
+  `id` (entrou/saiu), não conteúdo; então o publish fala "total enviado + novas/removidas", e só o
+  download distingue "atualizadas". (Não é bug; é o que o diff sabe.)
+- **221 verificações** (12 novas: download com novidade/singular/atualizadas/escala-atualizada/sem-
+  novidade/silencioso-com-e-sem-novidade; upload 1ª-vez/singular/delta/remoção/só-atualização),
+  zero erro de JS.
+
+---
+
 ## v0.40.1 — "Intro" não vira mais o artista na importação
 **Correção (importar colando).** Ao colar uma cifra, o cabeçalho do `parseImport` junta até
 duas linhas (título e artista) e só parava ao encontrar uma linha de acordes, uma seção

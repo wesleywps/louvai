@@ -762,7 +762,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.40.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.41.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1130,6 +1130,8 @@ function fmtAgo(ts){
   if(d<30) return "há "+Math.floor(d/7)+" semana(s)";
   return "há mais de um mês";
 }
+// plural pt-BR simples p/ as contagens de sync: pl(1,"música","músicas") → "1 música"
+function pl(n, sing, plur){ return n+" "+(n===1?sing:plur); }
 function hasRealContent(){ return songs.length>1 || escalas.length>0; }   // demo sozinho não conta (não enche o saco)
 function backupDue(){
   if(!hasRealContent()) return false;
@@ -2043,6 +2045,18 @@ function diffNote(d){
   if(d.sRem>0||d.eRem>0) n+=" — vai REMOVER itens da nuvem. Você atualizou do link antes?";
   return n;
 }
+// rótulo do toast de SUCESSO ao publicar: "Publicado: N músicas e M escalas" (total enviado),
+// + delta opcional "(cifras +A −R · escalas +A −R)" quando há entradas/saídas. Reporta o TOTAL
+// (responde "quantas foram pra nuvem"); o delta é a rede de segurança. Upload não tem "atualizadas"
+// (o diff é por presença de id, não por conteúdo) — por isso só total + novas/removidas.
+function pubLabel(d){
+  const base="Publicado: "+pl(d.sTotal,"música","músicas")+" e "+pl(d.eTotal,"escala","escalas");
+  if(d.first) return base;
+  const seg=[], s=[], e=[];
+  if(d.sAdd) s.push("+"+d.sAdd); if(d.sRem) s.push("−"+d.sRem); if(s.length) seg.push("cifras "+s.join(" "));
+  if(d.eAdd) e.push("+"+d.eAdd); if(d.eRem) e.push("−"+d.eRem); if(e.length) seg.push("escalas "+e.join(" "));
+  return base+(seg.length?" ("+seg.join(" · ")+")":"");
+}
 // escreve o snapshot no louvai.json via API Contents do GitHub (token fino, do aparelho)
 async function publishRepo(){
   const token=(settings.ghToken||"").trim();
@@ -2087,7 +2101,7 @@ async function doPublish(api, headers, sha, d){
     if(typeof cur2==="string"){ toast("Mudou na nuvem — atualize e tente de novo","err"); return; }
     try{ res=await put(cur2.sha); }catch(e){ toast("Não consegui publicar — sem internet?","err"); return; }
   }
-  if(res.ok){ settings.repoPublishedAt=Date.now(); settings.repoCloudApp=APP_VERSION; settings.repoCloudAt=env.publishedAt; saveSettings(); toast("Publicado na nuvem"+diffLabel(d),"ok"); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
+  if(res.ok){ settings.repoPublishedAt=Date.now(); settings.repoCloudApp=APP_VERSION; settings.repoCloudAt=env.publishedAt; saveSettings(); toast(pubLabel(d),"ok"); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
   else if(res.status===401||res.status===403) toast("Token inválido ou sem permissão","err");
   else if(res.status===409) toast("Mudou na nuvem — atualize e tente de novo","err");
   else toast("Não consegui publicar (erro "+res.status+")","err");
@@ -2191,15 +2205,17 @@ function importJSON(text, opts){
   doImport(data,tp,incoming, silent?"mine":"both", opts);
 }
 // funde UMA escala (dedup por id; só sobrescreve com updatedAt ≥). `remap` reescreve as
-// referências de cifra quando o usuário escolheu "manter as minhas". Retorna true se ADICIONOU.
+// referências de cifra quando o usuário escolheu "manter as minhas". Retorna "add" (nova),
+// "upd" (atualizou uma existente) ou "" (ignorou) — p/ a contagem do sync distinguir
+// escalas novas × atualizadas (padrão de código de string já usado em ghGetCurrent).
 function mergeEscala(inc, remap){
-  if(!inc) return false;
+  if(!inc) return "";
   inc.updatedAt=inc.updatedAt||Date.now();
   if(Array.isArray(inc.items)) inc.items.forEach(it=>{ if(it&&it.songId&&remap&&remap[it.songId]) it.songId=remap[it.songId]; });
   const ix=inc.id?escalas.findIndex(x=>x.id===inc.id):-1;
-  if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)) escalas[ix]=inc; return false; }
+  if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)){ escalas[ix]=inc; return "upd"; } return ""; }
   if(!inc.id||escalas.some(x=>x.id===inc.id)) inc.id=uid();
-  escalas.push(inc); return true;
+  escalas.push(inc); return "add";
 }
 function doImport(data,tp,incoming,policy,opts){
   const silent=!!(opts&&opts.silent);
@@ -2216,15 +2232,17 @@ function doImport(data,tp,incoming,policy,opts){
   // Snapshot da nuvem: repertório + escalas juntos
   if(tp==="louvai-full"){
     const {added,updated,remap}=mergeSongs(incoming,policy);
-    let escAdd=0;
-    (data.escalas||[]).forEach(e=>{ if(mergeEscala(e, remap)) escAdd++; });
+    let escAdd=0,escUpd=0;
+    (data.escalas||[]).forEach(e=>{ const r=mergeEscala(e, remap); if(r==="add") escAdd++; else if(r==="upd") escUpd++; });
     saveSongs(); saveEscalas(); renderLibrary(); renderEscalas();
-    if(!silent){
-      toast("Atualizado: "+added+" cifra(s)"+(updated?", "+updated+" atual.":"")+(escAdd?", "+escAdd+" escala(s)":""));
-    }else if(added||updated||escAdd){   // auto-sync: avisa só quando há novidade de verdade
-      const parts=[]; if(added) parts.push("+"+added+" cifra(s)"); if(updated) parts.push(updated+" atualizada(s)"); if(escAdd) parts.push("+"+escAdd+" escala(s)");
-      toast("Sincronizado: "+parts.join(", "),"ok");
-    }
+    // contagem: músicas novas → músicas atualizadas → escalas novas → escalas atualizadas
+    const parts=[];
+    if(added)   parts.push("+"+pl(added,"música","músicas"));
+    if(updated) parts.push(pl(updated,"música atualizada","músicas atualizadas"));
+    if(escAdd)  parts.push("+"+pl(escAdd,"escala","escalas"));
+    if(escUpd)  parts.push(pl(escUpd,"escala atualizada","escalas atualizadas"));
+    if(parts.length) toast("Sincronizado: "+parts.join(", "),"ok");   // manual e auto-sync: anuncia a novidade
+    else if(!silent) toast("Já está tudo sincronizado","ok");          // só o pull manual fala quando não há nada novo (auto-sync cala)
     return;
   }
   const {added,updated}=mergeSongs(incoming,policy);

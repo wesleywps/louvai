@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.40.1**.
+seguir. Atualizado até a **v0.41.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -101,6 +101,7 @@ instalação complexa.
 | **v0.39.0** | recurso | **Pull pelo commit atual:** lê o `louvai.json` pela API Contents do GitHub (não o link do Pages) — reflete a publicação na hora, sem o atraso do rebuild/CDN; fallback p/ link em rate-limit/host não-GitHub; mostra "nuvem vX · publicada há Y". Ver `PLANO-repertorio-link.md`. |
 | **v0.40.0** | recurso | **Ordenar a lista de cifras:** folha "Ordenar por" com 3 modos — **Alfabética**, **Tocadas recentemente** e **Menos tocadas** (usa a recência da v0.24.0); preferência persiste. |
 | **v0.40.1** | correção | **"Intro" não vira mais o artista ao colar:** rótulos de seção "pelados" (sem `[ ]` nem `:`) — `Intro`, `Introd.`, `Verso 1`… — encerram o cabeçalho do `parseImport` (lista `SECTION_WORDS_RE`, só na importação); `isSectionLine`/exibição intactas. |
+| **v0.41.0** | recurso | **Sincronizar diz a contagem:** download → "Sincronizado: +2 músicas, +1 escala" (ou "Já está tudo sincronizado"); upload → "Publicado: 12 músicas e 3 escalas (cifras +1)". Plural pt-BR (`pl()`); `mergeEscala` passa a contar escalas atualizadas; auto-sync silencioso só fala com novidade. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -281,4 +282,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.40.1.*
+*Última atualização deste roteiro: v0.41.0.*

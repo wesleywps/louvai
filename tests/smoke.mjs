@@ -830,7 +830,8 @@ ok(pub.get && pub.put, "Confirmar publica: busca o sha (GET) e escreve (PUT)");
 ok(pub.auth === "Bearer tok123", "PUT vai com Authorization: Bearer <token>");
 ok(pub.hasSha && /"type":"louvai-full"/.test(pub.content), "PUT envia o snapshot (louvai-full) em base64, com o sha");
 ok(pub.at, "Publicar registra a data da última publicação");
-ok(/Publicado/.test(await page.locator("#toast").textContent()), "Toast confirma o envio (Publicado na nuvem ✓)");
+const pubToast = await page.locator("#toast").textContent();
+ok(/Publicado: 1 música e 0 escalas/.test(pubToast) && /cifras \+1 −1/.test(pubToast), "Toast de publicar conta músicas/escalas + delta (v0.41.0)");
 // sem token / URL não-GitHub: avisa sem tocar a rede
 await page.evaluate(async () => { settings.ghToken = ""; settings.repoUrl = "https://wesleywps.github.io/louvai/louvai.json"; await publishRepo(); });
 await page.waitForTimeout(80);
@@ -1148,6 +1149,77 @@ ok(introT.tituloSecao.title === "Introdução", "Título que é palavra de seç�
 ok(introT.artistaOk.title === "Musica Importada" && introT.artistaOk.artist === "Artista X", "Artista legítimo continua capturado (sem regressão)");
 ok(introT.soloDeo.artist === "Solo Deo", "Nome que só começa com palavra de seção ('Solo Deo') continua artista (regex ancora em $)");
 ok(introT.secBare === false && introT.secBracket === true, "isSectionLine intacta: 'Intro' pelado não é seção na exibição, '[Intro]' é");
+
+// ===== v0.41.0 — contagem ao sincronizar: DOWNLOAD (pull manual e silencioso) =====
+const syncDl = await page.evaluate(async () => {
+  const real = window.fetch;
+  history.replaceState(null, "", location.href.split("#")[0]);   // sem #imp= (guard do maybeAutoPull)
+  const T = () => document.getElementById("toast").textContent;
+  const setSnap = snap => { window.fetch = async () => ({ ok: true, status: 200, text: async () => JSON.stringify(snap) }); };
+  const reset = (s, e) => { songs.length = 0; escalas.length = 0; (s||[]).forEach(x=>songs.push(x)); (e||[]).forEach(x=>escalas.push(x)); saveSongs(); saveEscalas(); closeSheet(); };
+  settings.repoUrl = "https://louvai-teste.example/louvai.json"; settings.autoPull = false; saveSettings();   // host não-GitHub: fetch direto
+  const out = {};
+  // 1) novidade: 2 músicas novas + 1 escala nova
+  reset();
+  setSnap({ type:"louvai-full", songs:[{id:"d1",title:"Um",key:"C",capo:0,tags:[],updatedAt:9,body:"C"},{id:"d2",title:"Dois",key:"C",capo:0,tags:[],updatedAt:9,body:"C"}], escalas:[{id:"de1",title:"Culto",date:"2026-01-01",team:[],items:[],updatedAt:9}] });
+  await pullRepo(); out.novidade = T();
+  // 2) singular: 1 música nova
+  reset();
+  setSnap({ type:"louvai-full", songs:[{id:"s1",title:"Só Uma",key:"C",capo:0,tags:[],updatedAt:9,body:"C"}], escalas:[] });
+  await pullRepo(); out.singular = T();
+  // 3) música atualizada (mesmo id, updatedAt maior)
+  reset([{id:"a",title:"Atual",key:"C",capo:0,tags:[],updatedAt:1,body:"C"}]);
+  setSnap({ type:"louvai-full", songs:[{id:"a",title:"Atual",key:"D",capo:0,tags:[],updatedAt:9,body:"D"}], escalas:[] });
+  await pullRepo(); out.atualizada = T();
+  // 4) escala atualizada (mergeEscala 'upd') + 1 música nova
+  reset([], [{id:"e1",title:"E1",date:"2026-01-01",team:[],items:[],updatedAt:1}]);
+  setSnap({ type:"louvai-full", songs:[{id:"n1",title:"Nova",key:"C",capo:0,tags:[],updatedAt:9,body:"C"}], escalas:[{id:"e1",title:"E1",date:"2026-01-01",team:[],items:[],updatedAt:9}] });
+  await pullRepo(); out.escAtual = T();
+  // 5) sem nada novo (nuvem mais antiga): "Já está tudo sincronizado"
+  reset([{id:"x",title:"X",key:"C",capo:0,tags:[],updatedAt:9,body:"C"}]);
+  setSnap({ type:"louvai-full", songs:[{id:"x",title:"X",key:"C",capo:0,tags:[],updatedAt:1,body:"C"}], escalas:[] });
+  await pullRepo(); out.semNovidade = T();
+  // 6) silencioso COM novidade → fala
+  reset();
+  setSnap({ type:"louvai-full", songs:[], escalas:[{id:"se",title:"Silenc",date:"2026-01-01",team:[],items:[],updatedAt:9}] });
+  settings.autoPull = true; saveSettings(); lastAutoSync = 0;
+  await maybeAutoPull(); out.silentNov = T();
+  // 7) silencioso SEM novidade → cala (toast permanece na sentinela, sem 'show')
+  reset([{id:"y",title:"Y",key:"C",capo:0,tags:[],updatedAt:9,body:"C"}]);
+  setSnap({ type:"louvai-full", songs:[{id:"y",title:"Y",key:"C",capo:0,tags:[],updatedAt:1,body:"C"}], escalas:[] });
+  const tEl = document.getElementById("toast"); tEl.classList.remove("show"); tEl.textContent = "SENTINELA";
+  lastAutoSync = 0; await maybeAutoPull();
+  out.silentNada = tEl.textContent; out.silentShown = tEl.classList.contains("show");
+  window.fetch = real; settings.autoPull = false; settings.repoUrl = ""; saveSettings();
+  return out;
+});
+ok(syncDl.novidade === "Sincronizado: +2 músicas, +1 escala", "Download conta músicas e escalas novas (plural)");
+ok(/\+1 música(?!s)/.test(syncDl.singular), "Download usa o singular '+1 música'");
+ok(/1 música atualizada/.test(syncDl.atualizada), "Download conta músicas atualizadas");
+ok(/1 escala atualizada/.test(syncDl.escAtual) && /\+1 música/.test(syncDl.escAtual), "Download conta escala atualizada (mergeEscala 'upd')");
+ok(syncDl.semNovidade === "Já está tudo sincronizado", "Pull manual sem novidade diz 'Já está tudo sincronizado'");
+ok(/Sincronizado:/.test(syncDl.silentNov) && /\+1 escala/.test(syncDl.silentNov), "Pull silencioso com novidade anuncia a contagem");
+ok(syncDl.silentNada === "SENTINELA" && !syncDl.silentShown, "Pull silencioso sem novidade não emite toast (silêncio preservado)");
+
+// ===== v0.41.0 — contagem ao sincronizar: UPLOAD (pubLabel sobre o diff real) =====
+const syncUp = await page.evaluate(() => {
+  const S = (id) => ({ id, title:id, key:"C", capo:0, tags:[], updatedAt:1, body:"C" });
+  const E = (id) => ({ id, title:id, date:"2026-01-01", team:[], items:[], updatedAt:1 });
+  const D = (cloudS, cloudE, locS, locE) =>
+    diffRepo(cloudS===null ? null : { songs: cloudS, escalas: cloudE||[] }, { songs: locS||[], escalas: locE||[] });
+  return {
+    first:   pubLabel(D(null, null, [S("a"),S("b"),S("c")], [E("e1"),E("e2")])),
+    singular:pubLabel(D(null, null, [S("a")], [E("e1")])),
+    delta:   pubLabel(D([S("old")], [E("e1")], [S("old"),S("new")], [E("e1")])),
+    remove:  pubLabel(D([S("a"),S("b")], [], [S("a")], [])),
+    soUpd:   pubLabel(D([S("a"),S("b")], [E("e1"),E("e2")], [S("a"),S("b")], [E("e1"),E("e2")])),
+  };
+});
+ok(syncUp.first === "Publicado: 3 músicas e 2 escalas", "Upload 1ª publicação: total de músicas e escalas");
+ok(syncUp.singular === "Publicado: 1 música e 1 escala", "Upload no singular (1 música e 1 escala)");
+ok(/^Publicado: 2 músicas e 1 escala/.test(syncUp.delta) && /\(cifras \+1\)/.test(syncUp.delta), "Upload com delta: total + (cifras +1)");
+ok(/^Publicado: 1 música e 0 escalas/.test(syncUp.remove) && /\(cifras −1\)/.test(syncUp.remove), "Upload com remoção: (cifras −1)");
+ok(syncUp.soUpd === "Publicado: 2 músicas e 2 escalas", "Upload só com atualização (sem add/rem): sem parênteses de delta");
 
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
