@@ -112,6 +112,14 @@ input,textarea,select{font-family:inherit}
   border:1px solid var(--line);font-size:13.5px;color:var(--muted);font-weight:500}
 .chip.on{background:var(--gold);color:var(--accent-ink);border-color:transparent;font-weight:700}
 .count{font-size:12.5px;color:var(--muted);margin:2px 2px 12px;letter-spacing:.3px;text-transform:uppercase}
+/* cabeçalho da lista de cifras: contagem à esquerda, ordenação à direita (v0.40.0) */
+.libhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 2px 12px}
+.libhead .count{margin:0}
+.sortbtn{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-pill);
+  padding:6px 12px;font-size:var(--fs-xs);font-weight:600;color:var(--muted);
+  display:inline-flex;align-items:center;white-space:nowrap;flex:0 0 auto}
+.sortbtn:active{transform:scale(.96)}
+.sortbtn .ic-tx{width:15px;height:15px;margin-right:5px}
 /* gramática de card UNIFICADA (.songcard × .escard, M4): título → sub → faixa de pílulas.
    Mesma tipografia, mesmo respiro 8pt e o mesmo vocabulário de pílula nas duas telas irmãs. */
 .songcard,.escard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
@@ -217,6 +225,10 @@ input,textarea,select{font-family:inherit}
 .sheetctrls .ctrl.actions{justify-content:stretch;padding-left:0}
 .sheetctrls .ctrl.actions .grp{flex:1;gap:8px}
 .sheetctrls .ctrl.actions .grp button{flex:1}
+/* aviso discreto de divergência de tom (recurso opcional "Conferir tom"): é SUGESTÃO, cor de aviso suave (não vermelho) */
+.keyhint{font-size:12.5px;line-height:1.45;color:var(--warn);padding:6px 4px 2px}
+/* no claro, âmbar mais escuro p/ contraste legível com sol no palco (sem mexer no --warn do toast) */
+body.light .keyhint{color:#b45309}
 /* título da música na barra de UMA linha (player normal); some no modo Apresentar */
 .p-titlebar{flex:1;min-width:0;font-size:16px;font-weight:700;letter-spacing:-.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
@@ -483,7 +495,10 @@ input,textarea,select{font-family:inherit}
           <input class="search" id="search" placeholder="Buscar música, artista, tom…">
         </div>
         <div class="tagbar" id="tagbar"></div>
-        <div class="count" id="count"></div>
+        <div class="libhead">
+          <div class="count" id="count"></div>
+          <button class="sortbtn" id="sortBtn" aria-label="Mudar a ordem da lista"></button>
+        </div>
         <div id="songlist"></div>
       </div>
 
@@ -718,6 +733,10 @@ input,textarea,select{font-family:inherit}
     <div class="ctrl"><span class="lbl">Tom</span>
       <span class="grp"><button id="s-tdown" aria-label="Descer meio tom">♭</button><span class="val" id="s-tkey">C</span><button id="s-tup" aria-label="Subir meio tom">♯</button></span>
     </div>
+    <div class="ctrl toggle"><span class="lbl">Conferir tom pelos acordes</span>
+      <span class="grp"><button id="checkkey-toggle" aria-label="Conferir o tom pelos acordes" aria-pressed="false"></button></span>
+    </div>
+    <div id="keycheck" class="keyhint hidden"></div>
     <div class="ctrl"><span class="lbl">Capo</span>
       <span class="grp"><button id="c-down" aria-label="Diminuir capotraste">−</button><span class="val" id="c-val">0</span><button id="c-up" aria-label="Aumentar capotraste">＋</button></span>
     </div>
@@ -751,7 +770,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.39.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.42.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -956,6 +975,102 @@ function transposeChord(tok, semis, ctx){
   if(p.bass) out += "/" + transposeNote(p.bass, semis, ctx);
   return out;
 }
+
+/* ===== Detecção de tom pelos acordes (recurso OPCIONAL, off por padrão) =====
+   Confere se o tom informado (song.key) bate com os acordes escritos e, se não bater,
+   sugere o provável. Heurística: contagem de pertencimento diatônico PONDERADA sobre as
+   24 tonalidades (12 maiores + 12 menores) — tônica e dominante pesam mais; o 1º e
+   (sobretudo) o ÚLTIMO acorde dão bônus de cadência. Esse bônus é o que separa uma
+   tonalidade da sua RELATIVA (compartilham os mesmos acordes — só muda quem é a tônica).
+   Acorde de fora do diatônico leva uma PEQUENA penalidade (`KW_OFF`): distingue a tonalidade que
+   encaixa TODOS os acordes daquela que "erra" um. Sem isso, a folha de louvor mais comum (I–V–vi–IV
+   escrita uma vez, ex.: C G Am F) termina no IV e o bônus do último acorde elegia o IV como tônica
+   (F) → alarme falso num tom CERTO (corrigido na v0.42.1). A penalidade é leve e compensada pela
+   tônica/cadência do tom certo; com muitos acordes de fora a confiança cai → `lowconf` (sem alarme),
+   então emprestado/secundário ainda não derruba a detecção.
+   Reusa parseChord/chordIntervals (fonte da verdade, regra nº3) — sem regex de acorde própria.
+   Os pesos são heurísticos e ajustáveis; os testes travam o COMPORTAMENTO, não os números. */
+const DIA_MAJ = {0:"maj",2:"min",4:"min",5:"maj",7:"maj",9:"min",11:"dim"};
+// menor = união natural ∪ harmônica; grau 7 aceita V maior (harmônica) E v menor (natural)
+const DIA_MIN = {0:"min",2:"dim",3:"maj",5:"min",7:"maj",8:"maj",10:"maj",11:"dim"};
+const KW_TONIC=2, KW_DOM=2, KW_DIA=1, KW_OFF=-2, KB_FIRST=2, KB_LAST=4;   // função + penalidade fora-do-tom + cadência
+// reduz o sufixo de um acorde à tríade {maj,min,dim,aug,sus} via chordIntervals (trata sus/add/7…)
+function triadOf(suffix){
+  const iv=chordIntervals(suffix), has=n=>iv.includes(n);
+  if(has(3)&&has(6)) return "dim";
+  if(has(4)&&has(8)) return "aug";
+  if(has(3)) return "min";
+  if(has(4)) return "maj";
+  return "sus";                       // sus2/sus4: sem terça definida — casa qualquer função (coringa)
+}
+function isDomChord(suffix){ const iv=chordIntervals(suffix); return iv.includes(4)&&iv.includes(10); }  // maior + 7ª menor = dominante
+// coleta os acordes do corpo NA ORDEM (mesma varredura do renderCifra): linha de acordes,
+// "[Sec] C G" na mesma linha e [C] inline na letra; ignora seção/letra/tab.
+function songChords(body){
+  const out=[];
+  (body||"").replace(/\r/g,"").split("\n").forEach(line=>{
+    if(isSectionLine(line)) return;
+    const sc=line.match(/^(\s*)(\[[^\]]+\])(\s+)(\S.*)$/);
+    if(sc && !isChord(sc[2].replace(/^\[|\]$/g,""))){
+      if(isChordLine(sc[4])) sc[4].trim().split(/\s+/).forEach(t=>{ if(isChord(t)) out.push(t); });
+      return;
+    }
+    if(isChordLine(line)){ line.trim().split(/\s+/).forEach(t=>{ if(isChord(t)) out.push(t); }); return; }
+    (line.match(/\[([^\]]+)\]/g)||[]).forEach(b=>{ const inner=b.slice(1,-1); if(isChord(inner)) out.push(inner); });
+  });
+  return out;
+}
+// peso de UM acorde normalizado numa candidata (tonic = pc da tônica; mode 0=maior/1=menor)
+function chordWeight(ch, tonic, mode){
+  const deg=(ch.pc-tonic+12)%12;
+  let ok;
+  if(mode && deg===7) ok = (ch.triad==="maj"||ch.triad==="min"||ch.triad==="sus");   // V maior OU v menor do tom menor
+  else { const exp=(mode?DIA_MIN:DIA_MAJ)[deg]; ok = exp && (ch.triad===exp || ch.triad==="sus"); }
+  if(!ok) return KW_OFF;   // acorde fora do diatônico: pequena penalidade (vê o IV/V-terminal certo)
+  if(deg===0) return KW_TONIC;
+  if(deg===7) return KW_DOM + (ch.dom?0.5:0);
+  return KW_DIA;
+}
+function isTonicChord(ch, tonic, mode){
+  if(((ch.pc-tonic+12)%12)!==0) return false;
+  return ch.triad===(mode?"min":"maj") || ch.triad==="sus";
+}
+// detecta o tom provável. Retorna {key,pc,minor,score,confidence,lowData,ranking} | null.
+function detectKey(chords){
+  const norm=[];
+  (chords||[]).forEach(c=>{ const p=parseChord(c); if(!p) return; const pc=NOTE_IDX[p.root];
+    if(pc==null) return; norm.push({pc, triad:triadOf(p.suffix), dom:isDomChord(p.suffix)}); });
+  if(!norm.length) return null;
+  const first=norm[0], last=norm[norm.length-1], cand=[];
+  for(let mode=0;mode<2;mode++) for(let tonic=0;tonic<12;tonic++){
+    let score=0; norm.forEach(ch=> score+=chordWeight(ch,tonic,mode));
+    if(isTonicChord(first,tonic,mode)) score+=KB_FIRST;
+    if(isTonicChord(last,tonic,mode))  score+=KB_LAST;
+    cand.push({tonic,mode,score});
+  }
+  cand.sort((a,b)=> b.score-a.score || a.mode-b.mode);   // empate: prefere maior (mode 0)
+  const top=cand[0], second=cand[1]||{score:0};
+  const confidence = top.score>0 ? Math.max(0,(top.score-second.score)/top.score) : 0;
+  return { key: top.mode?PREF_MIN[top.tonic]:PREF_MAJ[top.tonic], pc:top.tonic, minor:!!top.mode,
+           score:top.score, confidence, lowData: norm.length<3,
+           ranking: cand.slice(0,3).map(c=>({key:(c.mode?PREF_MIN:PREF_MAJ)[c.tonic], score:c.score})) };
+}
+function keyName(pc,minor){ return minor?PREF_MIN[pc]:PREF_MAJ[pc]; }
+// compara tom informado × detectado, TOLERANTE: ok | relative | mismatch | lowconf.
+// relativa (mesmas notas) e baixa confiança NUNCA viram alarme (honestidade > falso-positivo).
+function compareKey(informed, det){
+  if(!det || det.lowData || det.confidence<0.15) return {status:"lowconf"};
+  const inf=String(informed||"");
+  if(!/^[A-G][#b]?/.test(inf)) return {status:"lowconf"};   // tom informado vazio/inválido → não opina (não assume "C")
+  const iPc=NOTE_IDX[keyRoot(inf)], iMin=keyIsMinor(inf);
+  if(iPc==null) return {status:"lowconf"};
+  if(iPc===det.pc && iMin===det.minor) return {status:"ok", informedName:keyName(iPc,iMin), probableName:det.key};
+  if(iMin!==det.minor){                                   // uma maior, outra menor → pode ser relativa
+    const majPc=iMin?det.pc:iPc, minPc=iMin?iPc:det.pc;
+    if((majPc+9)%12===minPc) return {status:"relative", informedName:keyName(iPc,iMin), probableName:det.key};
+  }
+  return {status:"mismatch", informedName:keyName(iPc,iMin), probableName:det.key};
+}
 /* Corretor não-bloqueante: aponta tokens que parecem acorde mas não são válidos.
    Só examina linhas que são "majoritariamente acordes" (assim a letra fica livre). */
 function lintCifra(body){
@@ -997,6 +1112,27 @@ function isSectionLine(line){
   // rótulos curtos terminados em ":" (Intro:, Refrão:, Solo:)
   return /^[^\n]{1,28}:$/.test(t) && !/\s\S+\s\S+\s\S+/.test(t);
 }
+/* Rótulos de seção comuns em cifras pt-BR (e alguns do Cifra Club), reconhecidos
+   "pelados" — SEM colchetes nem dois-pontos (Intro, Introd., Verso 1, Solo de guitarra…).
+   Usado SÓ no cabeçalho da importação (parseImport) p/ não capturar "Intro"/"Refrão"…
+   como ARTISTA. Fica FORA da exibição de propósito: renderCifra/lintCifra usam
+   isSectionLine, que segue exigindo [ ] ou ":" — assim uma palavra solta da LETRA não
+   vira <span class=sec> no player. Pra aceitar um rótulo novo, edite só a lista BASE
+   (fonte única, no espírito do QUAL_RX). */
+const SEC_BASE = "(?:" +
+  "intro(?:d(?:u[çc][aã]o)?\\.?)?|introdu[çc][aã]o|" +
+  "vers[oa]|estrofe|pr[eé][ -]?refr[aã]o|refr[aã]o|" +
+  "ponte|solo|final|coda|sa[ií]da|interl[uú]dio|dedilhado|riff|base|meio|" +
+  "tab(?:latura)?|" +
+  "(?:primeira|segunda|terceira|[1-9][ªaoº]?)\\s*parte|parte" +
+")";
+const SECTION_WORDS_RE = new RegExp(
+  "^" + SEC_BASE +
+  "(?:\\s+(?:de\\s+)?(?:guitarra|viol[aã]o|teclado|gaita|bateria|baixo))?" +  // "Solo de guitarra"
+  "(?:\\s*[nº#]*\\s*[0-9a-d])?" +                                              // "Verso 1", "Parte B"
+  "\\s*:?\\s*$",
+  "i"
+);
 
 /* ---------- Renderização da cifra ---------- */
 // esc: fonte única de escape. Escapa também aspas (") e (') porque a saída é
@@ -1098,6 +1234,8 @@ function fmtAgo(ts){
   if(d<30) return "há "+Math.floor(d/7)+" semana(s)";
   return "há mais de um mês";
 }
+// plural pt-BR simples p/ as contagens de sync: pl(1,"música","músicas") → "1 música"
+function pl(n, sing, plur){ return n+" "+(n===1?sing:plur); }
 function hasRealContent(){ return songs.length>1 || escalas.length>0; }   // demo sozinho não conta (não enche o saco)
 function backupDue(){
   if(!hasRealContent()) return false;
@@ -1185,7 +1323,9 @@ const ICONS={
   tabs:'<line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/>',
   clipboard:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
   eye:'<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
-  user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+  user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  "arrow-up-down":'<path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>'
 };
 function icon(name,cls){
   return '<svg class="ic-svg'+(cls?" "+cls:"")+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
@@ -1244,6 +1384,17 @@ function allTags(){
   songs.forEach(s=>(s.tags||[]).forEach(t=>t&&set.add(t)));
   return [...set].sort((a,b)=>a.localeCompare(b,"pt"));
 }
+// ordenação da lista (v0.40.0): rótulos curtos (botão) e a folha de escolha
+const SORT_LABEL={az:"A–Z", recent:"Recentes", played:"Menos tocadas"};
+function openSortSheet(){
+  const cur=settings.sortMode||"az";
+  const opt=(mode,label)=>({ic:icon(cur===mode?"check":"arrow-up-down"),label,fn:()=>{ settings.sortMode=mode; saveSettings(); closeSheet(); renderLibrary(); }});
+  openSheet("Ordenar por",[
+    opt("az","Alfabética (A–Z)"),
+    opt("recent","Tocadas recentemente"),
+    opt("played","Menos tocadas (dar vez)"),
+  ]);
+}
 function renderLibrary(){
   // tags
   const tags=allTags();
@@ -1257,12 +1408,23 @@ function renderLibrary(){
       tb.appendChild(c);
     });
   }
-  // filtro
+  // recência (v0.24.0) — calculada antes p/ poder ordenar "menos tocadas"
+  const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
+  // filtro + ordenação (v0.40.0): A–Z · tocadas recentemente · menos tocadas (dá vez ao esquecido)
   const q=$("#search").value.trim().toLowerCase();
-  let list=songs.slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),"pt"));
+  const byTitle=(a,b)=>String(a.title||"").localeCompare(String(b.title||""),"pt");
+  const mode=settings.sortMode||"az";
+  let list=songs.slice();
+  if(mode==="recent")        // por recência: tocadas há menos tempo no topo; nunca tocada ("") por último
+    list.sort((a,b)=>{ const ra=played[a.id]||"", rb=played[b.id]||""; return ra!==rb ? (ra<rb?1:-1) : byTitle(a,b); });
+  else if(mode==="played")   // menos tocadas: nunca tocada no topo; depois da mais antiga p/ a mais recente
+    list.sort((a,b)=>{ const ra=played[a.id]||"", rb=played[b.id]||""; return ra!==rb ? (ra<rb?-1:1) : byTitle(a,b); });
+  else
+    list.sort(byTitle);
   if(activeTag) list=list.filter(s=>(s.tags||[]).includes(activeTag));
   if(q) list=list.filter(s=>(s.title+" "+(s.artist||"")+" "+s.key+" "+(s.tags||[]).join(" ")).toLowerCase().includes(q));
 
+  $("#sortBtn").innerHTML = icon("arrow-up-down","ic-tx") + (SORT_LABEL[mode]||SORT_LABEL.az);
   $("#count").textContent = list.length+(list.length===1?" cifra":" cifras");
   const box=$("#songlist"); box.innerHTML="";
   if(!list.length){
@@ -1279,7 +1441,6 @@ function renderLibrary(){
     }
     return;
   }
-  const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
   list.forEach(s=>{
     const card=document.createElement("div");
     card.className="songcard";
@@ -1312,6 +1473,7 @@ function openPlayer(id, ctx, atLast){   // atLast: abrir na ÚLTIMA página (ao 
   $("#lyr-toggle").classList.remove("on"); $("#lyr-toggle").setAttribute("aria-pressed","false");
   $("#tabs-toggle").classList.toggle("on",!!settings.hideTabs); $("#tabs-toggle").setAttribute("aria-pressed",String(!!settings.hideTabs));
   $("#scrollbar-toggle").classList.toggle("on",!!settings.showScrollbar); $("#scrollbar-toggle").setAttribute("aria-pressed",String(!!settings.showScrollbar));
+  $("#checkkey-toggle").classList.toggle("on",!!settings.checkKey); $("#checkkey-toggle").setAttribute("aria-pressed",String(!!settings.checkKey));
   $("#p-body").dataset.page=0;   // sempre abre na 1ª página (vale também p/ o modo Apresentar)
   applyReadMode();               // ajusta modo (rolagem/página) e a visibilidade da barra
   if(escalaCtx){
@@ -1372,6 +1534,21 @@ function drawPlayer(){
     delete b.dataset.page; delete b.dataset.pages;
     b.innerHTML=html;
   }
+  updateKeyCheck();
+}
+// "Conferir tom pelos acordes": mostra o aviso só com o toggle ligado E divergência clara
+// (mismatch). Detecta sobre o tom/acordes ESCRITOS (independe de transpor/capo). Discreto e
+// só sugestão — "nada salvo no escuro": não altera o tom, o músico decide.
+function updateKeyCheck(){
+  const el=$("#keycheck"); if(!el) return;
+  if(settings.checkKey && current){
+    const cmp=compareKey(current.key, detectKey(songChords(current.body)));
+    if(cmp.status==="mismatch"){
+      el.textContent="Tom informado: "+cmp.informedName+" · provável pelos acordes: "+cmp.probableName;
+      el.classList.remove("hidden"); return;
+    }
+  }
+  el.textContent=""; el.classList.add("hidden");
 }
 
 /* controles do player */
@@ -1386,6 +1563,7 @@ $("#f-down").onclick=()=>{fontSize=Math.max(10,fontSize-1);drawPlayer();};
 // nos toggles, espelhamos o estado no aria-pressed (leitor de tela no palco precisa saber ligado/desligado)
 $("#lyr-toggle").onclick=()=>{const b=$("#lyr-toggle");showChords=!showChords;b.classList.toggle("on",!showChords);b.setAttribute("aria-pressed",String(!showChords));drawPlayer();};
 $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings();const b=$("#tabs-toggle");b.classList.toggle("on",!!settings.hideTabs);b.setAttribute("aria-pressed",String(!!settings.hideTabs));drawPlayer();};
+$("#checkkey-toggle").onclick=()=>{settings.checkKey=!settings.checkKey;saveSettings();const b=$("#checkkey-toggle");b.classList.toggle("on",!!settings.checkKey);b.setAttribute("aria-pressed",String(!!settings.checkKey));updateKeyCheck();};
 $("#scrollbar-toggle").onclick=()=>{settings.showScrollbar=!settings.showScrollbar;saveSettings();const b=$("#scrollbar-toggle");b.classList.toggle("on",!!settings.showScrollbar);b.setAttribute("aria-pressed",String(!!settings.showScrollbar));applyScrollbar();};
 function exitPlayer(){   // voltar do player — usado pelo ← normal E pelo ← da barra compacta
   stopScroll();
@@ -1672,6 +1850,10 @@ function parseImport(raw){
     if(isMeta(l)){idx++;continue;}
     if(l.trim()===""){idx++;continue;}
     if(isChordLine(l)||isSectionLine(l)||/^\s*\[[^\]]+\]/.test(l)) break;  // estrutura -> fim do cabeçalho
+    // rótulo de seção "pelado" (Intro / Introd. / Verso 1…) também encerra o cabeçalho —
+    // senão a 2ª linha "Intro" virava o ARTISTA (bug). A guarda leading.length>=1 preserva
+    // um TÍTULO que por acaso seja palavra de seção (ex.: música chamada "Introdução").
+    if(leading.length>=1 && SECTION_WORDS_RE.test(l.trim())) break;
     leading.push(l.trim()); idx++;
   }
   const rest=[];
@@ -1683,7 +1865,11 @@ function parseImport(raw){
     else { title=leading[0]; artist=leading[1]||""; }
   }
   let body=rest.join("\n").replace(/\n{3,}/g,"\n\n").replace(/^\n+|\n+$/g,"");
-  if(!key){ for(const l of rest){ if(isChordLine(l)){ const p=parseChord(l.trim().split(/\s+/)[0]); if(p){ key=p.root+(/^m(?!aj)/.test(p.suffix)?"m":""); break; } } } }
+  if(!key){                                  // sem "Tom:" no texto → detecta pelos acordes (1º+último+função pesam)
+    const det=detectKey(songChords(body));
+    if(det && !det.lowData && det.confidence>=0.15) key=det.key;
+    else for(const l of rest){ if(isChordLine(l)){ const p=parseChord(l.trim().split(/\s+/)[0]); if(p){ key=p.root+(/^m(?!aj)/.test(p.suffix)?"m":""); break; } } }   // fallback: 1º acorde
+  }
   return {title,artist,key,capo,body};
 }
 function openPaste(){ $("#pastebox").value=""; openS("#pastebg","#pastesheet","#pastebox"); }
@@ -1702,7 +1888,12 @@ $("#paste-go").onclick=()=>{
   $("#e-body").value=r.body;
   closePaste(); runLint();
   const bits=[]; if(r.title)bits.push("título"); if(r.key)bits.push("tom "+r.key); if(r.capo)bits.push("capo "+r.capo);
-  toast("Reconheci "+(bits.length?bits.join(", "):"o corpo")+" · confira e salve ✓");
+  let msg="Reconheci "+(bits.length?bits.join(", "):"o corpo")+" · confira e salve ✓";
+  if(settings.checkKey && r.key){   // recurso ligado: avisa se o "Tom:" do texto destoa dos acordes
+    const cmp=compareKey(r.key, detectKey(songChords(r.body)));
+    if(cmp.status==="mismatch") msg="Tom "+r.key+"? os acordes sugerem "+cmp.probableName+" · confira e salve ✓";
+  }
+  toast(msg);
 };
 $("#newBtn").onclick=()=>openEditor(null);
 $("#e-cancel").onclick=()=>{ editingId?openPlayer(editingId):show("lib"); editingId||renderLibrary(); };
@@ -1984,6 +2175,18 @@ function diffNote(d){
   if(d.sRem>0||d.eRem>0) n+=" — vai REMOVER itens da nuvem. Você atualizou do link antes?";
   return n;
 }
+// rótulo do toast de SUCESSO ao publicar: "Publicado: N músicas e M escalas" (total enviado),
+// + delta opcional "(cifras +A −R · escalas +A −R)" quando há entradas/saídas. Reporta o TOTAL
+// (responde "quantas foram pra nuvem"); o delta é a rede de segurança. Upload não tem "atualizadas"
+// (o diff é por presença de id, não por conteúdo) — por isso só total + novas/removidas.
+function pubLabel(d){
+  const base="Publicado: "+pl(d.sTotal,"música","músicas")+" e "+pl(d.eTotal,"escala","escalas");
+  if(d.first) return base;
+  const seg=[], s=[], e=[];
+  if(d.sAdd) s.push("+"+d.sAdd); if(d.sRem) s.push("−"+d.sRem); if(s.length) seg.push("cifras "+s.join(" "));
+  if(d.eAdd) e.push("+"+d.eAdd); if(d.eRem) e.push("−"+d.eRem); if(e.length) seg.push("escalas "+e.join(" "));
+  return base+(seg.length?" ("+seg.join(" · ")+")":"");
+}
 // escreve o snapshot no louvai.json via API Contents do GitHub (token fino, do aparelho)
 async function publishRepo(){
   const token=(settings.ghToken||"").trim();
@@ -2028,7 +2231,7 @@ async function doPublish(api, headers, sha, d){
     if(typeof cur2==="string"){ toast("Mudou na nuvem — atualize e tente de novo","err"); return; }
     try{ res=await put(cur2.sha); }catch(e){ toast("Não consegui publicar — sem internet?","err"); return; }
   }
-  if(res.ok){ settings.repoPublishedAt=Date.now(); settings.repoCloudApp=APP_VERSION; settings.repoCloudAt=env.publishedAt; saveSettings(); toast("Publicado na nuvem"+diffLabel(d),"ok"); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
+  if(res.ok){ settings.repoPublishedAt=Date.now(); settings.repoCloudApp=APP_VERSION; settings.repoCloudAt=env.publishedAt; saveSettings(); toast(pubLabel(d),"ok"); const st=$("#repo-status"); if(st) st.textContent=repoStatus(); }
   else if(res.status===401||res.status===403) toast("Token inválido ou sem permissão","err");
   else if(res.status===409) toast("Mudou na nuvem — atualize e tente de novo","err");
   else toast("Não consegui publicar (erro "+res.status+")","err");
@@ -2090,7 +2293,10 @@ function mergeSongs(arr, policy){
     if(s.artist!=null) s.artist=String(s.artist);
     s.tags=s.tags||[]; s.capo=s.capo||0; s.updatedAt=s.updatedAt||Date.now();
     const ex=s.id&&songs.find(x=>x.id===s.id);
-    if(ex){ if((s.updatedAt||0)>=(ex.updatedAt||0)){Object.assign(ex,s);updated++;} return; }
+    // sobrescreve com updatedAt ≥ (nuvem ganha empate), mas só CONTA como atualizada se for
+    // ESTRITAMENTE mais nova — senão re-puxar o mesmo snapshot (timestamps iguais) "criaria" novidade
+    // falsa e o auto-sync silencioso falaria a cada reabertura (v0.42.1).
+    if(ex){ if((s.updatedAt||0)>=(ex.updatedAt||0)){ if((s.updatedAt||0)>(ex.updatedAt||0)) updated++; Object.assign(ex,s); } return; }
     // sem match por id: pode ser título repetido (mesma música, id diferente).
     if(policy==="mine"){
       const byTitle=songs.find(x=>normTitle(x.title)===normTitle(s.title));
@@ -2132,15 +2338,17 @@ function importJSON(text, opts){
   doImport(data,tp,incoming, silent?"mine":"both", opts);
 }
 // funde UMA escala (dedup por id; só sobrescreve com updatedAt ≥). `remap` reescreve as
-// referências de cifra quando o usuário escolheu "manter as minhas". Retorna true se ADICIONOU.
+// referências de cifra quando o usuário escolheu "manter as minhas". Retorna "add" (nova),
+// "upd" (atualizou uma existente) ou "" (ignorou) — p/ a contagem do sync distinguir
+// escalas novas × atualizadas (padrão de código de string já usado em ghGetCurrent).
 function mergeEscala(inc, remap){
-  if(!inc) return false;
+  if(!inc) return "";
   inc.updatedAt=inc.updatedAt||Date.now();
   if(Array.isArray(inc.items)) inc.items.forEach(it=>{ if(it&&it.songId&&remap&&remap[it.songId]) it.songId=remap[it.songId]; });
   const ix=inc.id?escalas.findIndex(x=>x.id===inc.id):-1;
-  if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)) escalas[ix]=inc; return false; }
+  if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)){ const upd=(inc.updatedAt||0)>(escalas[ix].updatedAt||0); escalas[ix]=inc; return upd?"upd":""; } return ""; }   // só conta "upd" se ESTRITAMENTE mais nova (re-pull idêntico = sem novidade, v0.42.1)
   if(!inc.id||escalas.some(x=>x.id===inc.id)) inc.id=uid();
-  escalas.push(inc); return true;
+  escalas.push(inc); return "add";
 }
 function doImport(data,tp,incoming,policy,opts){
   const silent=!!(opts&&opts.silent);
@@ -2157,15 +2365,17 @@ function doImport(data,tp,incoming,policy,opts){
   // Snapshot da nuvem: repertório + escalas juntos
   if(tp==="louvai-full"){
     const {added,updated,remap}=mergeSongs(incoming,policy);
-    let escAdd=0;
-    (data.escalas||[]).forEach(e=>{ if(mergeEscala(e, remap)) escAdd++; });
+    let escAdd=0,escUpd=0;
+    (data.escalas||[]).forEach(e=>{ const r=mergeEscala(e, remap); if(r==="add") escAdd++; else if(r==="upd") escUpd++; });
     saveSongs(); saveEscalas(); renderLibrary(); renderEscalas();
-    if(!silent){
-      toast("Atualizado: "+added+" cifra(s)"+(updated?", "+updated+" atual.":"")+(escAdd?", "+escAdd+" escala(s)":""));
-    }else if(added||updated||escAdd){   // auto-sync: avisa só quando há novidade de verdade
-      const parts=[]; if(added) parts.push("+"+added+" cifra(s)"); if(updated) parts.push(updated+" atualizada(s)"); if(escAdd) parts.push("+"+escAdd+" escala(s)");
-      toast("Sincronizado: "+parts.join(", "),"ok");
-    }
+    // contagem: músicas novas → músicas atualizadas → escalas novas → escalas atualizadas
+    const parts=[];
+    if(added)   parts.push("+"+pl(added,"música","músicas"));
+    if(updated) parts.push(pl(updated,"música atualizada","músicas atualizadas"));
+    if(escAdd)  parts.push("+"+pl(escAdd,"escala","escalas"));
+    if(escUpd)  parts.push(pl(escUpd,"escala atualizada","escalas atualizadas"));
+    if(parts.length) toast("Sincronizado: "+parts.join(", "),"ok");   // manual e auto-sync: anuncia a novidade
+    else if(!silent) toast("Já está tudo sincronizado","ok");          // só o pull manual fala quando não há nada novo (auto-sync cala)
     return;
   }
   const {added,updated}=mergeSongs(incoming,policy);
@@ -2606,6 +2816,8 @@ $("#themeBtn").onclick=()=>{settings.theme=settings.theme==="light"?"dark":"ligh
 
 /* ---------- Busca ---------- */
 $("#search").oninput=renderLibrary;
+/* ordenação da lista (v0.40.0): abre a folha de escolha (A–Z · recentes · menos tocadas); persiste */
+$("#sortBtn").onclick=openSortSheet;
 
 /* ---------- Boot ---------- */
 $("#appVer").textContent="v"+APP_VERSION;
