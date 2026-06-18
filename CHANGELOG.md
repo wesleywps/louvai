@@ -8,6 +8,28 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.40.1 — "Intro" não vira mais o artista na importação
+**Correção (importar colando).** Ao colar uma cifra, o cabeçalho do `parseImport` junta até
+duas linhas (título e artista) e só parava ao encontrar uma linha de acordes, uma seção
+(`isSectionLine`) ou um `[...]`. Como o `isSectionLine` só reconhece seção com **colchetes**
+(`[Intro]`) ou **dois-pontos** (`Intro:`), um rótulo de seção **"pelado"** — sem nenhum dos dois,
+como `Intro`, `Introd.` ou `Verso 1` — não interrompia o cabeçalho e era capturado como **artista**.
+- **Causa-raiz:** confirmado que `Introd.:` (com dois-pontos) **já** funcionava; o que escapava era a
+  forma sem dois-pontos/colchetes (`Intro`, `Introd.`, `Introdução`, `Verso 1`, `Solo`, `Refrão`…).
+- **Correção cirúrgica:** nova lista curada `SECTION_WORDS_RE` (rótulos pt-BR comuns, com abreviação,
+  acento e número opcionais) usada **só no cabeçalho do `parseImport`**, com guarda `leading.length>=1`
+  — encerra o cabeçalho num rótulo pelado **a partir da 2ª linha** (assim a 2ª linha "Intro" não vira
+  artista), mas **preserva** um título que por acaso seja uma palavra de seção (ex.: música chamada
+  "Introdução").
+- **`isSectionLine` fica intacta** (continua exigindo `[ ]` ou `:`): a exibição (`renderCifra`) e o
+  corretor (`lintCifra`) não mudam, então uma palavra solta da **letra** nunca passa a ser destacada
+  como seção no player. Parser de importação é generoso; render é conservador.
+- **Regressão coberta:** 8 verificações novas (Intro solta, `Introd.`, `Introd.:`, `Verso 1`, título
+  "Introdução" preservado, artista legítimo intacto, "Solo Deo" ainda é artista, `isSectionLine`
+  inalterada). **209 verificações**, zero erro de JS.
+
+---
+
 ## v0.40.0 — Ordenar a lista de cifras (alfabética · recência · menos tocadas)
 **Recurso (biblioteca).** Um seletor de ordem na lista de cifras, usando a recência da v0.24.0
 ("última vez que tocamos", derivada das escalas confirmadas).

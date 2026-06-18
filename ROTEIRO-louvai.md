@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.40.0**.
+seguir. Atualizado até a **v0.40.1**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -100,6 +100,7 @@ instalação complexa.
 | **v0.38.0** | recurso | **Auto-sync ao voltar pro app:** o pull silencioso também roda no `visibilitychange` (app volta ao foco), com throttle de 1 min pra não martelar a rede. Ver `PLANO-repertorio-link.md`. |
 | **v0.39.0** | recurso | **Pull pelo commit atual:** lê o `louvai.json` pela API Contents do GitHub (não o link do Pages) — reflete a publicação na hora, sem o atraso do rebuild/CDN; fallback p/ link em rate-limit/host não-GitHub; mostra "nuvem vX · publicada há Y". Ver `PLANO-repertorio-link.md`. |
 | **v0.40.0** | recurso | **Ordenar a lista de cifras:** folha "Ordenar por" com 3 modos — **Alfabética**, **Tocadas recentemente** e **Menos tocadas** (usa a recência da v0.24.0); preferência persiste. |
+| **v0.40.1** | correção | **"Intro" não vira mais o artista ao colar:** rótulos de seção "pelados" (sem `[ ]` nem `:`) — `Intro`, `Introd.`, `Verso 1`… — encerram o cabeçalho do `parseImport` (lista `SECTION_WORDS_RE`, só na importação); `isSectionLine`/exibição intactas. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -280,4 +281,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.40.0.*
+*Última atualização deste roteiro: v0.40.1.*

@@ -762,7 +762,7 @@ input,textarea,select{font-family:inherit}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.40.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.40.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1008,6 +1008,27 @@ function isSectionLine(line){
   // rótulos curtos terminados em ":" (Intro:, Refrão:, Solo:)
   return /^[^\n]{1,28}:$/.test(t) && !/\s\S+\s\S+\s\S+/.test(t);
 }
+/* Rótulos de seção comuns em cifras pt-BR (e alguns do Cifra Club), reconhecidos
+   "pelados" — SEM colchetes nem dois-pontos (Intro, Introd., Verso 1, Solo de guitarra…).
+   Usado SÓ no cabeçalho da importação (parseImport) p/ não capturar "Intro"/"Refrão"…
+   como ARTISTA. Fica FORA da exibição de propósito: renderCifra/lintCifra usam
+   isSectionLine, que segue exigindo [ ] ou ":" — assim uma palavra solta da LETRA não
+   vira <span class=sec> no player. Pra aceitar um rótulo novo, edite só a lista BASE
+   (fonte única, no espírito do QUAL_RX). */
+const SEC_BASE = "(?:" +
+  "intro(?:d(?:u[çc][aã]o)?\\.?)?|introdu[çc][aã]o|" +
+  "vers[oa]|estrofe|pr[eé][ -]?refr[aã]o|refr[aã]o|" +
+  "ponte|solo|final|coda|sa[ií]da|interl[uú]dio|dedilhado|riff|base|meio|" +
+  "tab(?:latura)?|" +
+  "(?:primeira|segunda|terceira|[1-9][ªaoº]?)\\s*parte|parte" +
+")";
+const SECTION_WORDS_RE = new RegExp(
+  "^" + SEC_BASE +
+  "(?:\\s+(?:de\\s+)?(?:guitarra|viol[aã]o|teclado|gaita|bateria|baixo))?" +  // "Solo de guitarra"
+  "(?:\\s*[nº#]*\\s*[0-9a-d])?" +                                              // "Verso 1", "Parte B"
+  "\\s*:?\\s*$",
+  "i"
+);
 
 /* ---------- Renderização da cifra ---------- */
 // esc: fonte única de escape. Escapa também aspas (") e (') porque a saída é
@@ -1706,6 +1727,10 @@ function parseImport(raw){
     if(isMeta(l)){idx++;continue;}
     if(l.trim()===""){idx++;continue;}
     if(isChordLine(l)||isSectionLine(l)||/^\s*\[[^\]]+\]/.test(l)) break;  // estrutura -> fim do cabeçalho
+    // rótulo de seção "pelado" (Intro / Introd. / Verso 1…) também encerra o cabeçalho —
+    // senão a 2ª linha "Intro" virava o ARTISTA (bug). A guarda leading.length>=1 preserva
+    // um TÍTULO que por acaso seja palavra de seção (ex.: música chamada "Introdução").
+    if(leading.length>=1 && SECTION_WORDS_RE.test(l.trim())) break;
     leading.push(l.trim()); idx++;
   }
   const rest=[];

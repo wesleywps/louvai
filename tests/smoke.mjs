@@ -1124,6 +1124,31 @@ ok(/Recentes/.test(sortT.label), "Botão mostra o modo atual");
 ok(/Ordenar por/.test(sortT.sheetTitle) && sortT.items.length === 3, "Folha 'Ordenar por' oferece os 3 modos");
 ok(sortT.persisted === "az", "Escolher na folha aplica e persiste em settings.sortMode");
 
+// ===== v0.40.1 — "Intro" (e rótulos de seção pelados) não vira mais ARTISTA na importação =====
+const introT = await page.evaluate(() => {
+  const P = raw => parseImport(raw);
+  return {
+    introSolta:  P("Aquieta minh'alma\nIntro\nC  G  Am  F\nLetra aqui"),
+    abrev:       P("Tua Graça\nIntrod.\nD  A  Bm  G\nLetra"),
+    abrevColon:  P("Santo Espírito\nIntrod.:\nE  B  C#m  A\nLetra"),
+    verso:       P("Grande é o Senhor\nVerso 1\nG  D  Em  C\nLetra"),
+    tituloSecao: P("Introdução\nC  G  Am  F\nLetra"),
+    artistaOk:   P("Cifra Club\nMusica Importada\nArtista X\nTom: D\n\n[Intro] D  A  Bm  G\nLinha"),
+    soloDeo:     P("Eu Te Louvarei\nSolo Deo\nG  D  Em  C\nLetra"),   // "Solo Deo" NÃO é seção (sobra "Deo")
+    // a correção NÃO mexe em isSectionLine (exibição): palavra pelada continua sem ser seção no render
+    secBare:     isSectionLine("Intro"),
+    secBracket:  isSectionLine("[Intro]"),
+  };
+});
+ok(introT.introSolta.title === "Aquieta minh'alma" && introT.introSolta.artist === "", "'Intro' solta não vira artista (título preservado)");
+ok(introT.abrev.artist === "", "Abreviação 'Introd.' pelada não vira artista");
+ok(introT.abrevColon.artist === "", "'Introd.:' (com dois-pontos) continua sem virar artista");
+ok(introT.verso.artist === "", "Rótulo pelado 'Verso 1' não vira artista");
+ok(introT.tituloSecao.title === "Introdução", "Título que é palavra de seção ('Introdução') é preservado");
+ok(introT.artistaOk.title === "Musica Importada" && introT.artistaOk.artist === "Artista X", "Artista legítimo continua capturado (sem regressão)");
+ok(introT.soloDeo.artist === "Solo Deo", "Nome que só começa com palavra de seção ('Solo Deo') continua artista (regex ancora em $)");
+ok(introT.secBare === false && introT.secBracket === true, "isSectionLine intacta: 'Intro' pelado não é seção na exibição, '[Intro]' é");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 
