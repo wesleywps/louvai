@@ -127,6 +127,8 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   violão 6 cordas; toque no acorde → popover) — **implementado na v0.25.0**.
 - `PLANO-repertorio-link.md` — repertório + escalas num snapshot único (`louvai.json`)
   hospedado, com "Atualizar do link" (pull, mão única) — **implementado na v0.26.0**.
+- `PLANO-validacao-tom.md` — conferir o tom pelos acordes (detecção diatônica ponderada;
+  teoria musical + calibragem dos pesos) — **implementado na v0.42.0**.
 - `PLANO-publicar-nuvem.md` — "Publicar na nuvem" (escrever o `louvai.json` do celular via
   token fino do GitHub + API Contents) — **implementado na v0.27.0**.
 - `PLANO-ui.md` — polimento de UI/ícones em **ondas**, **concluído (v0.28.0→v0.36.1)**: Onda 1
@@ -144,6 +146,16 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
 ## Anatomia do `louvai.html` (onde mexer)
 - **Música/teoria:** `SHARP`/`FLAT`, `QUAL_RX`, `parseChord`, `transposeChord`,
   `transposeNote`, `isChord`, `isChordLine`, `isSectionLine`.
+- **Detecção de tom (v0.42.0):** `detectKey(chords)` (contagem diatônica ponderada nas 24
+  tonalidades; tabelas `DIA_MAJ`/`DIA_MIN`=natural∪harmônica; pesos `KW_*`/`KB_*` ajustáveis;
+  bônus de cadência decide relativas), `compareKey(informado,det)` (`ok|relative|mismatch|lowconf`
+  — relativa e baixa confiança não alarmam), `songChords(body)`, `triadOf`/`isDomChord` (reusam
+  `chordIntervals`). UI: toggle `#checkkey-toggle` (`settings.checkKey`, off) no ⚙ Afinação +
+  aviso `#keycheck` pintado em `updateKeyCheck()` (no fim do `drawPlayer`). Reusa `parseChord`
+  (regra nº3). Teoria + calibragem em `PLANO-validacao-tom.md`.
+- **Rótulos de seção "pelados" na importação (v0.40.1):** `SECTION_WORDS_RE` (whitelist pt-BR,
+  perto de `isSectionLine`) — usada **só** no cabeçalho do `parseImport` p/ um rótulo sem `[ ]`/`:`
+  (`Intro`, `Verso 1`…) não virar artista; `isSectionLine`/exibição ficam **intactas**.
 - **Ícones (v0.29.0):** **fonte única** `ICONS` (paths Lucide, MIT) + helper `icon(name[,cls])`
   → `<svg class="ic-svg" stroke="currentColor">` (herda o tema). `paintIcons()` (no boot) pinta os
   botões estáticos: `ICON_ONLY` (innerHTML = ícone) e `ICON_TX` (prefixa o ícone com `.ic-tx`,
@@ -186,7 +198,9 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   prioridade sobre virar-página). No player o acorde já é a **forma com capô** (`ctxShape`).
 - **Corretor do editor:** `lintCifra` + `runLint`.
 - **Importar texto colado:** `parseImport` e `isMeta` (regras de limpeza do
-  Cifra Club: remove `Tom:`, `Capotraste`, `Cifra:`, `Favoritar`, URLs…).
+  Cifra Club: remove `Tom:`, `Capotraste`, `Cifra:`, `Favoritar`, URLs…). O cabeçalho para também
+  num rótulo de seção pelado via `SECTION_WORDS_RE` (v0.40.1) e, sem `Tom:`, o palpite de tom usa
+  `detectKey` (v0.42.0, fallback pro 1º acorde).
 - **Importar JSON (arquivo/link):** `importJSON` reconhece o tipo e **detecta título
   repetido** via `collidingTitles` (mesmo título, `id` diferente) **antes de mexer nos
   dados** → folha de escolha (`mine`/`both`/cancelar). `doImport(data,tp,incoming,policy)`
@@ -291,7 +305,10 @@ com diff/detalhes) e **polimento de UI completo em ondas** (v0.28.0–v0.36.1: O
 toast/vazios; Onda 2 **ícones SVG inline unificados**; Onda 3 ⚙ seções/linguagem de card/`#reposheet`
 em cartões/arrastar p/ fechar/entrada da lista/progresso na Apresentação/skeleton) e **sincronizar
 ao abrir/voltar** (auto-sync habilitável do repertório+escalas, v0.37.0–v0.38.0) com **pull pelo
-commit atual** (API Contents, sem atraso do Pages, v0.39.0). Ver os `PLANO-*.md`.
+commit atual** (API Contents, sem atraso do Pages, v0.39.0), **ordenar a lista** (v0.40.0),
+**fix do "Intro" virando artista na importação** (v0.40.1), **contagem ao sincronizar**
+(músicas/escalas no download e upload, v0.41.0) e **conferir o tom pelos acordes** (opcional,
+v0.42.0). Ver os `PLANO-*.md`.
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
 1. **Validação visual no celular** (dark/light) das Ondas 1–3 — Tom destacado, toast colorido,
    estados vazios, acorde no claro, o conjunto de ícones SVG, as seções do ⚙, os cards unificados,

@@ -1221,6 +1221,66 @@ ok(/^Publicado: 2 músicas e 1 escala/.test(syncUp.delta) && /\(cifras \+1\)/.te
 ok(/^Publicado: 1 música e 0 escalas/.test(syncUp.remove) && /\(cifras −1\)/.test(syncUp.remove), "Upload com remoção: (cifras −1)");
 ok(syncUp.soUpd === "Publicado: 2 músicas e 2 escalas", "Upload só com atualização (sem add/rem): sem parênteses de delta");
 
+// ===== v0.42.0 — validação de tom pelos acordes (detectKey/compareKey + UI opcional) =====
+const keyT = await page.evaluate(() => {
+  const dk = arr => detectKey(arr).key;
+  const cmp = (inf, arr) => compareKey(inf, detectKey(arr));
+  return {
+    cMajor:    dk(["C","F","G","C"]),
+    aMinor:    dk(["Am","Dm","E7","Am"]),
+    endsAm:    dk(["C","F","G","Am"]),
+    endsC:     dk(["Am","F","G","C"]),
+    susAdd:    dk(["Dsus4","D","Gadd9","A7","D"]),
+    borrowed:  dk(["C","Bb","F","C"]),
+    secondary: dk(["C","A7","Dm","G7","C"]),
+    flatKey:   dk(["F","Bb","C7","F"]),
+    okStatus:       cmp("C", ["C","F","G","C"]).status,
+    relativeStatus: cmp("C", ["Am","Dm","E7","Am"]).status,
+    mismatch:       cmp("G", ["D","G","A","D"]),
+    lowconf:        cmp("C", ["C","E"]).status,
+    songChordsSeq:  songChords("[Intro] C  G\nAm   F\nletra [C]aqui [G]ali\n[Verso]"),
+  };
+});
+ok(keyT.cMajor === "C", "detectKey: maior canônica (C F G C) → C");
+ok(keyT.aMinor === "Am", "detectKey: menor com V7 da harmônica (Am Dm E7 Am) → Am");
+ok(keyT.endsAm === "Am" && keyT.endsC === "C", "detectKey: relativa decidida pela cadência (último acorde)");
+ok(keyT.susAdd === "D", "detectKey: sus/add não mudam a função (→ D)");
+ok(keyT.borrowed === "C", "detectKey: acorde emprestado (Bb) não derruba (→ C)");
+ok(keyT.secondary === "C", "detectKey: dominante secundário (A7) não derruba (→ C)");
+ok(keyT.flatKey === "F", "detectKey: tom bemol nomeado certo (→ F, não E#)");
+ok(keyT.okStatus === "ok", "compareKey: informado bate com os acordes → ok");
+ok(keyT.relativeStatus === "relative", "compareKey: relativa (C × Am) não alarma → relative");
+ok(keyT.mismatch.status === "mismatch" && keyT.mismatch.probableName === "D", "compareKey: divergência real (G × acordes em D) → mismatch + provável D");
+ok(keyT.lowconf === "lowconf", "compareKey: poucos acordes → lowconf (não alarma)");
+ok(JSON.stringify(keyT.songChordsSeq) === JSON.stringify(["C","G","Am","F","C","G"]), "songChords extrai a sequência (linha, [Sec] acordes, [C] inline; ignora seção/letra)");
+
+// UI: toggle off (padrão) não mostra; on mostra 'informado X · provável Y' e persiste; tom certo não alarma
+const keyUI = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id:"kc", title:"Tom Errado", key:"G", capo:0, tags:[], updatedAt:1, body:"D  G  A  D\nletra aqui" });
+  saveSongs(); delete settings.checkKey; saveSettings();
+  openPlayer("kc");
+  const offHidden = document.getElementById("keycheck").classList.contains("hidden");
+  document.getElementById("checkkey-toggle").click();                       // liga o recurso
+  const el = document.getElementById("keycheck");
+  const onShown = !el.classList.contains("hidden"), txt = el.textContent;
+  const pressed = document.getElementById("checkkey-toggle").getAttribute("aria-pressed");
+  const persisted = JSON.parse(localStorage.getItem(LS_SET)||"{}").checkKey;
+  songs.push({ id:"kok", title:"Tom Certo", key:"C", capo:0, tags:[], updatedAt:1, body:"C  F  G  C" });
+  saveSongs(); settings.checkKey = true; saveSettings(); openPlayer("kok");
+  const okHidden = document.getElementById("keycheck").classList.contains("hidden");
+  settings.checkKey = false; saveSettings(); exitPlayer();
+  return { offHidden, onShown, txt, pressed, persisted, okHidden };
+});
+ok(keyUI.offHidden, "Conferir tom OFF (padrão): aviso de divergência não aparece");
+ok(keyUI.onShown && /Tom informado: G/.test(keyUI.txt) && /provável pelos acordes: D/.test(keyUI.txt), "Conferir tom ON: mostra 'informado G · provável D'");
+ok(keyUI.pressed === "true" && keyUI.persisted === true, "Toggle persiste em settings.checkKey (aria-pressed=true)");
+ok(keyUI.okHidden, "Conferir tom ON mas tom certo (C, acordes em C): sem aviso");
+
+// parseImport (sem 'Tom:') passa a usar detectKey: sugere a tônica, não o 1º acorde cru
+const keyImport = await page.evaluate(() => parseImport("Minha Canção\n\nG  Am  F  C\nLetra\nG  C").key);
+ok(keyImport === "C", "parseImport sem 'Tom:' usa detectKey: sugere a tônica C (não o 1º acorde G)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

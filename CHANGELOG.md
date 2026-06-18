@@ -8,6 +8,42 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.42.0 — Conferir o tom pelos acordes (recurso opcional)
+**Recurso (música/teoria).** Confere se o **tom informado** da música (`song.key`) condiz com os
+**acordes escritos** na cifra e, quando não condiz, avisa de forma discreta **qual o informado e
+qual o provável** ("Tom informado: G · provável pelos acordes: D"). É **ligável/desligável** em
+**⚙ Ajustes da cifra → Afinação → "Conferir tom pelos acordes"** (`settings.checkKey`, **off por
+padrão**, como o auto-sync). É só **sugestão** — não altera o tom ("nada salvo no escuro"); o músico
+decide.
+- **Como detecta (teoria pesquisada):** `detectKey(chords)` pontua as **24 tonalidades** (12 maiores
+  + 12 menores) por **pertencimento diatônico ponderado**. Tabelas de graus diatônicos `DIA_MAJ`
+  (I ii iii IV V vi vii°) e `DIA_MIN` = **união menor natural ∪ harmônica** (aceita o **V maior/V7** e
+  o **vii°** da harmônica, além do v/VII naturais — senão músicas menores com V7→i cairiam "fora do
+  tom"). A **qualidade tem que casar com a função** (um "Em" é vi de G; um "E" maior não é). **Tônica
+  e dominante pesam mais**; o **1º e (sobretudo) o último acorde** dão bônus de cadência — é o que
+  separa uma tonalidade da sua **relativa** (mesmas notas, só muda quem é a tônica). Acorde de fora
+  (emprestado/secundário) **não pontua mas não penaliza**, então uma ponte cromática não derruba a
+  detecção. Reusa `parseChord`/`chordIntervals` (fonte da verdade, regra nº3).
+- **Comparação tolerante:** `compareKey(informed, detectado)` → `ok` | `relative` | `mismatch` |
+  `lowconf`. **Relativa** (C × Am) e **baixa confiança** (poucos acordes ou progressão ambígua)
+  **nunca** viram alarme — honestidade acima de falso-positivo. Só `mismatch` (divergência clara, com
+  confiança) acende o aviso.
+- **Onde sinaliza:** linha discreta `#keycheck` no ⚙ Ajustes (sob o Tom), cor de **aviso** suave (não
+  vermelho — é sugestão). Vale também na importação: ao colar com o recurso ligado, se o "Tom:" do
+  texto destoa dos acordes, o toast avisa ("Tom G? os acordes sugerem D").
+- **De quebra:** o **palpite de tom da importação** (quando o texto não traz "Tom:") deixou de ser o
+  ingênuo "primeiro acorde = tom" e passou a usar `detectKey` (último acorde + função pesam) — com
+  fallback pro 1º acorde se a detecção for incerta.
+- **Limites assumidos:** sem duração de acorde nem modulação seção-a-seção (centro tonal único, como
+  as ferramentas pop); modulação real vira confiança baixa → sem alarme. Os pesos
+  (`KW_TONIC`/`KW_DOM`/`KW_DIA`/`KB_FIRST`/`KB_LAST`) são heurísticos e **ajustáveis** — os testes
+  travam o **comportamento**, não os números. Ver `PLANO-validacao-tom.md` (teoria + fontes).
+- **238 verificações** (17 novas: maior/menor/relativa-por-cadência/sus-add/emprestado/secundário/
+  grafia-bemol; `ok`/`relative`/`mismatch`/`lowconf`; `songChords`; toggle off/on/persistência/tom-
+  certo; e o palpite da importação), zero erro de JS.
+
+---
+
 ## v0.41.0 — Sincronizar diz quantas músicas e escalas vieram/foram
 **Recurso (nuvem).** Ao sincronizar, o app agora informa **a contagem** — tanto no **download**
 ("Atualizar do link" / auto-sync) quanto no **upload** ("Publicar na nuvem"). Antes o pull dizia
