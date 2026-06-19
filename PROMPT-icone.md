@@ -79,3 +79,44 @@ excessiva — quero uma MARCA, não uma ilustração detalhada.
    (com a margem de segurança e o fundo sangrando).
 3) Uma linha explicando o conceito e por que ele representa o Louvai.
 ```
+
+---
+
+## Depois de gerar — instalar os ícones no app (NÃO esqueça)
+
+> O prompt acima produz **imagens**; o PWA precisa de **arquivos PNG** nos tamanhos exatos,
+> salvos no lugar certo e **destravados no git**. Estes são os passos que ligam o design ao
+> app — o detalhe que some fácil, registrado aqui de propósito. Contexto em `PLANO-pwa.md`
+> (decisão **D2** + Incremento 1).
+
+**1. Salvar os PNGs em `icons/`** (nomes e tamanhos **exatos** — é o que o `manifest` e o
+`louvai.html` vão procurar):
+
+| Arquivo | Tamanho | Uso | Observação |
+|---|---|---|---|
+| `icons/icon-192.png` | 192×192 | ícone normal | símbolo violeta sobre `#121212` |
+| `icons/icon-512.png` | 512×512 | ícone normal / splash | idem |
+| `icons/maskable-512.png` | 512×512 | **maskable** (Android recorta) | conteúdo nos **~80% centrais**; fundo `#121212` **sangrando até a borda** (sem transparência) |
+| `icons/apple-touch-icon-180.png` | 180×180 | iOS (tela inicial) | **sem transparência** (o iOS arredonda sozinho) |
+
+**2. Destravar no `.gitignore`** — ⚠️ **o ponto que mais confunde:** a linha `*.png` (linha 2)
+**ignora todo PNG por padrão**, então os ícones **não entram no git sozinhos**. Adicione:
+
+```
+!icons/*.png
+```
+
+Só isso. **Não** use `!icons/` (é redundante — `*.png` casa arquivos, não a pasta).
+**Confira que destravou:** `git status` deve listar os ícones como novos; e
+`git check-ignore icons/icon-192.png` **não** pode retornar nada (saída vazia = não ignorado).
+
+**3. Onde eles são referenciados** (já previsto no Inc.1 do `PLANO-pwa.md`):
+- `manifest.webmanifest` → array `icons` com 192, 512 e o **maskable-512** (este com
+  `"purpose": "maskable"`; os outros, `"any"`).
+- `louvai.html` → `<link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">`.
+- Caminhos **relativos** (`icons/…`) resolvem para `/louvai/icons/…` em produção e funcionam
+  em **qualquer fork** (mesma lógica fork-safe do `defaultRepoUrl` da v0.45.0).
+
+**4. Sem etapa de build:** exporte os PNGs **à mão** (a partir da imagem/SVG gerado) **ou** com
+um `scripts/gen-icons.mjs` **pontual** (rodado à parte — **não** é build do app; o runtime segue
+sem dependências).
