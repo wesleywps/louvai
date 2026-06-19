@@ -327,6 +327,10 @@ Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
    internet pra abrir o app); o valor real é **offline + broadcast** e **só** pra a **estrutura da
    escala** (ordem/tom/momentos — cifras inteiras não cabem no QR ~2–3 KB), pra quem já tem o
    repertório. Pro "abrir sem internet", o lever certo é o **PWA** (item 3), não o QR.
-3. **PWA instalável** — fecha o offline do app hospedado e **encerra a regra "arquivo único"**
+3. **Repositório já configurado por padrão** (combinado 2026-06-19) — derivar o `repoUrl` do próprio
+   endereço (`new URL("louvai.json", location.href)`) quando não há link colado: o membro abre o app
+   hospedado e já puxa/sincroniza **sem colar nada** (link explícito tem prioridade; auto-sync opt-in).
+   Toca `pullRepo`/`maybeAutoPull`/`publishRepo`/`openRepoSheet`. Ver memória `default-repo-url`.
+4. **PWA instalável** — fecha o offline do app hospedado e **encerra a regra "arquivo único"**
    (ver seção "Horizonte"). *(A acessibilidade contínua da análise — `:focus-visible`, `--muted` no
    dark, alvo da `.chip` ≥44px — foi **entregue na v0.43.2**.)*

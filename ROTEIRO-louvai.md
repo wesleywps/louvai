@@ -224,6 +224,11 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   já tenha o repertório no aparelho. Para "abrir **sem internet**", o investimento certo é o **PWA**, não
   o QR (o `.json` por arquivo e o link `#imp=` já cobrem boa parte da transferência offline). Fica como
   opção futura *targeted*, só se a dor offline aparecer.
+- [ ] **Repositório já configurado por padrão** (combinado em 2026-06-19) — o app **deriva o `repoUrl`
+  do próprio endereço** (`new URL("louvai.json", location.href)`) quando o membro não colou link: abre o
+  app hospedado e já puxa/sincroniza **sem colar nada**; link explícito tem prioridade; auto-sync segue
+  opt-in; `file://` sem padrão (só teste local). Mudança média (toca `pullRepo`/`maybeAutoPull`/
+  `publishRepo`/`openRepoSheet`). Ver memória `default-repo-url`. Implementar em sessão dedicada.
 - [x] **Importar de URL (repertório + escalas)** — `pullRepo`+`importJSON` de um snapshot
   `louvai.json` hospedado (GitHub Pages, CORS ok; o Drive não serve). Mão única (líder publica,
   equipe puxa). *(entregue na v0.26.0 — ver `PLANO-repertorio-link.md`)*
