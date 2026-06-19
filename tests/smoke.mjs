@@ -1436,6 +1436,67 @@ const impSec = await page.evaluate(() => {
 ok(impSec.title === "" && impSec.artist === "", "Importar: 'Intro: <acordes>' não vira título/autor (cabeçalho fica vazio)");
 ok(impSec.bodyKeepsIntro, "Importar: a linha 'Intro: …' segue no corpo (estrutura, não cabeçalho)");
 
+// ===== v0.45.0 — repoUrl PADRÃO derivado do endereço do app (membro não cola link) =====
+// deriveRepoUrl(href) é função pura (não depende de location) — testável em qualquer host
+const defUrl = await page.evaluate(() => ({
+  proj: deriveRepoUrl("https://wesleywps.github.io/louvai/index.html"),
+  slash: deriveRepoUrl("https://wesleywps.github.io/louvai/"),
+  dropsHash: deriveRepoUrl("https://x.github.io/louvai/index.html?a=1#imp=zzz"),
+  file: deriveRepoUrl("file:///C:/app/louvai.html"),
+}));
+ok(defUrl.proj === "https://wesleywps.github.io/louvai/louvai.json", "deriveRepoUrl: app em /louvai/ → /louvai/louvai.json (sem URL cravada)");
+ok(defUrl.slash === "https://wesleywps.github.io/louvai/louvai.json", "deriveRepoUrl: aceita endereço com barra final");
+ok(defUrl.dropsHash === "https://x.github.io/louvai/louvai.json", "deriveRepoUrl: ignora ?query e #hash (#imp=) do endereço");
+ok(defUrl.file === "", "deriveRepoUrl: file:// (teste local) não tem padrão derivável → vazio");
+
+// effectiveRepoUrl: link colado tem PRIORIDADE; sem link, cai no padrão derivado
+const effUrl = await page.evaluate(() => {
+  const out = {};
+  settings.repoUrl = "https://meu-link.example/r.json"; out.explicit = effectiveRepoUrl();
+  settings.repoUrl = "   ";                              out.blank = effectiveRepoUrl(); out.def = defaultRepoUrl();
+  settings.repoUrl = ""; saveSettings();
+  return out;
+});
+ok(effUrl.explicit === "https://meu-link.example/r.json", "effectiveRepoUrl: link colado tem prioridade sobre o padrão");
+ok(effUrl.blank === effUrl.def, "effectiveRepoUrl: sem link (ou só espaços) usa o padrão derivado");
+
+// folha pré-preenche o campo com o padrão; campo == padrão = 'sem override' (mantém derivado, fork-safe)
+const prefill = await page.evaluate(() => {
+  const orig = window.defaultRepoUrl;
+  window.defaultRepoUrl = () => "https://x.github.io/louvai/louvai.json";   // simula o app hospedado
+  settings.repoUrl = ""; saveSettings();
+  openRepoSheet();
+  const filled = document.getElementById("repo-url").value;
+  const keepDefault = repoUrlFromField();                          // não mexeu no campo → sem override
+  document.getElementById("repo-url").value = "https://outro.example/x.json";
+  const custom = repoUrlFromField();                               // colou outro → override
+  closeRepoSheet();
+  const ghOk = !!ghRepoFromUrl(effectiveRepoUrl());                // padrão derivado (GitHub) serve pro publish
+  window.defaultRepoUrl = orig; settings.repoUrl = ""; saveSettings();
+  return { filled, keepDefault, custom, ghOk };
+});
+ok(prefill.filled === "https://x.github.io/louvai/louvai.json", "openRepoSheet pré-preenche o campo com o padrão derivado (transparência)");
+ok(prefill.keepDefault === "", "Campo igual ao padrão = sem override (settings.repoUrl fica vazio → derivado, fork-safe)");
+ok(prefill.custom === "https://outro.example/x.json", "Colar um link diferente do padrão vira override explícito");
+ok(prefill.ghOk, "Sem link colado, o padrão derivado (GitHub) serve pro publishRepo (ghRepoFromUrl resolve)");
+
+// integração: autoPull + SEM link colado + padrão derivado (stub data:) → puxa e mescla sem colar nada
+const autoDerived = await page.evaluate(async () => {
+  history.replaceState(null, "", location.href.split("#")[0]);     // sem #imp= (guard do maybeAutoPull)
+  songs.length = 0; escalas.length = 0; saveSongs(); saveEscalas();
+  const snap = { type: "louvai-full", version: 1, app: "x",
+    songs: [{ id: "dv", title: "Derivada", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" }], escalas: [] };
+  const dataUrl = "data:application/json," + encodeURIComponent(JSON.stringify(snap));
+  const orig = window.defaultRepoUrl;
+  window.defaultRepoUrl = () => dataUrl;                            // simula o app hospedado (padrão derivado válido)
+  settings.repoUrl = ""; settings.autoPull = true; saveSettings(); lastAutoSync = 0;
+  await maybeAutoPull();                                            // auto-sync sem link colado → usa o padrão derivado
+  const merged = songs.some(s => s.id === "dv");
+  window.defaultRepoUrl = orig; settings.autoPull = false; settings.repoUrl = ""; saveSettings();
+  return merged;
+});
+ok(autoDerived, "Auto-sync sem link colado puxa do padrão derivado (membro não precisa colar nada)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

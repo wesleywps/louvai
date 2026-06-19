@@ -11,7 +11,7 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.44.2)
+## Recursos (v0.45.0)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
   **Ícones SVG coesos** (traço único, herdam o tema nos dois modos) no lugar da
@@ -27,7 +27,8 @@ para ter um ícone e abrir como app.
   abrir quando atrasado) e tem **"Restaurar de um arquivo"** claro. Tudo local (sem nuvem).
 - **Repertório na nuvem (link):** o líder publica um snapshot `louvai.json` (cifras + escalas)
   no GitHub Pages e a equipe puxa com **"Atualizar do link"** — celular novo pega tudo de um
-  link. O líder pode **"Publicar na nuvem"** direto do celular (escreve o `louvai.json` via API
+  link. Hospedado o app, o membro **nem precisa colar o link**: o app já sabe de onde puxar
+  (o endereço é **derivado do próprio app**, funciona em qualquer fork). O líder pode **"Publicar na nuvem"** direto do celular (escreve o `louvai.json` via API
   do GitHub, com um token fino que fica só no aparelho). Antes de publicar, mostra o **diff**
   (quantas cifras/escalas vão entrar/sair, com **"ver detalhes"** mostrando os nomes) — feedback
   e rede de segurança. Mão única (líder publica, equipe puxa), sem backend. Dá pra ligar
@@ -101,9 +102,12 @@ Depois de hospedar, dá pra ter um **repertório compartilhado** sem backend, **
 1. **Líder publica:** no app, **Repertório → Repertório na nuvem → "Exportar tudo (pra publicar)"**
    gera um `louvai.json` (cifras **+** escalas). Suba esse arquivo no mesmo repositório do
    app (Add file → Upload files → Commit) — ele vira `https://<seu-site>/louvai.json`.
-2. **Equipe configura uma vez:** **Repertório → Repertório na nuvem**, cola o link e toca
-   **"Atualizar do link"**. Baixa o repertório e as escalas e **mescla** no aparelho
-   (cifras/escalas repetidas não duplicam; o app avisa se um título bater).
+2. **Equipe abre e atualiza:** **Repertório → Repertório na nuvem → "Atualizar do link"**.
+   Como o app e o `louvai.json` ficam no mesmo endereço, o campo do link **já vem preenchido
+   sozinho** (derivado do endereço do app) — o membro **não precisa colar nada**, é só tocar
+   "Atualizar". (Pra puxar de **outro** repositório, cole o link no campo: link explícito tem
+   prioridade.) Baixa o repertório e as escalas e **mescla** no aparelho (cifras/escalas
+   repetidas não duplicam; o app avisa se um título bater).
 3. **Atualizar depois:** o líder repete o passo 1 (sobe o `louvai.json` novo); a equipe toca
    "Atualizar do link" de novo.
 

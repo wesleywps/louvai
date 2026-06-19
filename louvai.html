@@ -723,8 +723,9 @@ body.light .keyhint{color:#b45309}
   <div class="repo-card">
     <div class="repo-h">Baixar do link (equipe)</div>
     <div class="hint" style="margin:0 0 8px">
-      Cole o link de um repertório publicado (ex.: no GitHub Pages). “Atualizar” baixa as
-      cifras e escalas e mescla no aparelho — mão única: você baixa, não escreve de volta.
+      Já vem com o endereço deste app — é só tocar <b>Atualizar</b>. (Pra puxar de outro
+      repositório, cole o link aqui.) Baixa as cifras e escalas e mescla no aparelho —
+      mão única: você baixa, não escreve de volta.
     </div>
     <input id="repo-url" class="search" inputmode="url" placeholder="https://…/louvai.json" style="width:100%;margin-bottom:8px">
     <div id="repo-status" class="sheetnote" style="margin:0 0 10px"></div>
@@ -811,7 +812,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.44.2";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.45.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -2154,6 +2155,17 @@ function exportFull(){
   shareFile("louvai.json",JSON.stringify(fullEnvelope()),"Louvai — repertório + escalas");
   recordBackup();   // snapshot completo também é um backup (o mais completo)
 }
+// repoUrl PADRÃO derivado do próprio endereço do app (v0.45.0): aberto em
+// usuario.github.io/louvai/ → .../louvai/louvai.json. Assim o membro puxa/sincroniza
+// SEM colar link, e funciona em qualquer fork (sem URL cravada no código). Ignora ?query/#hash
+// (ex.: o #imp= do link compartilhado). file:// (teste local) não tem padrão → "" (cai no aviso).
+function deriveRepoUrl(href){
+  try{ const u=new URL(href); if(!/^https?:$/i.test(u.protocol)) return ""; return new URL("louvai.json", u).href; }
+  catch(e){ return ""; }
+}
+function defaultRepoUrl(){ return deriveRepoUrl(location.href); }
+// URL efetiva pro pull/publish: link colado explicitamente tem PRIORIDADE; senão o padrão derivado.
+function effectiveRepoUrl(){ return (settings.repoUrl||"").trim() || defaultRepoUrl(); }
 // busca o snapshot da nuvem (v0.39.0): quando é GitHub, lê o COMMIT ATUAL via API Contents —
 // reflete a publicação NA HORA, sem o atraso do rebuild/CDN do GitHub Pages. Cai pro link como
 // está (Pages / qualquer host / data:) em rate-limit (403), erro, 404 ou repo não-GitHub.
@@ -2175,8 +2187,8 @@ async function getRepoText(url){
 }
 async function pullRepo(opts){
   const silent=!!(opts&&opts.silent);   // auto-sync: sem skeleton, sem erro barulhento, sem prompt de conflito
-  const url=(settings.repoUrl||"").trim();
-  if(!url){ if(!silent) toast("Cole o link do repertório primeiro","warn"); return; }
+  const url=effectiveRepoUrl();          // link colado tem prioridade; senão o padrão derivado do endereço do app
+  if(!url){ if(!silent) toast("Cole o link do repertório primeiro","warn"); return; }   // só sem padrão (ex.: file://)
   const box=$("#songlist"); if(box&&!silent) box.innerHTML=loadingSkeleton();   // M6: feedback de carregamento (rede)
   const restore=()=>{ if(box&&!silent) renderLibrary(); };                      // desfaz o skeleton se algo falhar
   let txt;
@@ -2198,7 +2210,7 @@ async function pullRepo(opts){
 let lastAutoSync=0;
 const AUTO_SYNC_COOLDOWN=60000;   // 1 min entre auto-pulls ao reabrir (evita buscar a cada alt-tab)
 function maybeAutoPull(opts){
-  if(!settings.autoPull || !(settings.repoUrl||"").trim()) return;
+  if(!settings.autoPull || !effectiveRepoUrl()) return;   // sem link colado, usa o padrão derivado (opt-in continua)
   if(/[#&]imp=/.test(location.hash||"")) return;
   if(opts && opts.throttle && Date.now()-lastAutoSync < AUTO_SYNC_COOLDOWN) return;
   lastAutoSync=Date.now();
@@ -2275,7 +2287,7 @@ function pubLabel(d){
 async function publishRepo(){
   const token=(settings.ghToken||"").trim();
   if(!token){ toast("Cole um token do GitHub primeiro","warn"); return; }
-  const r=ghRepoFromUrl((settings.repoUrl||"").trim());
+  const r=ghRepoFromUrl(effectiveRepoUrl());   // sem link colado, usa o padrão derivado do endereço do app
   if(!r){ toast("Publicar só funciona com URL do GitHub Pages","err"); return; }
   const api="https://api.github.com/repos/"+r.owner+"/"+r.repo+"/contents/"+r.path;
   const headers={Authorization:"Bearer "+token, Accept:"application/vnd.github+json"};
@@ -2320,8 +2332,10 @@ async function doPublish(api, headers, sha, d){
   else if(res.status===409) toast("Mudou na nuvem — atualize e tente de novo","err");
   else toast("Não consegui publicar (erro "+res.status+")","err");
 }
+// lê o link do campo: vazio OU igual ao padrão derivado = "sem override" (mantém o padrão, fork-safe)
+function repoUrlFromField(){ const v=($("#repo-url").value||"").trim(); return (v && v!==defaultRepoUrl()) ? v : ""; }
 function openRepoSheet(){
-  $("#repo-url").value=settings.repoUrl||"";
+  $("#repo-url").value=settings.repoUrl||defaultRepoUrl();   // pré-preenche com o padrão derivado (transparência; não grava)
   $("#gh-token").value=settings.ghToken||"";
   $("#repo-status").textContent=repoStatus();
   const ap=$("#auto-pull"); if(ap) ap.checked=!!settings.autoPull;          // reflete o "Sincronizar ao abrir"
@@ -2331,14 +2345,14 @@ function openRepoSheet(){
 function closeRepoSheet(){ closeS("#repobg","#reposheet"); }
 $("#repobg").onclick=closeRepoSheet;
 $("#repo-pull").onclick=()=>{
-  settings.repoUrl=$("#repo-url").value.trim(); saveSettings();
+  settings.repoUrl=repoUrlFromField(); saveSettings();   // campo == padrão = sem override (puxa do derivado)
   closeRepoSheet(); pullRepo();
 };
 $("#auto-pull").onchange=e=>{ settings.autoPull=e.target.checked; saveSettings();
   toast(settings.autoPull?"Vai sincronizar ao abrir o app":"Sincronismo automático desligado","ok"); };
 $("#repo-export").onclick=()=>{ closeRepoSheet(); exportFull(); };
 $("#repo-publish").onclick=()=>{
-  settings.repoUrl=$("#repo-url").value.trim(); settings.ghToken=$("#gh-token").value.trim(); saveSettings();
+  settings.repoUrl=repoUrlFromField(); settings.ghToken=$("#gh-token").value.trim(); saveSettings();   // campo == padrão = sem override
   publishRepo();   // mantém a folha aberta: mostra "Publicado ✓"/erro e permite reenviar no conflito
 };
 $("#repo-forget").onclick=()=>{ settings.ghToken=""; saveSettings(); $("#gh-token").value=""; toast("Token removido deste aparelho","ok"); };

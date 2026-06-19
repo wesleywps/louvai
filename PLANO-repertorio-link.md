@@ -29,6 +29,17 @@
 > fallback e, com promessa pendente (M6), travam o `await` num 2º fetch — por isso os testes de pull
 > silencioso usam host **não-GitHub** e o caminho GitHub tem teste próprio (`commitPull`). **195 verificações.**
 >
+> **Extensão — repoUrl padrão derivado do endereço (v0.45.0):** o app **deriva o `repoUrl`** do próprio
+> endereço, então o membro abre o app hospedado e **puxa/sincroniza sem colar link**. `deriveRepoUrl(href)`
+> (pura) = `new URL("louvai.json", href)` em http(s), `""` em `file://` (ignora `?query`/`#hash`);
+> `defaultRepoUrl()` = `deriveRepoUrl(location.href)`; `effectiveRepoUrl()` = link colado (prioridade) **ou**
+> o derivado — usado em `pullRepo`/`maybeAutoPull`/`publishRepo`. `openRepoSheet` pré-preenche o campo com o
+> padrão (transparência) e `repoUrlFromField()` trata **campo == padrão como "sem override"** (mantém
+> `settings.repoUrl=""` → derivação não congela, **fork-safe**). **Auto-sync segue opt-in.** Sem URL cravada
+> (qualquer fork funciona). **Armadilha de teste:** `deriveRepoUrl(href)` é pura **de propósito** — em
+> `file://` (Playwright) `location` não dá um padrão; os testes de integração (folha/auto-sync) **stubam
+> `window.defaultRepoUrl`** (script clássico, reassinável) com uma `data:`/URL fixa. **274 verificações.**
+>
 > **Decisão registrada (2026-06):** depois da v0.39.0, o **GitHub Pages deixou de ser essencial** para
 > o sincronismo — publicar e puxar falam direto com a **API Contents** do repositório. **Decidimos
 > MANTER o Pages assim mesmo** (custo zero; é o **fallback** quando a API falha/limita; é a **URL que

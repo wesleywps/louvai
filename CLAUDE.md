@@ -107,7 +107,7 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`), **contagem ao sincronizar**, **detecção/validação de tom** e a
     compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~263 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~274 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -249,6 +249,14 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   `importJSON(text,{silent})` → `doImport(...,policy,{silent})`: sem skeleton, **pula a folha de
   conflito** (usa `"mine"` — não duplica, remapeia a escala), sem toast de erro offline; avisa só
   quando há novidade. **Idempotente**. `#imp=` em importação tem prioridade.
+- **repoUrl padrão derivado do endereço (v0.45.0):** `deriveRepoUrl(href)` (pura) = `new URL("louvai.json",
+  href)` se http(s), senão `""` (ignora `?query`/`#hash`; `file://` → `""`); `defaultRepoUrl()` =
+  `deriveRepoUrl(location.href)`; `effectiveRepoUrl()` = `settings.repoUrl` colado (prioridade) **ou** o
+  padrão derivado. `pullRepo`/`maybeAutoPull`/`publishRepo` usam `effectiveRepoUrl()` — o membro abre o app
+  hospedado e puxa/sincroniza **sem colar link** (funciona em qualquer fork, sem URL cravada). `openRepoSheet`
+  pré-preenche `#repo-url` com o padrão (transparência); `repoUrlFromField()` trata **campo == padrão como
+  "sem override"** → `settings.repoUrl` fica `""` e a derivação não congela (fork-safe). **Auto-sync segue
+  opt-in.** Reusa `ghRepoFromUrl` (o padrão derivado serve pro publish). Ver memória `default-repo-url`.
 - **Publicar na nuvem (v0.27.0):** o líder **escreve** o `louvai.json` via **API Contents do
   GitHub**. `ghRepoFromUrl` deriva `owner/repo/path` da `settings.repoUrl`; `publishRepo` faz
   GET sha → PUT (snapshot em `bytesToB64` base64 padrão; 404 cria; 409 rebusca+retry); token
@@ -316,8 +324,9 @@ commit atual** (API Contents, sem atraso do Pages, v0.39.0), **ordenar a lista**
 **fix do "Intro" virando artista na importação** (v0.40.1), **contagem ao sincronizar**
 (músicas/escalas no download e upload, v0.41.0), **conferir o tom pelos acordes** (opcional,
 v0.42.0, calibrado/endurecido na v0.42.1–0.42.2), **lista de músicas compacta** (card em 2 linhas,
-tom em tile menor à esquerda, v0.43.0–0.43.1) e **acessibilidade** (foco por teclado, alvo de toque
-da tag ≥44px, contraste no escuro, v0.43.2). Ver os `PLANO-*.md`.
+tom em tile menor à esquerda, v0.43.0–0.43.1), **acessibilidade** (foco por teclado, alvo de toque
+da tag ≥44px, contraste no escuro, v0.43.2), **tela cheia na Apresentação** (v0.44.0) e **repositório já
+configurado por padrão** (repoUrl derivado do endereço — membro puxa sem colar link, v0.45.0). Ver os `PLANO-*.md`.
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
 1. **Validação visual no celular** (dark/light) das Ondas 1–3 — Tom destacado, toast colorido,
    estados vazios, acorde no claro, o conjunto de ícones SVG, as seções do ⚙, os cards unificados,
@@ -327,10 +336,10 @@ Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
    internet pra abrir o app); o valor real é **offline + broadcast** e **só** pra a **estrutura da
    escala** (ordem/tom/momentos — cifras inteiras não cabem no QR ~2–3 KB), pra quem já tem o
    repertório. Pro "abrir sem internet", o lever certo é o **PWA** (item 3), não o QR.
-3. **Repositório já configurado por padrão** (combinado 2026-06-19) — derivar o `repoUrl` do próprio
-   endereço (`new URL("louvai.json", location.href)`) quando não há link colado: o membro abre o app
-   hospedado e já puxa/sincroniza **sem colar nada** (link explícito tem prioridade; auto-sync opt-in).
-   Toca `pullRepo`/`maybeAutoPull`/`publishRepo`/`openRepoSheet`. Ver memória `default-repo-url`.
+3. ✅ **Repositório já configurado por padrão** (combinado 2026-06-19, **entregue na v0.45.0**) — o
+   `repoUrl` é derivado do próprio endereço (`new URL("louvai.json", location.href)`) quando não há link
+   colado: o membro abre o app hospedado e já puxa/sincroniza **sem colar nada** (link explícito tem
+   prioridade; auto-sync opt-in). `deriveRepoUrl`/`defaultRepoUrl`/`effectiveRepoUrl`/`repoUrlFromField`.
 4. **PWA instalável** — fecha o offline do app hospedado e **encerra a regra "arquivo único"**
    (ver seção "Horizonte"). *(A acessibilidade contínua da análise — `:focus-visible`, `--muted` no
    dark, alvo da `.chip` ≥44px — foi **entregue na v0.43.2**.)*

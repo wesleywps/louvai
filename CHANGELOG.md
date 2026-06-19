@@ -8,6 +8,29 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.45.0 — Repositório já configurado por padrão (membro não cola link)
+**Recurso (repertório na nuvem).** O app agora **deriva sozinho o `repoUrl`** do próprio endereço, então
+o membro **abre o app hospedado e já puxa/sincroniza sem colar nada**. Antes, mesmo com a equipe partindo
+do mesmo GitHub Pages, cada um precisava colar a URL do `louvai.json` à mão — atrito bobo que travava o
+"baixar tudo de um link" pra quem só queria as cifras no domingo.
+- **`defaultRepoUrl()`** = `new URL("louvai.json", location.href)`: aberto em `usuario.github.io/louvai/`
+  vira `usuario.github.io/louvai/louvai.json`. **Sem URL cravada no código** — funciona em qualquer fork.
+  A derivação (`deriveRepoUrl(href)`) é **função pura**, ignora `?query`/`#hash` (o `#imp=` de um link
+  compartilhado não atrapalha) e devolve **vazio** em `file://` (teste local não tem padrão derivável).
+- **`effectiveRepoUrl()`** = link colado explicitamente **tem prioridade**; sem link, cai no padrão
+  derivado. Usado em `pullRepo`, `maybeAutoPull` (auto-sync) e `publishRepo` (o líder publica sem colar a
+  URL — o token continua obrigatório). **Auto-sync segue opt-in** (desligado por padrão): nada de
+  rede-surpresa, só ficou fácil ligar sem colar nada.
+- **Folha "Repertório na nuvem"** pré-preenche o campo com o padrão (transparência: o membro vê de onde
+  puxa). Campo **igual ao padrão = "sem override"** (`repoUrlFromField`): toca *Atualizar* sem mexer e o
+  `settings.repoUrl` **fica vazio**, mantendo a derivação — fork-safe pra sempre (o endereço nunca congela
+  no código). Colar um link diferente vira override explícito normalmente.
+- **11 novas verificações** (deriva projeto/barra final/drop hash+query/`file://`; prioridade do link
+  colado; pré-preenchimento + `repoUrlFromField`; integração auto-sync sem link via padrão derivado).
+  **274 verificações**, zero erro de JS.
+
+---
+
 ## v0.44.2 — Índice de seções no `<script>` (navegação)
 **Organização (sem mudança de comportamento).** Adicionado um **índice de seções** no topo do `<script>`
 (`ÍNDICE DO SCRIPT`) que lista, na ordem, os grandes blocos do arquivo único — basta dar Ctrl+F no nome

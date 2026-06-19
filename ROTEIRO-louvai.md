@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.44.2**.
+seguir. Atualizado até a **v0.45.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -111,6 +111,7 @@ instalação complexa.
 | **v0.44.0** | recurso | **Tela cheia na Apresentação:** botão maximiza a cifra (esconde barra/cabeçalho) + Fullscreen API (Android/desktop; iOS graceful); sair pelo botão flutuante no canto. Navegar segue por virar-página/‹ ›. |
 | **v0.44.1** | correção | **Data do culto realizado** = data da escala (sem data, usa o dia do clique); **importar "Intro: \<acordes\>"** não vira mais título/autor (`sectionChordLead` + traço neutro). |
 | **v0.44.2** | organização | **Índice de seções** no topo do `<script>` (navegação por Ctrl+F). Fatia segura; o refactor completo (nomes/agrupamento) fica como frente dedicada. |
+| **v0.45.0** | recurso | **Repositório já configurado por padrão:** o app **deriva o `repoUrl` do próprio endereço** (`new URL("louvai.json", location.href)`) — o membro abre o app hospedado e **puxa/sincroniza sem colar link** (funciona em qualquer fork, sem URL cravada). Link colado tem prioridade; auto-sync segue opt-in; campo pré-preenchido (transparência) e "campo = padrão" não congela a URL (fork-safe). `file://` sem padrão. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -224,11 +225,11 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   já tenha o repertório no aparelho. Para "abrir **sem internet**", o investimento certo é o **PWA**, não
   o QR (o `.json` por arquivo e o link `#imp=` já cobrem boa parte da transferência offline). Fica como
   opção futura *targeted*, só se a dor offline aparecer.
-- [ ] **Repositório já configurado por padrão** (combinado em 2026-06-19) — o app **deriva o `repoUrl`
+- [x] **Repositório já configurado por padrão** (combinado em 2026-06-19) — o app **deriva o `repoUrl`
   do próprio endereço** (`new URL("louvai.json", location.href)`) quando o membro não colou link: abre o
   app hospedado e já puxa/sincroniza **sem colar nada**; link explícito tem prioridade; auto-sync segue
-  opt-in; `file://` sem padrão (só teste local). Mudança média (toca `pullRepo`/`maybeAutoPull`/
-  `publishRepo`/`openRepoSheet`). Ver memória `default-repo-url`. Implementar em sessão dedicada.
+  opt-in; `file://` sem padrão (só teste local). *(entregue na v0.45.0 — `deriveRepoUrl`/`defaultRepoUrl`/
+  `effectiveRepoUrl`/`repoUrlFromField`; folha pré-preenchida sem congelar a URL, fork-safe.)*
 - [x] **Importar de URL (repertório + escalas)** — `pullRepo`+`importJSON` de um snapshot
   `louvai.json` hospedado (GitHub Pages, CORS ok; o Drive não serve). Mão única (líder publica,
   equipe puxa). *(entregue na v0.26.0 — ver `PLANO-repertorio-link.md`)*
@@ -251,6 +252,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 1. **Hospedar o app + validar o link em campo** (tarefa do dono): publicar no
    GitHub Pages (passo a passo no `README` / `PLANO-compartilhar-link.md`), gerar
    "Enviar link" numa escala e mandar pra outro aparelho no WhatsApp → tocar → importar.
+   *(Desde a v0.45.0, hospedado o app, o membro já puxa o repertório **sem colar link** —
+   o `repoUrl` é derivado do endereço; é só abrir e tocar "Atualizar".)*
 2. **Validação visual no celular** (dark e light): o redesign, o **Modo Página** e a
    **barra compacta da Apresentação** só se confirmam de verdade na tela real do palco.
 3. **PWA instalável** — fecha o **offline 100%** do app hospedado (manifest + service worker; **abre sem
@@ -279,7 +282,9 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 > com **diff +/− e confirmação** ao publicar na v0.27.1 (e **"ver detalhes"** com os nomes na v0.27.2);
 > **sincronizar ao abrir** (auto-sync habilitável, pull silencioso de cifras+escalas) na v0.37.0,
 > estendido para **puxar também ao voltar pro app** (visibilitychange, com throttle) na v0.38.0,
-> e o pull passou a ler o **commit atual** (API Contents, sem o atraso do GitHub Pages) na v0.39.0.
+> e o pull passou a ler o **commit atual** (API Contents, sem o atraso do GitHub Pages) na v0.39.0;
+> **repositório já configurado por padrão** (o `repoUrl` é **derivado do endereço do app** — membro
+> puxa/sincroniza sem colar link) na v0.45.0.
 > ✅ **Polimento de UI em ondas** (`PLANO-ui.md`) **concluído** (v0.28.0→v0.36.1): Onda 1 (tokens,
 > Tom, toast, vazios, acorde no claro), Onda 2 (ícones SVG inline via `ICONS`/`icon()`) e Onda 3
 > (seções do ⚙ Ajustes, linguagem de card unificada, `#reposheet` em cartões, arrastar p/ fechar,
@@ -304,4 +309,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.44.2.*
+*Última atualização deste roteiro: v0.45.0.*
