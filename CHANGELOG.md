@@ -8,6 +8,24 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.44.1 — Correções: data do culto realizado + título/autor na importação
+**Correção.**
+- **"Culto realizado" usa a DATA da escala**, não o dia do clique. Como a confirmação pode ser feita
+  **dias depois** do culto, a recência ("tocada há…") reflete o **dia do culto** (campo Data). Quando a
+  escala **não tem data**, usa o dia em que se sinalizou (hoje) como execução — *decisão do dono
+  (2026-06-19)*. (A recência já vinha de `buildLastPlayed`/`e.date`; mantido o fallback de hoje só p/
+  escala sem data.)
+- **Importar "Intro: <acordes>" não vira mais título/autor.** Uma linha de **rótulo de seção seguida de
+  acordes** na mesma linha (ex.: `Intro: Em C D Em - Em C D Em`) era capturada como título — e o ` - ` do
+  meio ainda virava "Título - Autor". Novo `sectionChordLead` reconhece "rótulo + acordes" (`[Sec]`,
+  `Sec:` ou palavra de seção) como **estrutura** — **só** quando o resto é linha de acordes (um título
+  real como "Solo na Montanha" não casa) — e encerra o cabeçalho; o traço solto (`-`/`–`/`—`) passou a
+  ser **neutro** em linha de acordes. Resultado: título/autor ficam **vazios** pro usuário preencher e a
+  linha segue no corpo.
+- **263 verificações** (4 novas), zero erro de JS.
+
+---
+
 ## v0.44.0 — Modo tela cheia na Apresentação
 **Recurso (Apresentação ao vivo).** Botão de **tela cheia** na barra compacta da Apresentação: **maximiza
 a cifra** na tela do palco — esconde a barra e a linha de info (cabeçalho) e ainda **pede o Fullscreen do

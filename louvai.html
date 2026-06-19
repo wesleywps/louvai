@@ -793,7 +793,7 @@ body.light .keyhint{color:#b45309}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.44.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.44.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -854,7 +854,7 @@ const QUAL_RX = new RegExp("^(?:" + [
   "\\([^)]{0,14}\\)"                               // tensões entre parênteses: (9), (b9), (#11)…
 ].join("|") + ")*$");
 // Tokens neutros que não desqualificam uma linha de acordes
-const NEUTRAL_RE = /^(\||:\||\|:|\|\||\(?\d+x\)?|x\d+|\.|·)$/i;
+const NEUTRAL_RE = /^(\||:\||\|:|\|\||\(?\d+x\)?|x\d+|\.|·|[-–—]+)$/i;   // traço solto separa trechos de acordes
 
 // parseChord: o coração da fonte da verdade. Retorna {root, suffix, bass} ou null.
 function parseChord(raw){
@@ -1158,6 +1158,18 @@ const SECTION_WORDS_RE = new RegExp(
   "\\s*:?\\s*$",
   "i"
 );
+// "rótulo de seção SEGUIDO de acordes na MESMA linha" → é ESTRUTURA, não título/artista (v0.44.1).
+// Ex.: "Intro: Em C D Em", "[Intro] C G Am", "Solo  A  B". O resto TEM que ser linha de acordes —
+// assim um TÍTULO real ("Solo na Montanha") não casa (o resto não são acordes). Usado só no parseImport.
+function sectionChordLead(line){
+  const m=String(line).trim().match(/^(\[[^\]]+\]|\S.{0,26}?:|\S+)\s+(\S.*)$/);
+  if(!m) return false;
+  const raw=m[1]; let isLabel;
+  if(/^\[/.test(raw)) isLabel=!isChord(raw.replace(/^\[|\]$/g,""));   // [Intro] (e não um acorde)
+  else if(/:$/.test(raw)) isLabel=!isChord(raw.slice(0,-1));          // "Intro:" (e não "C:")
+  else isLabel=SECTION_WORDS_RE.test(raw);                            // palavra de seção conhecida
+  return isLabel && isChordLine(m[2]);                                // o resto é linha de acordes
+}
 
 /* ---------- Renderização da cifra ---------- */
 // esc: fonte única de escape. Escapa também aspas (") e (') porque a saída é
@@ -1903,7 +1915,7 @@ function parseImport(raw){
     const l=lines[idx];
     if(isMeta(l)){idx++;continue;}
     if(l.trim()===""){idx++;continue;}
-    if(isChordLine(l)||isSectionLine(l)||/^\s*\[[^\]]+\]/.test(l)) break;  // estrutura -> fim do cabeçalho
+    if(isChordLine(l)||isSectionLine(l)||/^\s*\[[^\]]+\]/.test(l)||sectionChordLead(l)) break;  // estrutura -> fim do cabeçalho
     // rótulo de seção "pelado" (Intro / Introd. / Verso 1…) também encerra o cabeçalho —
     // senão a 2ª linha "Intro" virava o ARTISTA (bug). A guarda leading.length>=1 preserva
     // um TÍTULO que por acaso seja palavra de seção (ex.: música chamada "Introdução").
@@ -2640,7 +2652,10 @@ $("#es-back").onclick=()=>{switchTab("escalas");show("lib");renderEscalas();};
 $("#es-done").onclick=()=>{
   const e=escalas.find(x=>x.id===currentEscalaId); if(!e)return;
   e.done=!e.done;
-  if(e.done && !e.date) e.date=todayISO();   // precisa de uma data pra saber "quando tocou"
+  // recência = a DATA da escala (o dia do culto) quando há uma — pode-se marcar "realizado" dias
+  // depois e ainda conta no dia certo. SEM data, usa o dia em que se sinalizou o "culto realizado"
+  // (hoje) como data de execução (decisão do dono, 2026-06-19).
+  if(e.done && !e.date) e.date=todayISO();
   e.updatedAt=Date.now(); saveEscalas();
   openEscala(currentEscalaId);               // atualiza o botão
   renderLibrary();                           // a recência muda na aba Cifras

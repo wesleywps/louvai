@@ -1411,6 +1411,31 @@ ok(full.onImm && full.barHidden && full.exitShown, "Tela cheia esconde a barra/c
 ok(full.req >= 1, "Tela cheia pede o Fullscreen do navegador (best-effort)");
 ok(full.offImm && full.exit >= 1, "Sair (botão flutuante) volta o layout e libera o fullscreen");
 
+// ===== v0.44.1 — "culto realizado" usa a DATA da escala (sem data, usa o dia do clique) =====
+const doneDate = await page.evaluate(() => {
+  songs.length=0; escalas.length=0;
+  songs.push({id:"sa",title:"A",key:"C",capo:0,tags:[],updatedAt:1,body:"C"});
+  songs.push({id:"sb",title:"B",key:"C",capo:0,tags:[],updatedAt:1,body:"C"});
+  escalas.push({id:"ed",title:"ComData",date:"2026-06-10",done:false,team:[],items:[{kind:"song",songId:"sa",key:"",capo:0}],updatedAt:1});
+  escalas.push({id:"en",title:"SemData",date:"",done:false,team:[],items:[{kind:"song",songId:"sb",key:"",capo:0}],updatedAt:1});
+  saveSongs(); saveEscalas();
+  const today=new Date().toISOString().slice(0,10);
+  openEscala("ed"); document.getElementById("es-done").click();   // marca realizado (dias depois)
+  openEscala("en"); document.getElementById("es-done").click();
+  const map=buildLastPlayed();
+  return { dated:escalas.find(e=>e.id==="ed").date, undated:escalas.find(e=>e.id==="en").date, today, recA:map["sa"], recB:map["sb"] };
+});
+ok(doneDate.dated === "2026-06-10" && doneDate.recA === "2026-06-10", "Culto realizado usa a DATA da escala (dia 10), não o dia do clique");
+ok(doneDate.undated === doneDate.today && doneDate.recB === doneDate.today, "Sem data na escala, usa o dia em que se sinalizou (clique) como execução");
+
+// ===== v0.44.1 — importar: "Intro: <acordes>" não vira título/autor =====
+const impSec = await page.evaluate(() => {
+  const r=parseImport("Intro: Em  C  D  Em  -  Em  C  D  Em\n\nEm                    C\nPorque dEle e por Ele\n     D                 Em\nPara Ele todas as coisas");
+  return { title:r.title, artist:r.artist, bodyKeepsIntro:/^Intro:/.test(r.body.trim()) };
+});
+ok(impSec.title === "" && impSec.artist === "", "Importar: 'Intro: <acordes>' não vira título/autor (cabeçalho fica vazio)");
+ok(impSec.bodyKeepsIntro, "Importar: a linha 'Intro: …' segue no corpo (estrutura, não cabeçalho)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 
