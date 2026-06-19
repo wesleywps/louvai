@@ -214,8 +214,14 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   sem backend; recebe tocando o link, com confirmação). *(entregue na v0.21.0 — ver
   `PLANO-compartilhar-link.md`)*. Falta a tarefa operacional do dono: **hospedar** o app
   (GitHub Pages — passo a passo no `README` e no plano).
-- [ ] **Transferência por QR Code** entre celulares (do link curto / via Drive) — entra
-  depois de validar o link em campo.
+- [ ] **Transferência por QR Code** entre celulares — **despriorizado (decisão 2026-06-19).**
+  Com o app **hospedado + nuvem**, o QR de *link* rende pouco **online** (a nuvem já sincroniza) e ainda
+  **exige internet** pra abrir o app na 1ª vez. O valor real seria **offline + broadcast** (vários
+  escaneiam de uma vez, sem pareamento, iPhone↔Android), e **só pra a estrutura da escala** (ordem · tom
+  por música · momentos) — cifras inteiras **não cabem** no limite do QR (~2–3 KB) e exigem que a equipe
+  já tenha o repertório no aparelho. Para "abrir **sem internet**", o investimento certo é o **PWA**, não
+  o QR (o `.json` por arquivo e o link `#imp=` já cobrem boa parte da transferência offline). Fica como
+  opção futura *targeted*, só se a dor offline aparecer.
 - [x] **Importar de URL (repertório + escalas)** — `pullRepo`+`importJSON` de um snapshot
   `louvai.json` hospedado (GitHub Pages, CORS ok; o Drive não serve). Mão única (líder publica,
   equipe puxa). *(entregue na v0.26.0 — ver `PLANO-repertorio-link.md`)*
@@ -240,11 +246,13 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
    "Enviar link" numa escala e mandar pra outro aparelho no WhatsApp → tocar → importar.
 2. **Validação visual no celular** (dark e light): o redesign, o **Modo Página** e a
    **barra compacta da Apresentação** só se confirmam de verdade na tela real do palco.
-3. **PWA instalável** — fecha o offline 100% do app hospedado (manifest + service worker)
-   e destrava "Abrir com Louvai" pra importar arquivo em 1 toque. **Encerra a regra
-   "arquivo único"** (ver `CLAUDE.md`, seção "Horizonte").
-4. ✅ **Ordenar a lista de cifras** (alfabética/recência/menos tocadas — v0.40.0). Falta o **QR Code**.
-5. **PWA instalável** (Tema A) — fecha o offline do app hospedado e encerra a regra "arquivo único".
+3. **PWA instalável** — fecha o **offline 100%** do app hospedado (manifest + service worker; **abre sem
+   internet**) e destrava "Abrir com Louvai" pra importar arquivo em 1 toque. **Encerra a regra
+   "arquivo único"** (ver `CLAUDE.md`, seção "Horizonte"). **É o investimento certo pro offline** —
+   maior ganho que o QR (decisão 2026-06-19).
+4. ✅ **Ordenar a lista de cifras** (v0.40.0). O **QR Code** foi **despriorizado** (decisão 2026-06-19):
+   rende pouco online; o caso útil é offline e só pra a **estrutura da escala** — opção futura *targeted*
+   (ver Tema E).
 
 > ✅ **Modos de leitura no player** (auto-scroll opcional + Modo Página) concluídos
 > nas v0.14.0–v0.15.0 — ver `PLANO-modos-leitura.md`.

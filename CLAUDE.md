@@ -322,7 +322,11 @@ Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
 1. **Validação visual no celular** (dark/light) das Ondas 1–3 — Tom destacado, toast colorido,
    estados vazios, acorde no claro, o conjunto de ícones SVG, as seções do ⚙, os cards unificados,
    arrastar-pra-fechar e o progresso da Apresentação só se confirmam na tela do palco.
-2. ✅ **Ordenar a lista** (alfabética/recência/menos tocadas — v0.40.0); falta o **QR Code**.
+2. ✅ **Ordenar a lista** (alfabética/recência/menos tocadas — v0.40.0). **QR Code despriorizado**
+   (decisão 2026-06-19): com o app hospedado + nuvem, rende pouco **online** (e o QR de link exige
+   internet pra abrir o app); o valor real é **offline + broadcast** e **só** pra a **estrutura da
+   escala** (ordem/tom/momentos — cifras inteiras não cabem no QR ~2–3 KB), pra quem já tem o
+   repertório. Pro "abrir sem internet", o lever certo é o **PWA** (item 3), não o QR.
 3. **PWA instalável** — fecha o offline do app hospedado e **encerra a regra "arquivo único"**
    (ver seção "Horizonte"). *(A acessibilidade contínua da análise — `:focus-visible`, `--muted` no
    dark, alvo da `.chip` ≥44px — foi **entregue na v0.43.2**.)*

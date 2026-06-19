@@ -104,7 +104,10 @@ cache do navegador (1º acesso e atualizações pedem internet). Para validaçã
 arquivo único). Documentar o passo a passo de publicação no README.
 
 ### Fora de escopo (próximos passos, anotar no ROTEIRO)
-- **QR Code** (do link curto / via Drive) — depois de validar o link.
+- **QR Code** — **despriorizado (decisão 2026-06-19):** com o app hospedado + nuvem, o QR de link rende
+  pouco online (e exige internet pra abrir o app). Valor real = **offline + broadcast**, e só pra a
+  **estrutura da escala** (ordem/tom/momentos; cifras inteiras não cabem no ~2–3 KB do QR), pra equipe
+  que já tem o repertório. Pro "abrir sem internet", o lever é o **PWA**. Opção futura *targeted*.
 - **Importar de URL (Drive/Dropbox/Gist)** — `fetch`+`importJSON`, para payloads grandes
   por link curto (atenção a CORS).
 - **PWA instalável + offline garantido** (manifest + service worker; decidir arquivo único).
