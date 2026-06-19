@@ -107,7 +107,7 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`), **contagem ao sincronizar**, **detecção/validação de tom** e a
     compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~251 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~255 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -314,13 +314,15 @@ em cartões/arrastar p/ fechar/entrada da lista/progresso na Apresentação/skel
 ao abrir/voltar** (auto-sync habilitável do repertório+escalas, v0.37.0–v0.38.0) com **pull pelo
 commit atual** (API Contents, sem atraso do Pages, v0.39.0), **ordenar a lista** (v0.40.0),
 **fix do "Intro" virando artista na importação** (v0.40.1), **contagem ao sincronizar**
-(músicas/escalas no download e upload, v0.41.0) e **conferir o tom pelos acordes** (opcional,
-v0.42.0). Ver os `PLANO-*.md`.
+(músicas/escalas no download e upload, v0.41.0), **conferir o tom pelos acordes** (opcional,
+v0.42.0, calibrado/endurecido na v0.42.1–0.42.2), **lista de músicas compacta** (card em 2 linhas,
+tom em tile menor à esquerda, v0.43.0–0.43.1) e **acessibilidade** (foco por teclado, alvo de toque
+da tag ≥44px, contraste no escuro, v0.43.2). Ver os `PLANO-*.md`.
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
 1. **Validação visual no celular** (dark/light) das Ondas 1–3 — Tom destacado, toast colorido,
    estados vazios, acorde no claro, o conjunto de ícones SVG, as seções do ⚙, os cards unificados,
    arrastar-pra-fechar e o progresso da Apresentação só se confirmam na tela do palco.
 2. ✅ **Ordenar a lista** (alfabética/recência/menos tocadas — v0.40.0); falta o **QR Code**.
 3. **PWA instalável** — fecha o offline do app hospedado e **encerra a regra "arquivo único"**
-   (ver seção "Horizonte"). Acessibilidade contínua que sobrou da análise: `:focus-visible` em
-   botões/cards, subir `--muted` no dark, alvo da `.chip` da tagbar ≥44–48px.
+   (ver seção "Horizonte"). *(A acessibilidade contínua da análise — `:focus-visible`, `--muted` no
+   dark, alvo da `.chip` ≥44px — foi **entregue na v0.43.2**.)*

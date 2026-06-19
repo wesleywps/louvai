@@ -14,7 +14,7 @@
 :root{
   /* superfícies em camadas de brilho (elevação = mais claro, estilo Spotify) */
   --bg:#121212; --bg2:#181818; --panel:#1e1e1e; --panel2:#282828;
-  --line:rgba(255,255,255,.09); --text:#ffffff; --muted:#b3b3b3;
+  --line:rgba(255,255,255,.09); --text:#ffffff; --muted:#c4c4c4;   /* secundário mais claro p/ contraste no escuro (a11y v0.43.2) */
   /* acento violeta (worship) — token único: trocar aqui muda o app todo */
   --accent:#a78bfa; --accent-strong:#8b5cf6; --accent-soft:#c4b5fd;
   --accent-ink:#190b2e;                 /* tinta sobre o acento (contraste AA) */
@@ -53,6 +53,11 @@
   --danger:#dc2626; --shadow:0 18px 50px -24px rgba(40,25,80,.18);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* foco visível por teclado (a11y v0.43.2): só no foco por teclado (:focus-visible), não no toque/clique.
+   Inputs têm o próprio realce (.field …:focus); aqui cobrimos botões, chips, links e os divs clicáveis
+   que viram acessíveis por teclado (role=button/tabindex via clickable()). */
+button:focus-visible,[role=button]:focus-visible,.chip:focus-visible,a:focus-visible,[tabindex]:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px}
 html,body{margin:0;padding:0;height:100%}
 body{
   /* atmosfera: brilho violeta sutil no topo que se dissolve no near-black */
@@ -109,7 +114,8 @@ input,textarea,select{font-family:inherit}
 .tagbar{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
 .tagbar::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;padding:7px 14px;border-radius:999px;background:var(--panel);
-  border:1px solid var(--line);font-size:13.5px;color:var(--muted);font-weight:500}
+  border:1px solid var(--line);font-size:13.5px;color:var(--muted);font-weight:500;
+  min-height:44px;display:inline-flex;align-items:center}   /* alvo de toque ≥44px (a11y v0.43.2) */
 .chip.on{background:var(--gold);color:var(--accent-ink);border-color:transparent;font-weight:700}
 .count{font-size:12.5px;color:var(--muted);margin:2px 2px 12px;letter-spacing:.3px;text-transform:uppercase}
 /* cabeçalho da lista de cifras: contagem à esquerda, ordenação à direita (v0.40.0) */
@@ -775,7 +781,7 @@ body.light .keyhint{color:#b45309}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.43.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.43.2";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1243,6 +1249,10 @@ function fmtAgo(ts){
 }
 // plural pt-BR simples p/ as contagens de sync: pl(1,"música","músicas") → "1 música"
 function pl(n, sing, plur){ return n+" "+(n===1?sing:plur); }
+// torna um <div> clicável também ACESSÍVEL por teclado (foco + Enter/Espaço) — a11y v0.43.2
+function clickable(el){ el.tabIndex=0; el.setAttribute("role","button");
+  el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); el.click(); } });
+  return el; }
 function hasRealContent(){ return songs.length>1 || escalas.length>0; }   // demo sozinho não conta (não enche o saco)
 function backupDue(){
   if(!hasRealContent()) return false;
@@ -1412,7 +1422,7 @@ function renderLibrary(){
       c.className="chip"+(activeTag===t?" on":"");
       c.textContent=t;
       c.onclick=()=>{activeTag=activeTag===t?null:t;renderLibrary();};
-      tb.appendChild(c);
+      clickable(c); tb.appendChild(c);
     });
   }
   // recência (v0.24.0) — calculada antes p/ poder ordenar "menos tocadas"
@@ -1453,7 +1463,7 @@ function renderLibrary(){
     card.className="songcard";
     card.innerHTML=songCardInner(s,played,anyDone);
     card.onclick=()=>openPlayer(s.id);
-    box.appendChild(card);
+    clickable(card); box.appendChild(card);
   });
   staggerIn(box,"lib");
 }
@@ -2523,7 +2533,7 @@ function renderEscalas(){
         ((e.team||[]).length?'<span class="pill">'+e.team.length+' na equipe</span>':'')+
       '</div>';
     card.onclick=()=>openEscala(e.id);
-    box.appendChild(card);
+    clickable(card); box.appendChild(card);
   });
   staggerIn(box,"esc");
 }
@@ -2715,7 +2725,7 @@ function renderPicker(q){
   if(!list.length){ box.innerHTML='<div class="hint" style="padding:10px">Nenhuma cifra encontrada.</div>'; return; }
   const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
   list.forEach(s=>{
-    const c=document.createElement("div"); c.className="songcard";
+    const c=clickable(document.createElement("div")); c.className="songcard";
     c.innerHTML=songCardInner(s,played,anyDone);
     c.onclick=()=>{
       editEscala.items.push({kind:"song",songId:s.id,key:"",capo:0,momento:"",dur:0,note:""});

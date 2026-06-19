@@ -1359,6 +1359,30 @@ ok(compact.noMeta && /Banda/.test(compact.sub) && /ceia/.test(compact.sub), "Met
 ok(compact.playedInSub, "Recência fica inline na .c-sub (span .played) — sem faixa de pílulas separada");
 ok(compact.h <= 70, "Card de música compacto (≤70px) — cabem mais na tela. Altura=" + Math.round(compact.h));
 
+// ===== v0.43.2 — acessibilidade: foco por teclado (cards), alvo de toque da tagbar, contraste do --muted =====
+const a11y = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id:"a1", title:"Acessível", key:"C", capo:0, tags:["ceia"], updatedAt:1, body:"C\nx" });
+  saveSongs(); saveEscalas();
+  switchTab("songs"); $("#search").value=""; activeTag=null; renderLibrary();
+  const card=document.querySelector("#songlist .songcard");
+  const chip=document.querySelector("#tagbar .chip");
+  return {
+    cardRole: card.getAttribute("role"), cardTab: card.tabIndex,
+    chipRole: chip ? chip.getAttribute("role") : null,
+    chipH: chip ? Math.round(chip.getBoundingClientRect().height) : 0,
+    muted: getComputedStyle(document.body).getPropertyValue("--muted").trim(),
+  };
+});
+ok(a11y.cardRole === "button" && a11y.cardTab === 0, "Card de música é focável + role=button (acessível por teclado)");
+ok(a11y.chipRole === "button" && a11y.chipH >= 44, "Tag da tagbar: botão com alvo de toque ≥44px (altura=" + a11y.chipH + ")");
+ok(/c4c4c4/i.test(a11y.muted), "--muted no escuro mais claro p/ contraste. Lido: " + a11y.muted);
+await page.locator("#songlist .songcard").first().focus();
+await page.keyboard.press("Enter"); await page.waitForTimeout(150);
+const kbdOpen = await page.evaluate(() => !document.getElementById("view-player").classList.contains("hidden") && document.getElementById("p-title").textContent.includes("Acess"));
+ok(kbdOpen, "Enter no card focado abre o player (ativação por teclado)");
+await page.evaluate(() => exitPlayer());
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

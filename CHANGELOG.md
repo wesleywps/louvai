@@ -8,6 +8,21 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.43.2 — Acessibilidade: foco por teclado, alvo de toque e contraste
+**Ajuste (acessibilidade).** Fecha os três itens de acessibilidade que sobraram da análise de UI:
+- **Foco visível por teclado** (`:focus-visible`): botões, chips, links e os **cards** (lista de cifras/
+  escalas e seletor) ganham um anel de foco com o acento — só no foco **por teclado**, não no toque/clique.
+  Os cards passaram a ser **acessíveis por teclado** (foco + **Enter/Espaço** ativam), via helper
+  `clickable` (`role="button"`/`tabindex=0`).
+- **Alvo de toque da tagbar ≥44px:** as `.chip` de tag agora têm `min-height:44px` (eram ~30px) — mais
+  fáceis de acertar no palco, com pouca luz.
+- **Contraste no escuro:** `--muted` subiu de `#b3b3b3` para `#c4c4c4`, deixando o texto secundário
+  (artista, recência, contagens) mais legível sobre o fundo escuro.
+- **255 verificações** (4 novas: card focável/role, alvo da chip ≥44px, `--muted`, Enter abre o player),
+  zero erro de JS.
+
+---
+
 ## v0.43.1 — Tom volta pro tile à esquerda (menor)
 **Ajuste (UI/lista).** Refinamento da v0.43.0 a pedido: o tom **não muda de lado** — volta ao **tile à
 esquerda do nome** da música (a forma de antes, que o líder preferia), só **menor**: de 46×46px para

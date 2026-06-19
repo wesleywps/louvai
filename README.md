@@ -11,7 +11,7 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.43.1)
+## Recursos (v0.43.2)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
   **Ícones SVG coesos** (traço único, herdam o tema nos dois modos) no lugar da
@@ -60,7 +60,9 @@ para ter um ícone e abrir como app.
   confirmação antes de salvar). Link longo (repertório/escala grande) avisa e oferece
   mandar o arquivo, que não é cortado por apps de mensagem. Tudo offline.
 - **Robusto e acessível:** importação à prova de arquivo malformado (sem XSS, sem
-  travar a lista), botões com nome em leitor de tela e respeito ao "Reduzir movimento".
+  travar a lista), botões com nome em leitor de tela, respeito ao "Reduzir movimento",
+  **foco visível por teclado**, **alvo de toque ≥44px** na barra de tags e bom **contraste**
+  no tema escuro.
 
 ## Publicar (hospedar)
 Hospedar dá uma **URL fixa** ao app, e aí o **link de importação** (`…/#imp=…`) vira
