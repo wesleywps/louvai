@@ -123,15 +123,19 @@ input,textarea,select{font-family:inherit}
 /* gramática de card UNIFICADA (.songcard × .escard, M4): título → sub → faixa de pílulas.
    Mesma tipografia, mesmo respiro 8pt e o mesmo vocabulário de pílula nas duas telas irmãs. */
 .songcard,.escard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
-  margin-bottom:var(--sp-3);transition:var(--dur)}
-.songcard{display:flex;align-items:center;gap:14px;padding:var(--sp-3) var(--sp-4)}
+  margin-bottom:var(--sp-2);transition:var(--dur)}
+/* card de música COMPACTO (v0.43.0): 2 linhas (título+tom · metadados cinza), sem o tile grande de tom —
+   cabem mais músicas no palco. O alvo de toque é a LINHA INTEIRA (min-height 56px ≥ 44px). */
+.songcard{display:flex;flex-direction:column;justify-content:center;padding:var(--sp-2) var(--sp-4);min-height:56px}
 .escard{padding:var(--sp-3) var(--sp-4)}
 .songcard:active,.escard:active{transform:scale(.985);background:var(--panel2)}
-.keytag{flex:0 0 auto;width:46px;height:46px;border-radius:var(--r-sm);display:grid;place-items:center;
-  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:var(--fs-lg);
-  background:linear-gradient(140deg,var(--panel2),var(--bg2));color:var(--gold);
-  border:1px solid var(--line)}
-.songcard .meta{flex:1;min-width:0}
+.songcard .meta{min-width:0}
+/* linha 1: título (cresce, corta com …) + TOM discreto à direita (chip fininho, mono p/ alinhar 1–3 chars) */
+.c-head{display:flex;align-items:baseline;gap:var(--sp-2)}
+.c-head .c-ttl{flex:1;min-width:0}
+.keypill{flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);font-weight:700;
+  color:var(--accent-soft);background:var(--panel2);border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:2px 7px;letter-spacing:.5px}
 /* nível 1: título · nível 2: subtítulo (artista/data) · faixa de metadados em pílulas */
 .c-ttl{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -141,7 +145,8 @@ input,textarea,select{font-family:inherit}
 .pill{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-pill);
   padding:3px 10px;font-size:var(--fs-xs);color:var(--muted);line-height:1.4;white-space:nowrap}
 .pill.tag{color:var(--section)}                      /* tag da cifra: leve cor de seção */
-.pill.never{color:var(--accent-soft);border-color:var(--accent-soft)}  /* nunca tocada: dar vez */
+.c-sub .played{color:var(--muted)}                     /* recência inline na linha cinza do card compacto (v0.43.0) */
+.c-sub .never{color:var(--accent-soft)}                /* "nunca tocada": dar vez (v0.24.0, agora inline) */
 /* entrada da lista (M7): stagger sutil só na 1ª pintura — duração some sob prefers-reduced-motion */
 @keyframes cardIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 .card-in{animation:cardIn .26s cubic-bezier(.2,.9,.3,1) both}
@@ -149,7 +154,7 @@ input,textarea,select{font-family:inherit}
    O player abre síncrono (sem espera), então o skeleton mora aqui, onde há de fato latência. */
 @keyframes skelPulse{0%,100%{opacity:.45}50%{opacity:.8}}
 .skel{animation:skelPulse 1.1s ease-in-out infinite}
-.skel-card{height:74px;border-radius:var(--r);background:var(--panel2);border:1px solid var(--line);margin-bottom:var(--sp-3)}
+.skel-card{height:58px;border-radius:var(--r);background:var(--panel2);border:1px solid var(--line);margin-bottom:var(--sp-2)}
 .empty{text-align:center;padding:84px 24px;color:var(--muted);line-height:1.6}
 .empty .eic{line-height:0;margin-bottom:14px}   /* ícone SVG do estado vazio (injetado via icon()) */
 .empty .eic .ic-svg{width:42px;height:42px;color:var(--accent);opacity:.85;filter:drop-shadow(0 0 24px var(--accent-glow))}
@@ -770,7 +775,7 @@ body.light .keyhint{color:#b45309}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.42.2";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.43.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1446,13 +1451,7 @@ function renderLibrary(){
   list.forEach(s=>{
     const card=document.createElement("div");
     card.className="songcard";
-    const tagPills=(s.tags||[]).filter(Boolean).slice(0,3).map(t=>'<span class="pill tag">'+esc(t)+'</span>').join("");
-    const meta=tagPills+playedPill(s.id,played,anyDone);
-    card.innerHTML=
-      '<div class="keytag">'+esc(s.key||"?")+'</div>'+
-      '<div class="meta"><div class="c-ttl">'+esc(s.title)+'</div>'+
-      (s.artist?'<div class="c-sub">'+esc(s.artist)+'</div>':'')+
-      (meta?'<div class="c-meta">'+meta+'</div>':'')+'</div>';
+    card.innerHTML=songCardInner(s,played,anyDone);
     card.onclick=()=>openPlayer(s.id);
     box.appendChild(card);
   });
@@ -2479,11 +2478,26 @@ function staggerIn(box, key){
 }
 // placeholders de carregamento (M6): usados no "Atualizar do link" enquanto a rede responde
 function loadingSkeleton(n){ return '<div class="skel">'+Array.from({length:n||5},()=>'<div class="skel-card"></div>').join("")+'</div>'; }
-// pílula pro card: "tocada há…" / "nunca tocada" (só quando há escala confirmada, p/ não poluir)
-function playedPill(songId, map, anyDone){
-  const iso=map[songId];
-  const txt=iso?fmtPlayed(iso):(anyDone?"nunca tocada":"");
-  return txt ? '<span class="pill played'+(iso?'':' never')+'">'+esc(txt)+'</span>' : '';
+// metadados secundários do card de música numa ÚNICA linha cinza (artista · recência · tags) — compacto
+// (v0.43.0). A recência mantém o <span class="played"> (e .never p/ "nunca tocada") da v0.24.0; "nunca
+// tocada" só aparece quando há escala confirmada (anyDone), p/ não poluir.
+function songSub(s, map, anyDone){
+  const bits=[];
+  if(s.artist) bits.push(esc(s.artist));
+  const iso=map[s.id];
+  if(iso) bits.push('<span class="played">'+esc(fmtPlayed(iso))+'</span>');
+  else if(anyDone) bits.push('<span class="played never">nunca tocada</span>');
+  const tags=(s.tags||[]).filter(Boolean).slice(0,3);
+  if(tags.length) bits.push(esc(tags.join(", ")));
+  return bits.join(" · ");
+}
+// HTML interno do card de música compacto (compartilhado pela lista inicial e pelo seletor da escala):
+// linha 1 = título + tom discreto (.keypill) à direita; linha 2 = .c-sub cinza com os metadados.
+function songCardInner(s, map, anyDone){
+  const sub=songSub(s,map,anyDone);
+  return '<div class="meta"><div class="c-head"><div class="c-ttl">'+esc(s.title)+'</div>'+
+    (s.key?'<span class="keypill">'+esc(s.key)+'</span>':'')+'</div>'+
+    (sub?'<div class="c-sub">'+sub+'</div>':'')+'</div>';
 }
 
 /* ---- lista de escalas ---- */
@@ -2702,10 +2716,7 @@ function renderPicker(q){
   const played=buildLastPlayed(), anyDone=escalas.some(e=>e.done&&e.date);
   list.forEach(s=>{
     const c=document.createElement("div"); c.className="songcard";
-    const pp=playedPill(s.id,played,anyDone);
-    c.innerHTML='<div class="keytag">'+esc(s.key||"?")+'</div><div class="meta"><div class="c-ttl">'+esc(s.title)+'</div>'+
-      (s.artist?'<div class="c-sub">'+esc(s.artist)+'</div>':'')+
-      (pp?'<div class="c-meta">'+pp+'</div>':'')+'</div>';
+    c.innerHTML=songCardInner(s,played,anyDone);
     c.onclick=()=>{
       editEscala.items.push({kind:"song",songId:s.id,key:"",capo:0,momento:"",dur:0,note:""});
       closePicker(); renderItemsEditor(); toast("“"+s.title+"” adicionada");

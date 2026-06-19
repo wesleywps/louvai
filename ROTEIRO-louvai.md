@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.42.2**.
+seguir. Atualizado até a **v0.43.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -105,6 +105,7 @@ instalação complexa.
 | **v0.42.0** | recurso | **Conferir o tom pelos acordes** (opcional, off por padrão): `detectKey`/`compareKey` ranqueiam as 24 tonalidades por pertencimento diatônico ponderado (tônica/dominante + cadência) e avisam "Tom informado X · provável Y" no ⚙ Ajustes; relativa/baixa confiança não alarmam. Melhora também o palpite de tom da importação. Ver `PLANO-validacao-tom.md`. |
 | **v0.42.1** | correção | **Pós-validação adversarial:** corrige o alarme falso de tom em cifra terminando no IV/V (penalidade a acorde fora do diatônico + bônus do 1º acorde); re-pull idêntico não conta mais como "atualizada" (silêncio real do auto-sync); `compareKey` com tom inválido → `lowconf`; contraste do aviso no tema claro. |
 | **v0.42.2** | correção | **Conferir tom:** `compareKey` valida o tom informado por inteiro (`^[A-G](#/b)?(m)?$`) — string-lixo que começa com nota vira `lowconf` em vez de ser lida como aquela nota. |
+| **v0.43.0** | recurso | **Lista de músicas compacta:** card em 2 linhas (título + tom num chip discreto `.keypill` à direita · linha cinza com artista/recência/tags); some o tile de 46px; altura ~74–100px → ~61px (cabem mais músicas). Pesquisa de densidade (Spotify/OnSong/Material). |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -285,4 +286,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.42.2.*
+*Última atualização deste roteiro: v0.43.0.*

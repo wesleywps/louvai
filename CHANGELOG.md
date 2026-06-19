@@ -8,6 +8,28 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.43.0 — Lista de músicas mais compacta (tom discreto)
+**Recurso (UI/lista).** A tela inicial passa a caber mais músicas: o card de cifra ficou em **duas
+linhas enxutas** e o tom deixou de ser um tile grande.
+- **Base de pesquisa** (Spotify/Apple Music; OnSong/Planning Center; Material 3): linha de lista de
+  duas linhas compacta fica em ~56–60px — **comprime o espaço, não a fonte**; o tom é metadado pequeno
+  (rótulo/chip cinza), nunca um elemento volumoso; o **alvo de toque é a linha inteira** (≥44px).
+- **Tom:** o tile dourado de **46×46px** virou um **chip discreto `.keypill`** (mono, à direita da
+  linha do título) — bem menor, ainda legível e identificável.
+- **Card em 2 linhas:** título (+ tom à direita) · uma **linha cinza** com **artista · recência · tags**
+  (antes: título / artista / faixa de pílulas empilhada). A recência ("tocada há…" / "nunca tocada") e o
+  realce "dar vez" da v0.24.0 ficam **inline** na linha cinza (`<span class="played">`/`.never`).
+- **Espaço comprimido:** padding vertical 12→8px, margem entre cards 12→8px, `min-height: 56px`
+  garantindo o toque. A altura do card caiu de **~74–100px para ~61px** — cabem ~1–3 músicas a mais por
+  tela, sem perder legibilidade.
+- O `.keytag` saiu; `playedPill` deu lugar a `songSub`/`songCardInner` — **helper único** usado pela
+  lista inicial **e** pelo seletor de músicas da escala (ambos ganharam a forma compacta). O `.escard`
+  mantém sua gramática `.c-ttl`/`.c-sub`/`.c-meta .pill`.
+- **250 verificações** (5 novas: chip do tom, metadados na `.c-sub`, recência inline, altura ≤70px; o
+  teste M4 reescrito p/ o card compacto), zero erro de JS.
+
+---
+
 ## v0.42.2 — Conferir tom: valida o tom informado por inteiro
 **Correção (detecção de tom).** Pequeno endurecimento surfaçado na re-validação: o `compareKey` só
 rejeitava tom informado **vazio** ou que **não começasse** com nota; uma string-lixo que por acaso
