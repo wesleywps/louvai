@@ -793,7 +793,25 @@ body.light .keyhint{color:#b45309}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.44.1";  // ← versão do app (ver CHANGELOG.md)
+/* ===== ÍNDICE DO SCRIPT (Ctrl+F no nome da seção para pular) =================
+   Mapa de navegação do arquivo único. Mais detalhes de cada bloco no CLAUDE.md
+   ("Anatomia do louvai.html"). As seções aparecem nesta ordem:
+
+   • Música: notas e transposição · Grafia inteligente ao transpor
+   • FONTE DA VERDADE: o que é um acorde válido  (parseChord — usado em tudo)
+   • Diagramas de acorde  (formas no violão)
+   • Detecção de tom pelos acordes  (detectKey/compareKey — recurso opcional)
+   • Renderização da cifra  (renderCifra)
+   • Armazenamento  (load/save, settings, KEYS) · Rede de segurança do backup
+   • Estado da tela · Ícones (fonte única) · Wake Lock
+   • Biblioteca  (lista de cifras: busca, ordenação, cards, recência)
+   • Player  (abrir/desenhar, transpor, modos de leitura, tela cheia, estrutura)
+   • Editor · Importar texto colado · Compartilhamento por arquivo / por LINK
+   • Repertório na nuvem  (pull/publicar) · Receber por LINK (#imp=)
+   • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
+   • Sheet & toast · Tema · Busca · Boot
+   ========================================================================= */
+const APP_VERSION = "0.44.2";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];

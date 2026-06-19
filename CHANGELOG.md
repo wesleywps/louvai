@@ -8,6 +8,15 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.44.2 — Índice de seções no `<script>` (navegação)
+**Organização (sem mudança de comportamento).** Adicionado um **índice de seções** no topo do `<script>`
+(`ÍNDICE DO SCRIPT`) que lista, na ordem, os grandes blocos do arquivo único — basta dar Ctrl+F no nome
+da seção para pular até ela. Espelha o "Anatomia do louvai.html" do `CLAUDE.md`. Só comentário: nenhuma
+lógica ou nome mudou; **263 verificações**, zero erro de JS. *(Fatia segura de uma frente maior de
+organização — o refactor completo, com nomes/agrupamento, fica para uma sessão dedicada; ver `ROTEIRO`.)*
+
+---
+
 ## v0.44.1 — Correções: data do culto realizado + título/autor na importação
 **Correção.**
 - **"Culto realizado" usa a DATA da escala**, não o dia do clique. Como a confirmação pode ser feita
