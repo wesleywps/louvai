@@ -1296,13 +1296,15 @@ const noFalseAlarm = await page.evaluate(() => {
   const offenders = cases.filter(([k, prog]) => compareKey(k, detectKey(prog)).status === "mismatch")
                          .map(([k, prog]) => k + ": " + prog.join(" "));
   const real = compareKey("G", detectKey(["D","G","A","D"]));         // mismatch GENUÍNO (diz G, é D) ainda acusa
-  const invalid = compareKey("", detectKey(["C","F","G","C"])).status;   // tom vazio não opina
-  const garbage = compareKey("xyz", detectKey(["C","F","G","C"])).status; // tom inválido não assume "C"
-  return { offenders, realStatus: real.status, realProb: real.probableName, invalid, garbage };
+  const invalid = compareKey("", detectKey(["C","F","G","C"])).status;       // tom vazio não opina
+  const garbage = compareKey("xyz", detectKey(["C","F","G","C"])).status;    // tom inválido não assume "C"
+  const gibberish = compareKey("Gibberish", detectKey(["C","F","G","C"])).status;  // v0.42.2: lixo que começa com nota → lowconf
+  return { offenders, realStatus: real.status, realProb: real.probableName, invalid, garbage, gibberish };
 });
 ok(noFalseAlarm.offenders.length === 0, "Sem alarme falso em loops terminando no IV/V com tom certo" + (noFalseAlarm.offenders.length ? ": " + noFalseAlarm.offenders.join(" | ") : ""));
 ok(noFalseAlarm.realStatus === "mismatch" && noFalseAlarm.realProb === "D", "Mismatch genuíno (diz G, é D) ainda é sinalizado (recurso não cegou)");
 ok(noFalseAlarm.invalid === "lowconf" && noFalseAlarm.garbage === "lowconf", "Tom informado vazio/inválido → lowconf (não assume C, não mascara mismatch)");
+ok(noFalseAlarm.gibberish === "lowconf", "Tom string-lixo que começa com nota ('Gibberish') → lowconf (valida o token inteiro, v0.42.2)");
 
 const syncIdem = await page.evaluate(async () => {
   const real = window.fetch;

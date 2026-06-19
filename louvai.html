@@ -770,7 +770,7 @@ body.light .keyhint{color:#b45309}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.42.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.42.2";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1061,7 +1061,9 @@ function keyName(pc,minor){ return minor?PREF_MIN[pc]:PREF_MAJ[pc]; }
 function compareKey(informed, det){
   if(!det || det.lowData || det.confidence<0.15) return {status:"lowconf"};
   const inf=String(informed||"");
-  if(!/^[A-G][#b]?/.test(inf)) return {status:"lowconf"};   // tom informado vazio/inválido → não opina (não assume "C")
+  // valida o token INTEIRO como tom ([A-G](#/b)?(m)?) — vazio, "xyz" ou string-lixo que só começa
+  // com letra de nota ("Gibberish") viram lowconf (não opina), em vez de assumir a nota inicial.
+  if(!/^[A-G][#b]?m?$/.test(inf)) return {status:"lowconf"};
   const iPc=NOTE_IDX[keyRoot(inf)], iMin=keyIsMinor(inf);
   if(iPc==null) return {status:"lowconf"};
   if(iPc===det.pc && iMin===det.minor) return {status:"ok", informedName:keyName(iPc,iMin), probableName:det.key};

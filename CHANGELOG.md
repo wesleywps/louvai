@@ -8,6 +8,17 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.42.2 — Conferir tom: valida o tom informado por inteiro
+**Correção (detecção de tom).** Pequeno endurecimento surfaçado na re-validação: o `compareKey` só
+rejeitava tom informado **vazio** ou que **não começasse** com nota; uma string-lixo que por acaso
+começa com letra de nota (ex.: `"Gibberish"` → lia como `G`) ainda era comparada e podia acusar
+divergência. Agora o guard valida o **token inteiro** como tom (`^[A-G](#/b)?(m)?$`) — qualquer coisa
+fora desse formato vira `lowconf` (não opina), em vez de assumir a nota inicial. Só deixa o recurso
+**mais conservador** (nunca cria alarme); na prática o `song.key` vem do seletor controlado, então é
+blindagem de borda. **245 verificações** (1 nova), zero erro de JS.
+
+---
+
 ## v0.42.1 — Correções pós-validação (alarme falso de tom · sync idempotente)
 **Correção.** Uma rodada de validação adversarial (3 validadores) pegou dois defeitos reais nas
 entregas v0.41.0/v0.42.0, além de dois ajustes finos:
