@@ -917,17 +917,17 @@ const m4 = await page.evaluate(() => {
   switchTab("escalas"); renderEscalas();
   const ec = document.querySelector("#escalalist .escard");
   return {
-    // v0.43.0: card de música compacto — título + tom (.keypill) na linha 1, metadados na .c-sub
-    scOk: !!(sc.querySelector(".c-ttl") && sc.querySelector(".keypill") && sc.querySelector(".c-sub")),
-    scKey: (sc.querySelector(".keypill") || {}).textContent || "",
+    // v0.43.0/0.43.1: card de música compacto — tom no tile .keytag (esquerda, menor) + metadados na .c-sub
+    scOk: !!(sc.querySelector(".c-ttl") && sc.querySelector(".keytag") && sc.querySelector(".c-sub")),
+    scKey: (sc.querySelector(".keytag") || {}).textContent || "",
     scSub: (sc.querySelector(".c-sub") || {}).textContent || "",
-    scNoTile: !sc.querySelector(".keytag") && !sc.querySelector(".c-meta"),
+    scNoMeta: !sc.querySelector(".c-meta"),
     ecOk: !!(ec.querySelector(".c-ttl") && ec.querySelector(".c-sub") && ec.querySelector(".c-meta .pill")),
     noEstag: !document.querySelector(".estag")
   };
 });
-ok(m4.scOk && m4.scKey === "D" && /Artista X/.test(m4.scSub) && /lento/.test(m4.scSub), "songcard compacto: título + tom (.keypill 'D') + metadados na .c-sub (artista, tags)");
-ok(m4.scNoTile, "songcard compacto não usa mais o tile grande (.keytag) nem a faixa de pílulas (.c-meta)");
+ok(m4.scOk && m4.scKey === "D" && /Artista X/.test(m4.scSub) && /lento/.test(m4.scSub), "songcard: tom no tile .keytag ('D', à esquerda) + metadados foldados na .c-sub (artista, tags)");
+ok(m4.scNoMeta, "songcard folda os metadados na .c-sub (sem a faixa de pílulas .c-meta empilhada)");
 ok(m4.ecOk && m4.noEstag, "escard mantém .c-ttl/.c-sub/.c-meta .pill (sem .estag)");
 
 // ===== v0.32.0 — Onda 3 / M5: #reposheet em cartões (Baixar × Publicar recolhido) =====
@@ -1342,19 +1342,22 @@ const compact = await page.evaluate(() => {
   saveSongs(); saveEscalas();
   switchTab("songs"); $("#search").value=""; activeTag=null; settings.sortMode="az"; renderLibrary();
   const card=document.querySelector("#songlist .songcard");
-  const kp=card.querySelector(".keypill"), sub=card.querySelector(".c-sub");
+  const kt=card.querySelector(".keytag"), sub=card.querySelector(".c-sub");
   return {
-    noTile: !card.querySelector(".keytag"),
-    key: kp ? kp.textContent : null,
+    hasTile: !!kt,
+    key: kt ? kt.textContent : null,
+    tileW: kt ? kt.getBoundingClientRect().width : 0,
+    noMeta: !card.querySelector(".c-meta"),
     sub: sub ? sub.textContent : "",
     playedInSub: !!(sub && sub.querySelector(".played")),
     h: card.getBoundingClientRect().height,
   };
 });
-ok(compact.noTile && compact.key === "Bb", "Card compacto: tom no chip .keypill (Bb), sem o tile grande de 46px");
-ok(/Banda/.test(compact.sub) && /ceia/.test(compact.sub), "Metadados (artista, tag) na única linha cinza .c-sub");
+ok(compact.hasTile && compact.key === "Bb", "Tom no tile .keytag à esquerda (Bb) — como era, só menor");
+ok(compact.tileW > 0 && compact.tileW <= 42, "Tile do tom MENOR que antes (≤42px; era 46). Largura=" + Math.round(compact.tileW));
+ok(compact.noMeta && /Banda/.test(compact.sub) && /ceia/.test(compact.sub), "Metadados (artista, tag) na única linha cinza .c-sub (sem faixa de pílulas)");
 ok(compact.playedInSub, "Recência fica inline na .c-sub (span .played) — sem faixa de pílulas separada");
-ok(compact.h <= 70, "Card de música ficou compacto (≤70px) — cabem mais na tela. Altura=" + Math.round(compact.h));
+ok(compact.h <= 70, "Card de música compacto (≤70px) — cabem mais na tela. Altura=" + Math.round(compact.h));
 
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));

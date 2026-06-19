@@ -8,6 +8,17 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.43.1 — Tom volta pro tile à esquerda (menor)
+**Ajuste (UI/lista).** Refinamento da v0.43.0 a pedido: o tom **não muda de lado** — volta ao **tile à
+esquerda do nome** da música (a forma de antes, que o líder preferia), só **menor**: de 46×46px para
+**38×38px** (mono, gradiente, acento, como era). Sai o chip `.keypill` à direita que a v0.43.0 tinha
+introduzido. O resto da compactação **fica**: card em 2 linhas (título / linha cinza com
+artista · recência · tags), `padding`/margem enxutos, `min-height` 56px; altura ~58px (cabem mais
+músicas). Helper `songCardInner` volta a montar o `.keytag` à esquerda. **251 verificações**, zero erro
+de JS.
+
+---
+
 ## v0.43.0 — Lista de músicas mais compacta (tom discreto)
 **Recurso (UI/lista).** A tela inicial passa a caber mais músicas: o card de cifra ficou em **duas
 linhas enxutas** e o tom deixou de ser um tile grande.

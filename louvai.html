@@ -124,18 +124,18 @@ input,textarea,select{font-family:inherit}
    Mesma tipografia, mesmo respiro 8pt e o mesmo vocabulário de pílula nas duas telas irmãs. */
 .songcard,.escard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
   margin-bottom:var(--sp-2);transition:var(--dur)}
-/* card de música COMPACTO (v0.43.0): 2 linhas (título+tom · metadados cinza), sem o tile grande de tom —
-   cabem mais músicas no palco. O alvo de toque é a LINHA INTEIRA (min-height 56px ≥ 44px). */
-.songcard{display:flex;flex-direction:column;justify-content:center;padding:var(--sp-2) var(--sp-4);min-height:56px}
+/* card de música COMPACTO (v0.43.0): 2 linhas (título+tom · metadados numa linha cinza só) —
+   cabem mais músicas no palco; o tom segue à esquerda no tile (v0.43.1), só menor. O alvo de toque é a
+   LINHA INTEIRA (min-height 56px). */
+.songcard{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-4);min-height:56px}
 .escard{padding:var(--sp-3) var(--sp-4)}
 .songcard:active,.escard:active{transform:scale(.985);background:var(--panel2)}
-.songcard .meta{min-width:0}
-/* linha 1: título (cresce, corta com …) + TOM discreto à direita (chip fininho, mono p/ alinhar 1–3 chars) */
-.c-head{display:flex;align-items:baseline;gap:var(--sp-2)}
-.c-head .c-ttl{flex:1;min-width:0}
-.keypill{flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);font-weight:700;
-  color:var(--accent-soft);background:var(--panel2);border:1px solid var(--line);
-  border-radius:var(--r-sm);padding:2px 7px;letter-spacing:.5px}
+.songcard .meta{flex:1;min-width:0}
+/* TOM à ESQUERDA do nome, no tile como era — só MENOR (v0.43.1): 38px (era 46). Mono, gradiente, acento. */
+.keytag{flex:0 0 auto;width:38px;height:38px;border-radius:var(--r-sm);display:grid;place-items:center;
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:var(--fs-md);
+  background:linear-gradient(140deg,var(--panel2),var(--bg2));color:var(--accent);
+  border:1px solid var(--line)}
 /* nível 1: título · nível 2: subtítulo (artista/data) · faixa de metadados em pílulas */
 .c-ttl{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -775,7 +775,7 @@ body.light .keyhint{color:#b45309}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.43.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.43.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -2492,11 +2492,11 @@ function songSub(s, map, anyDone){
   return bits.join(" · ");
 }
 // HTML interno do card de música compacto (compartilhado pela lista inicial e pelo seletor da escala):
-// linha 1 = título + tom discreto (.keypill) à direita; linha 2 = .c-sub cinza com os metadados.
+// tom no tile .keytag à ESQUERDA (menor, v0.43.1) + .meta (título / .c-sub cinza com os metadados).
 function songCardInner(s, map, anyDone){
   const sub=songSub(s,map,anyDone);
-  return '<div class="meta"><div class="c-head"><div class="c-ttl">'+esc(s.title)+'</div>'+
-    (s.key?'<span class="keypill">'+esc(s.key)+'</span>':'')+'</div>'+
+  return '<div class="keytag">'+esc(s.key||"?")+'</div>'+
+    '<div class="meta"><div class="c-ttl">'+esc(s.title)+'</div>'+
     (sub?'<div class="c-sub">'+sub+'</div>':'')+'</div>';
 }
 

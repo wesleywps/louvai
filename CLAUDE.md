@@ -107,7 +107,7 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`), **contagem ao sincronizar**, **detecção/validação de tom** e a
     compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~250 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~251 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -169,13 +169,14 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
 - **Polimento de UI Onda 3 (v0.30.0–v0.36.1):**
   - **⚙ Ajustes em seções (M2):** `#playersheet` agrupado por `.sheetsec` (Afinação/Leitura/Esta
     música); Editar/Enviar na `.ctrl.actions`. IDs dos controles preservados.
-  - **Linguagem de card (M4 + compactação v0.43.0):** ambos usam `.c-ttl`/`.c-sub`. O **card de música**
-    (`.songcard`) é **compacto**: 2 linhas — `.c-head` (título + **tom no chip `.keypill`** à direita) e
-    `.c-sub` cinza com **artista · recência · tags** (a recência é `<span class="played">`/`.never`,
-    da v0.24.0, agora inline). HTML pelo helper único **`songCardInner`/`songSub`** (usado na lista
-    inicial **e** no seletor da escala). **Saíram:** o tile `.keytag` (46px) e o `playedPill`/faixa
-    `.c-meta` no card de música. O **`.escard`** mantém `.c-ttl`/`.c-sub`/`.c-meta .pill` (contagem/
-    duração/equipe). Não recriar `.estag`/`.ttl`/`.sub`/`.tags` antigos.
+  - **Linguagem de card (M4 + compactação v0.43.0/0.43.1):** ambos usam `.c-ttl`/`.c-sub`. O **card de
+    música** (`.songcard`) é **compacto** em 2 linhas: **tom no tile `.keytag` à ESQUERDA** (38px desde a
+    v0.43.1, era 46) + `.meta` (título / `.c-sub` cinza com **artista · recência · tags**; a recência é
+    `<span class="played">`/`.never`, da v0.24.0, agora inline). HTML pelo helper único
+    **`songCardInner`/`songSub`** (usado na lista inicial **e** no seletor da escala). **Saíram:** o
+    `playedPill`/faixa `.c-meta` empilhada no card de música (e o chip `.keypill` à direita que a v0.43.0
+    chegou a usar). O **`.escard`** mantém `.c-ttl`/`.c-sub`/`.c-meta .pill` (contagem/duração/equipe).
+    Não recriar `.estag`/`.ttl`/`.sub`/`.tags` antigos.
   - **`#reposheet` em cartões (M5):** `.repo-card` "Baixar" + `<details class="repo-pub">` "Publicar"
     recolhido (abre sozinho se `settings.ghToken`). Handlers por ID — pode reestruturar à vontade.
   - **Arrastar p/ fechar (M3):** `enableSheetDrag` em todo `.sheet` no boot; pega só no `.grip`/`h3`,
