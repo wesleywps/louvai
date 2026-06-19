@@ -1383,6 +1383,34 @@ const kbdOpen = await page.evaluate(() => !document.getElementById("view-player"
 ok(kbdOpen, "Enter no card focado abre o player (ativação por teclado)");
 await page.evaluate(() => exitPlayer());
 
+// ===== v0.44.0 — modo tela cheia na Apresentação =====
+const full = await page.evaluate(async () => {
+  songs.length=0; escalas.length=0;
+  songs.push({id:"fz",title:"Cheia",key:"C",capo:0,tags:[],updatedAt:1,body:"C\nx"});
+  const esc={id:"fe",title:"Culto",date:"2026-01-01",team:[],items:[{kind:"song",songId:"fz",key:"",capo:0}],updatedAt:1};
+  escalas.push(esc); saveSongs(); saveEscalas();
+  let req=0,exit=0;   // stub do Fullscreen API (headless não entra em fullscreen de verdade)
+  document.documentElement.requestFullscreen = async()=>{ req++; };
+  document.exitFullscreen = async()=>{ exit++; };
+  openPlayer("fz",{id:"fe",idx:0,list:[{songId:"fz",key:"",capo:0}]});
+  const vp=document.getElementById("view-player");
+  const out={ present: vp.classList.contains("present"), hasBtn: !!document.getElementById("pv-full") };
+  toggleImmersive(); await new Promise(r=>setTimeout(r,10));
+  out.onImm = vp.classList.contains("immersive");
+  out.barHidden = getComputedStyle(document.getElementById("presentbar")).display==="none";
+  out.exitShown = getComputedStyle(document.getElementById("pv-exitfull")).display!=="none";
+  out.req = req;
+  document.getElementById("pv-exitfull").click(); await new Promise(r=>setTimeout(r,10));
+  out.offImm = !vp.classList.contains("immersive");
+  out.exit = exit;
+  exitPlayer();
+  return out;
+});
+ok(full.present && full.hasBtn, "Apresentação tem o botão de tela cheia (#pv-full)");
+ok(full.onImm && full.barHidden && full.exitShown, "Tela cheia esconde a barra/cabeçalho e mostra o botão flutuante de sair (maximiza a cifra)");
+ok(full.req >= 1, "Tela cheia pede o Fullscreen do navegador (best-effort)");
+ok(full.offImm && full.exit >= 1, "Sair (botão flutuante) volta o layout e libera o fullscreen");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

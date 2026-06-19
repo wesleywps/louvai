@@ -11,7 +11,7 @@ celular/tablet, guarda tudo no aparelho e compartilha por arquivo.
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
 para ter um ícone e abrir como app.
 
-## Recursos (v0.43.2)
+## Recursos (v0.44.0)
 - **Interface moderna** (estilo Spotify/Deezer): tema escuro near-black com
   acento violeta, bottom nav, botão "+" contextual e player focado no palco.
   **Ícones SVG coesos** (traço único, herdam o tema nos dois modos) no lugar da
@@ -49,7 +49,8 @@ para ter um ícone e abrir como app.
   acordes** da cifra e sugere o provável quando há divergência (sem alterar nada — só avisa).
 - **Escalas/Setlists**: ordem do culto, tom por escala, equipe, tempo total,
   **"Culto realizado"** (confirma a escala) e **modo Apresentar** com **barra compacta**
-  (mais cifra na tela ao vivo) e **virar de página como um livro** entre as músicas.
+  (mais cifra na tela ao vivo), **tela cheia** (maximiza a cifra no palco) e **virar de página como um
+  livro** entre as músicas.
 - **"Última vez que tocamos"**: cada cifra mostra a recência ("tocada há 2 semanas" /
   "nunca tocada"), na lista e ao montar a escala — pra não repetir música. Conta só
   escalas marcadas como **realizadas** (a escala é plano; o que rola se confirma no culto).

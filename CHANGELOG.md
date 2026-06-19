@@ -8,6 +8,20 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.44.0 — Modo tela cheia na Apresentação
+**Recurso (Apresentação ao vivo).** Botão de **tela cheia** na barra compacta da Apresentação: **maximiza
+a cifra** na tela do palco — esconde a barra e a linha de info (cabeçalho) e ainda **pede o Fullscreen do
+navegador** (recupera a barra do navegador no Android/desktop; iOS, que não suporta, degrada sem erro).
+- Navegar entre músicas segue por **virar-página / ‹ ›**; sair pelo **botão flutuante** no canto — fora da
+  zona de toque de virar-página, sem conflito. O Wake Lock mantém a tela acesa.
+- Sair do player **ou** sair do fullscreen pelo sistema (Esc/gesto) volta o layout automaticamente.
+- `#pv-full` (alterna `maximize`/`minimize`), `#pv-exitfull` flutuante; `setImmersive`/`toggleImmersive`
+  (classe `.immersive` em `#view-player`) + Fullscreen API com prefixo `webkit` e `try/catch`.
+- **259 verificações** (4 novas: botão presente, esconde barra + mostra sair, pede Fullscreen, sair volta),
+  zero erro de JS.
+
+---
+
 ## v0.43.2 — Acessibilidade: foco por teclado, alvo de toque e contraste
 **Ajuste (acessibilidade).** Fecha os três itens de acessibilidade que sobraram da análise de UI:
 - **Foco visível por teclado** (`:focus-visible`): botões, chips, links e os **cards** (lista de cifras/

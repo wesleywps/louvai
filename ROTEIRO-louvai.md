@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.43.2**.
+seguir. Atualizado até a **v0.44.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -108,6 +108,7 @@ instalação complexa.
 | **v0.43.0** | recurso | **Lista de músicas compacta:** card em 2 linhas (título · linha cinza com artista/recência/tags); altura ~74–100px → ~61px (cabem mais músicas). Pesquisa de densidade (Spotify/OnSong/Material). |
 | **v0.43.1** | ajuste | **Tom no tile à esquerda, menor:** a pedido, o tom volta ao tile à esquerda do nome (forma de antes), só menor (46→38px); sai o chip à direita da v0.43.0. Compactação mantida (altura ~58px). |
 | **v0.43.2** | ajuste | **Acessibilidade:** foco visível por teclado (`:focus-visible`) em botões/chips/cards (cards ativáveis por Enter/Espaço); alvo de toque da tag ≥44px; `--muted` mais claro no escuro (contraste). Fecha os itens de a11y da análise. |
+| **v0.44.0** | recurso | **Tela cheia na Apresentação:** botão maximiza a cifra (esconde barra/cabeçalho) + Fullscreen API (Android/desktop; iOS graceful); sair pelo botão flutuante no canto. Navegar segue por virar-página/‹ ›. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -288,4 +289,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.43.2.*
+*Última atualização deste roteiro: v0.44.0.*

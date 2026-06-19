@@ -412,6 +412,15 @@ body.light .keyhint{color:#b45309}
    fininha do tom (.songhead = artista · Tom · capo) à vista, como no player normal */
 #view-player.present .controls{display:none}
 #view-player.present .cifra{padding-top:6px}
+/* tela cheia da Apresentação (v0.44.0): esconde a barra/cabeçalho p/ MÁXIMA cifra; o navegar fica por
+   virar-página (Modo Página) e o botão flutuante de sair (canto, fora da zona de toque de virar). */
+#view-player.immersive #presentbar,#view-player.immersive .songhead{display:none}
+#view-player.immersive .cifra{padding-top:max(6px,env(safe-area-inset-top))}
+#pv-exitfull{position:fixed;top:max(10px,env(safe-area-inset-top));right:10px;z-index:60;
+  width:44px;height:44px;border-radius:12px;display:none;place-items:center;color:var(--text);
+  background:var(--glass2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line)}
+#pv-exitfull .ic-svg{width:20px;height:20px}
+#view-player.immersive #pv-exitfull{display:grid}
 
 /* ---------- Song picker ---------- */
 #picklist .songcard{margin-bottom:8px}
@@ -548,9 +557,12 @@ body.light .keyhint{color:#b45309}
         <button class="pbtn" id="pv-prev" aria-label="Música anterior"></button>
         <div class="pinfo"><span id="pv-title"></span><span id="pv-pos"></span></div>
         <button class="pbtn" id="pv-next" aria-label="Próxima música"></button>
+        <button class="pbtn-sm" id="pv-full" aria-label="Tela cheia"></button>
         <button class="pbtn-sm" id="pv-settings" aria-label="Ajustes"></button>
       </div>
     </div>
+    <!-- botão flutuante p/ sair da tela cheia (canto, fora da zona de virar-página) -->
+    <button id="pv-exitfull" aria-label="Sair da tela cheia"></button>
     <div class="songhead">
       <div class="s" id="p-sub"></div>
     </div>
@@ -781,7 +793,7 @@ body.light .keyhint{color:#b45309}
    Louvai · app de cifras  —  offline-first, arquivo único
    Tudo é salvo no próprio aparelho (localStorage). Compartilhamento por arquivo.
    ========================================================================= */
-const APP_VERSION = "0.43.2";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.44.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1342,7 +1354,9 @@ const ICONS={
   eye:'<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
   user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   "arrow-up-down":'<path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>',
-  check:'<path d="M20 6 9 17l-5-5"/>'
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  maximize:'<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
+  minimize:'<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>'
 };
 function icon(name,cls){
   return '<svg class="ic-svg'+(cls?" "+cls:"")+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" '+
@@ -1352,7 +1366,8 @@ function icon(name,cls){
 const ICON_ONLY={"#backupBtn":"archive","#importBtn":"download","#p-back":"arrow-left","#es-back":"arrow-left",
   "#pv-back":"arrow-left","#p-struct":"list-music","#p-settings":"sliders","#pv-settings":"sliders",
   "#pv-prev":"chevron-left","#pv-next":"chevron-right","#e-cancel":"x","#ee-cancel":"x","#es-edit":"pencil",
-  "#es-share":"share-2","#lyr-toggle":"type","#tabs-toggle":"tabs","#scrollbar-toggle":"play","#scroll-toggle":"play"};
+  "#es-share":"share-2","#lyr-toggle":"type","#tabs-toggle":"tabs","#scrollbar-toggle":"play","#scroll-toggle":"play",
+  "#pv-exitfull":"minimize"};
 const ICON_TX={"#es-present":"play","#e-delete":"trash-2","#ee-delete":"trash-2","#e-paste":"clipboard",
   "#repo-pull":"download","#repo-export":"file-down","#repo-publish":"cloud-upload","#p-edit":"pencil","#p-share":"share-2"};
 function paintIcons(){
@@ -1503,6 +1518,7 @@ function updatePresentBar(){
   $("#view-player").classList.toggle("present", !!escalaCtx);
   if(!escalaCtx){ bar.classList.add("hidden"); return; }
   bar.classList.remove("hidden");
+  applyFullBtn();                                          // pinta o botão de tela cheia conforme o estado
   $("#pv-title").textContent = current.title;             // título pequeno no meio da barra
   $("#pv-pos").textContent = (escalaCtx.idx+1)+" de "+escalaCtx.list.length;
   const pct = escalaCtx.list.length>1 ? (escalaCtx.idx+1)/escalaCtx.list.length*100 : 100;
@@ -1567,6 +1583,32 @@ function transposeBy(d){ transp+=d; drawPlayer(); }   // o Tom mora no ⚙ Ajust
 $("#s-tup").onclick=()=>transposeBy(1);
 $("#s-tdown").onclick=()=>transposeBy(-1);
 $("#pv-settings").onclick=()=>openPlayerSheet();
+/* tela cheia da Apresentação (v0.44.0): maximiza a cifra (esconde barra/cabeçalho) + tenta o Fullscreen
+   do navegador (recupera a barra do navegador no Android/desktop; iOS não suporta → graceful no-op).
+   Navegar entre músicas segue por virar-página/‹ ›; sair pelo botão flutuante no canto. */
+let immersiveFs=false;
+function fsActive(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
+function applyFullBtn(){
+  const on=$("#view-player").classList.contains("immersive"), b=$("#pv-full");
+  if(b){ b.innerHTML=icon(on?"minimize":"maximize"); b.setAttribute("aria-label",on?"Sair da tela cheia":"Tela cheia"); b.setAttribute("aria-pressed",String(on)); }
+}
+function setImmersive(on){
+  $("#view-player").classList.toggle("immersive",on); applyFullBtn();
+  if(on){
+    const el=document.documentElement, rq=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(rq){ try{ const p=rq.call(el); if(p&&p.catch)p.catch(()=>{}); immersiveFs=true; }catch(e){ immersiveFs=false; } }
+  }else if(immersiveFs){
+    immersiveFs=false; const ex=document.exitFullscreen||document.webkitExitFullscreen;
+    if(ex){ try{ const p=ex.call(document); if(p&&p.catch)p.catch(()=>{}); }catch(e){} }
+  }
+}
+function toggleImmersive(){ setImmersive(!$("#view-player").classList.contains("immersive")); }
+$("#pv-full").onclick=toggleImmersive;
+$("#pv-exitfull").onclick=()=>setImmersive(false);
+// sair do fullscreen pelo sistema (Esc/gesto) também desliga o modo imersivo, p/ manter coerência
+["fullscreenchange","webkitfullscreenchange"].forEach(ev=>document.addEventListener(ev,()=>{
+  if(!fsActive() && $("#view-player").classList.contains("immersive")){ immersiveFs=false; setImmersive(false); }
+}));
 $("#c-up").onclick=()=>{if(capo<11){capo++;drawPlayer();}};
 $("#c-down").onclick=()=>{if(capo>0){capo--;drawPlayer();}};
 $("#f-up").onclick=()=>{fontSize=Math.min(28,fontSize+1);drawPlayer();};
@@ -1578,6 +1620,7 @@ $("#checkkey-toggle").onclick=()=>{settings.checkKey=!settings.checkKey;saveSett
 $("#scrollbar-toggle").onclick=()=>{settings.showScrollbar=!settings.showScrollbar;saveSettings();const b=$("#scrollbar-toggle");b.classList.toggle("on",!!settings.showScrollbar);b.setAttribute("aria-pressed",String(!!settings.showScrollbar));applyScrollbar();};
 function exitPlayer(){   // voltar do player — usado pelo ← normal E pelo ← da barra compacta
   stopScroll();
+  setImmersive(false);  // sai da tela cheia ao deixar o player (limpa imersivo + fullscreen)
   hideChordDiagram();   // não deixa um diagrama de acorde aberto sobre a lista
 
   $("#view-player").classList.remove("present");   // desliga o layout compacto da Apresentação
