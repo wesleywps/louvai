@@ -3,7 +3,9 @@
 > **Como retomar:** abra o Claude Code nesta pasta e peça
 > *"vamos executar o PLANO-pwa.md"* (ou *"vamos pro Incremento 1 do PWA"*).
 >
-> **Status: 📝 PLANEJADO (não implementado).** App na **v0.45.0** ao planejar.
+> **Status: 🟡 EM ANDAMENTO.** App na **v0.45.0** ao planejar. **Ícone + `manifest.webmanifest`
+> mínimo entregues na v0.46.0** (favicon + tela inicial iOS/Android, **sem service worker**); falta o
+> **service worker** (instalável + offline 100%) — o Incremento 1 abaixo.
 > **Revisado após validação adversarial** (4 lentes: técnica/APIs, fit do projeto,
 > testabilidade, completude/risco — todas pediram mudanças; incorporadas abaixo).
 > Este plano **encerra a regra "arquivo único"** (ver `CLAUDE.md`, seção "Horizonte"):
@@ -107,7 +109,7 @@ repetir o erro.
 | # | Decisão | Opções | Recomendação |
 |---|---|---|---|
 | D1 | **Fontes offline** | (a) manter **fallback de sistema** (Google Fonts é cosmética, com fallback; zero arquivos) · (b) **self-hostar** Inter/Fraunces (woff2 local) | **(a) no Inc.1**; **(b) opcional no Inc.2**. "Offline 100%" **não depende** da fonte (é cosmética; só a aparência muda offline). |
-| D2 | **Ícone** | (a) **PNG** 192/512 + maskable + apple-touch-180 (compat máxima; exige destravar `*.png`) · (b) SVG único (iOS/maskable fracos) | **(a) PNG.** **Como gerar sem build:** exportar à mão de um SVG-base, ou um **script Node pontual** (`scripts/gen-icons.mjs`, roda fora do runtime/manual) — **não** é etapa de build do app. |
+| D2 | **Ícone** | (a) **PNG** 192/512 + maskable + apple-touch-180 · (b) SVG único | **✅ FEITO (PNG, fora do app).** Gerado em **`louvai-icons/`** (`icon-192/512`, `icon-maskable-192/512`, `apple-touch-180` + SVG-fonte `louvai-icon.svg`/`louvai-icon-maskable.svg`) via o `PROMPT-icone.md` — sem build. *(Junto vem `louvai-icons/manifest.json`, rascunho do gerador com `start_url:"/"` — o Inc.1 cria o `manifest.webmanifest` correto na raiz, `./`.)* |
 | D3 | **Integração com o SO (Inc.3)** | `share_target` (Android Chrome ✓) × `file_handlers`/`launchQueue` (**desktop Chromium apenas — NÃO dispara no Android**) | **`share_target` é o item de valor no celular** (público-alvo) e vira o **principal** do Inc.3; `file_handlers` é **bônus de desktop**. *(Correção da validação: o rascunho priorizava o item que no celular nem existe.)* |
 | D4 | **Cache** | cache-first do shell + precache versionado + atualização controlada (toast) | **Confirmar** (decisão técnica nº1/nº3). |
 
@@ -128,7 +130,7 @@ iOS best-effort, ver Limites), **com atualização controlada** (toast, sem troc
   com `.catch()` individual (decisão nº7); **não** chama `skipWaiting`. **activate:** apaga caches
   com prefixo `louvai-shell-` ≠ atual; `clients.claim()`. **message:** `SKIP_WAITING` → `skipWaiting()`.
   **fetch:** regra de bypass da decisão nº4.
-- `icons/icon-192.png`, `icons/icon-512.png`, `icons/maskable-512.png`, `icons/apple-touch-icon-180.png`.
+- **Já gerados** em `louvai-icons/`: `icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`, `apple-touch-180.png` (+ SVG-fonte).
 
 **Mudanças em `louvai.html`** (reconhecendo o que JÁ existe — head linhas 5-8, `applyTheme` linha 2926)
 - **Já existem, NÃO duplicar:** `theme-color #121212` (l.6, **mutado em runtime** por `applyTheme`
@@ -138,17 +140,17 @@ iOS best-effort, ver Limites), **com atualização controlada** (toast, sem troc
 - **Adicionar o que falta:** `<link rel="manifest" href="manifest.webmanifest">`,
   `<meta name="mobile-web-app-capable" content="yes">` (a `apple-` está deprecada — manter ambas),
   `<meta name="apple-mobile-web-app-title" content="Louvai">`,
-  `<link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">`.
+  `<link rel="apple-touch-icon" href="louvai-icons/apple-touch-180.png">`.
 - **Registro do SW** (decisão nº8): após `load`, gated em `isSecureContext`, com `updateViaCache:"none"`
   + `registration.update()`; detectar `registration.waiting`/`updatefound` → **toast de atualização**
   (decisão nº3); ao tocar, `postMessage("SKIP_WAITING")` e recarregar em `controllerchange`.
 - (Opcional) capturar `beforeinstallprompt` e oferecer botão **"Instalar"** discreto.
 
 **Mudanças de repo**
-- `.gitignore`: **`!icons/*.png`** (só isso destrava os ícones; `!icons/` é redundante — `*.png`
-  casa arquivos, não a pasta).
+- `.gitignore`: **`!louvai-icons/*.png`** (✅ já aplicado — destrava só os PNGs de `louvai-icons/`;
+  não precisa `!louvai-icons/`, pois `*.png` casa arquivos, não a pasta).
 - Ritual (`CLAUDE.md`): passo de versão passa a incluir **`SW_VERSION` no `sw.js`**; passo 6 inclui
-  subir `manifest`/`sw.js`/`icons/` (1ª vez) e **re-subir `sw.js` com a versão nova a cada release**.
+  subir `manifest`/`sw.js`/`louvai-icons/` (1ª vez) e **re-subir `sw.js` com a versão nova a cada release**.
 
 **Pronto quando (DoD):** manifest válido e instalável; SW `activated` com **scope `/louvai/`** (no
 teste, sob subpath); **reload offline abre o app**; **`pullRepo()` offline FALHA limpo** (não serve
@@ -190,7 +192,7 @@ por **zero risco**; o registro do SW é pulado lá via `isSecureContext`.)*
 
 **`tests/pwa.mjs` (novo; sem dep nova — módulo `http` nativo do Node):**
 - **Espelhar o subpath de produção:** copiar (`fs.copyFileSync`, portável — não `cp`) `louvai.html`→
-  `<tmp>/louvai/index.html` + `manifest`/`sw.js`/`icons/` pra `<tmp>/louvai/`; servir `<tmp>` e abrir
+  `<tmp>/louvai/index.html` + `manifest`/`sw.js`/`louvai-icons/` pra `<tmp>/louvai/`; servir `<tmp>` e abrir
   **`http://localhost:PORT/louvai/`**. Assim testa a **resolução de scope/registro sob `/louvai/`** —
   a armadilha nº1. **Não** sobrescrever o `index.html` do repo (usa tmp).
 - **Servidor:** `server.listen(0)` (porta efêmera, sem colisão), `server.address().port`,
@@ -235,10 +237,10 @@ por **zero risco**; o registro do SW é pulado lá via `isSecureContext`.)*
 - **Não é app de loja** (PWA, não pacote nativo) — decisão do projeto.
 
 ## Arquivos
-- **Novos:** `manifest.webmanifest`, `sw.js`, `icons/*` (destravados), `tests/pwa.mjs`,
+- **Novos:** `manifest.webmanifest`, `sw.js`, `tests/pwa.mjs` (ícones `louvai-icons/*` **já commitados**),
   (D2) `scripts/gen-icons.mjs` opcional, (Inc.2/D1=b) `fonts/*`.
 - **Alterados:** `louvai.html` (link manifest + metas que faltam + registro/atualização do SW),
-  `.gitignore` (`!icons/*.png`), `package.json` (scripts de teste), `tests/smoke.mjs` (não-regressão
+  `.gitignore` (`!louvai-icons/*.png`, ✅ feito), `package.json` (scripts de teste), `tests/smoke.mjs` (não-regressão
   do registro em `file://` + `levita-*`), `index.html` (cópia — sincronizar no ritual),
   **`CLAUDE.md`** (Ritual: `SW_VERSION` como 3º local de versão + subir `sw.js` por release),
   `README.md`/`ROTEIRO-louvai.md`/`CHANGELOG.md` (ritual).

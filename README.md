@@ -30,11 +30,11 @@ e sem backend: abre no navegador do celular/tablet e compartilha por arquivo ou 
   conferência opcional do **tom pelos acordes**, importação à prova de arquivo malformado
   (sem XSS) e **acessível** (foco por teclado, contraste no escuro, alvos de toque grandes).
 
-*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.45.0**.*
+*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.46.0**.*
 
 ## Usar
-Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"**
-para ter um ícone e abrir como app.
+Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"** — desde a
+v0.46.0 ele instala com o **ícone do Louvai** (na aba do navegador e na tela inicial).
 
 ## Publicar (hospedar)
 Hospedar dá uma **URL fixa** ao app, e aí o **link de importação** (`…/#imp=…`) vira

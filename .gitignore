@@ -1,5 +1,7 @@
 node_modules/
 *.png
+# ...exceto os ícones do PWA (PNG é asset deployável; ver PLANO-pwa.md / PROMPT-icone.md)
+!louvai-icons/*.png
 *.log
 # cópias de distribuição por versão ficam só na pasta, fora do git (ver ROTEIRO)
 louvai-v*.html

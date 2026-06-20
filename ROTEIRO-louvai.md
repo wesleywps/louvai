@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.45.0**.
+seguir. Atualizado até a **v0.46.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -112,6 +112,7 @@ instalação complexa.
 | **v0.44.1** | correção | **Data do culto realizado** = data da escala (sem data, usa o dia do clique); **importar "Intro: \<acordes\>"** não vira mais título/autor (`sectionChordLead` + traço neutro). |
 | **v0.44.2** | organização | **Índice de seções** no topo do `<script>` (navegação por Ctrl+F). Fatia segura; o refactor completo (nomes/agrupamento) fica como frente dedicada. |
 | **v0.45.0** | recurso | **Repositório já configurado por padrão:** o app **deriva o `repoUrl` do próprio endereço** (`new URL("louvai.json", location.href)`) — o membro abre o app hospedado e **puxa/sincroniza sem colar link** (funciona em qualquer fork, sem URL cravada). Link colado tem prioridade; auto-sync segue opt-in; campo pré-preenchido (transparência) e "campo = padrão" não congela a URL (fork-safe). `file://` sem padrão. |
+| **v0.46.0** | recurso | **Ícone do app:** favicon na aba (SVG+PNG), ícone na tela inicial do **iOS** (apple-touch) e do **Android** (`manifest.webmanifest` mínimo, fork-safe `./`). Identidade violeta/near-black gerada (monograma "L" + nota; ver `PROMPT-icone.md`), em `louvai-icons/`. **Sem service worker** — instalável + offline 100% é o Inc.1 do PWA. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -167,13 +168,15 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   **Falta apenas a validação visual no celular** (palco, dark/light) — ver ordem sugerida.
 
 ### Tema A — Segurança dos dados
-- [ ] **PWA instalável de verdade** (ícone, 100% offline inclusive fontes;
+- [ ] **PWA instalável de verdade** (100% offline inclusive fontes;
   destrava o compartilhar nativo no desktop, e "Abrir com Louvai" pra importar
   arquivo em 1 toque). **Decisão registrada:** a migração para PWA **encerra a regra
   "arquivo único"** — a partir dela o critério passa a ser **qualidade de software e
   organização do repositório** (multi-arquivo ok), mantendo offline-first/vanilla/sem
   build/sem backend. Detalhe no `CLAUDE.md` (seção "Horizonte"). Antes do PWA, seguimos
   refinando em arquivo único.
+  *(O **ícone do app** já saiu na v0.46.0 — favicon + tela inicial iOS/Android + `manifest.webmanifest`
+  mínimo; falta só o **service worker** pro offline/instalável. Ver `PLANO-pwa.md` (Inc.1).)*
 - [x] **Backup com rede de segurança:** data do último backup, "há mudanças desde então",
   lembrete ativo (pontinho no ↥ + toast ao abrir quando atrasado) e "Restaurar de um
   arquivo" claro. *(entregue na v0.23.0 — backup local; nuvem é fase online)*
@@ -309,4 +312,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.45.0.*
+*Última atualização deste roteiro: v0.46.0.*

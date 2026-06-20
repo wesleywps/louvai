@@ -89,33 +89,40 @@ excessiva — quero uma MARCA, não uma ilustração detalhada.
 > app — o detalhe que some fácil, registrado aqui de propósito. Contexto em `PLANO-pwa.md`
 > (decisão **D2** + Incremento 1).
 
-**1. Salvar os PNGs em `icons/`** (nomes e tamanhos **exatos** — é o que o `manifest` e o
-`louvai.html` vão procurar):
+> **✅ Status: ícones gerados e commitados** na pasta **`louvai-icons/`** (via este prompt).
+> Os passos abaixo já foram aplicados — ficam registrados pra repetir/atualizar no futuro.
+
+**1. PNGs em `louvai-icons/`** (nomes e tamanhos **reais** — é o que o `manifest`/`louvai.html` procuram):
 
 | Arquivo | Tamanho | Uso | Observação |
 |---|---|---|---|
-| `icons/icon-192.png` | 192×192 | ícone normal | símbolo violeta sobre `#121212` |
-| `icons/icon-512.png` | 512×512 | ícone normal / splash | idem |
-| `icons/maskable-512.png` | 512×512 | **maskable** (Android recorta) | conteúdo nos **~80% centrais**; fundo `#121212` **sangrando até a borda** (sem transparência) |
-| `icons/apple-touch-icon-180.png` | 180×180 | iOS (tela inicial) | **sem transparência** (o iOS arredonda sozinho) |
+| `louvai-icons/icon-192.png` | 192×192 | ícone normal | símbolo violeta sobre `#121212` |
+| `louvai-icons/icon-512.png` | 512×512 | ícone normal / splash | idem |
+| `louvai-icons/icon-maskable-192.png` | 192×192 | **maskable** (Android recorta) | conteúdo nos **~80% centrais**; fundo sangrando |
+| `louvai-icons/icon-maskable-512.png` | 512×512 | **maskable** | idem, em alta |
+| `louvai-icons/apple-touch-180.png` | 180×180 | iOS (tela inicial) | **sem transparência** (o iOS arredonda sozinho) |
+
+Fonte vetorial junto: `louvai-icons/louvai-icon.svg` e `louvai-icon-maskable.svg`. ⚠️ O
+`louvai-icons/manifest.json` é **rascunho do gerador** (`start_url:"/"`) — o Inc.1 cria o
+`manifest.webmanifest` correto na **raiz** (`start_url:"./"` + `scope`/`id`).
 
 **2. Destravar no `.gitignore`** — ⚠️ **o ponto que mais confunde:** a linha `*.png` (linha 2)
 **ignora todo PNG por padrão**, então os ícones **não entram no git sozinhos**. Adicione:
 
 ```
-!icons/*.png
+!louvai-icons/*.png
 ```
 
-Só isso. **Não** use `!icons/` (é redundante — `*.png` casa arquivos, não a pasta).
+Só isso. **Não** use `!louvai-icons/` (é redundante — `*.png` casa arquivos, não a pasta).
 **Confira que destravou:** `git status` deve listar os ícones como novos; e
-`git check-ignore icons/icon-192.png` **não** pode retornar nada (saída vazia = não ignorado).
+`git check-ignore louvai-icons/icon-192.png` **não** pode retornar nada (saída vazia = não ignorado).
 
 **3. Onde eles são referenciados** (já previsto no Inc.1 do `PLANO-pwa.md`):
 - `manifest.webmanifest` → array `icons` com 192, 512 e o **maskable-512** (este com
   `"purpose": "maskable"`; os outros, `"any"`).
-- `louvai.html` → `<link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">`.
-- Caminhos **relativos** (`icons/…`) resolvem para `/louvai/icons/…` em produção e funcionam
-  em **qualquer fork** (mesma lógica fork-safe do `defaultRepoUrl` da v0.45.0).
+- `louvai.html` → `<link rel="apple-touch-icon" href="louvai-icons/apple-touch-180.png">`.
+- Caminhos **relativos** (`louvai-icons/…`) resolvem para `/louvai/louvai-icons/…` em produção e
+  funcionam em **qualquer fork** (mesma lógica fork-safe do `defaultRepoUrl` da v0.45.0).
 
 **4. Sem etapa de build:** exporte os PNGs **à mão** (a partir da imagem/SVG gerado) **ou** com
 um `scripts/gen-icons.mjs` **pontual** (rodado à parte — **não** é build do app; o runtime segue

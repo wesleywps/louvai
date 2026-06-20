@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Louvai — Ícone do app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#121212;
+    --bg2:#181818;
+    --violet:#a78bfa;
+    --violet-strong:#8b5cf6;
+    --violet-deep:#7c3aed;
+    --violet-bright:#c7a9ff;
+    --ink:#ECE8F5;
+    --muted:#9b94ad;
+    --line:rgba(167,139,250,.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Nunito Sans",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(120% 70% at 50% -6%, rgba(139,92,246,.20) 0%, rgba(124,58,237,.06) 34%, #121212 64%);
+    background-repeat:no-repeat;
+  }
+  .wrap{max-width:1060px;margin:0 auto;padding:72px 32px 120px;}
+
+  /* ---- header ---- */
+  header{margin-bottom:64px;}
+  .eyebrow{
+    font-size:12px;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--violet);font-weight:700;margin:0 0 18px;
+  }
+  .wordmark{
+    font-family:"Fraunces",serif;font-weight:600;
+    font-size:clamp(56px,10vw,104px);line-height:.92;letter-spacing:-.01em;
+    margin:0;color:#fff;
+  }
+  .wordmark .dot{color:var(--violet);}
+  .lede{
+    margin:22px 0 0;max-width:620px;color:var(--muted);
+    font-size:18px;line-height:1.6;font-weight:300;
+  }
+  .lede strong{color:var(--ink);font-weight:600;}
+
+  /* ---- section ---- */
+  section{margin-top:88px;}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:32px;
+    border-bottom:1px solid var(--line);padding-bottom:18px;}
+  .sec-num{font-family:"Fraunces",serif;font-size:20px;color:var(--violet);font-weight:600;}
+  .sec-title{font-family:"Fraunces",serif;font-size:26px;font-weight:600;margin:0;color:#fff;}
+  .sec-sub{margin-left:auto;color:var(--muted);font-size:14px;max-width:360px;text-align:right;line-height:1.45;}
+
+  /* ---- concept grid ---- */
+  .concepts{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;}
+  .concept{display:flex;flex-direction:column;gap:16px;}
+  .concept .tiles{display:flex;align-items:flex-end;gap:14px;}
+  .tile{
+    background:radial-gradient(120% 96% at 50% -8%, rgba(139,92,246,.30) 0%, rgba(124,58,237,.07) 40%, #121212 70%);
+    border:1px solid var(--line);
+    display:grid;place-items:center;overflow:hidden;
+  }
+  .t-lg{width:120px;height:120px;border-radius:26px;}
+  .t-sm{width:48px;height:48px;border-radius:11px;}
+  .c-label{display:flex;flex-direction:column;gap:5px;}
+  .c-tag{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--violet);}
+  .c-name{font-family:"Fraunces",serif;font-size:18px;font-weight:600;color:#fff;}
+  .c-desc{font-size:13.5px;line-height:1.5;color:var(--muted);}
+  .concept.chosen .c-tag{color:var(--violet-bright);}
+  .pill{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;
+    font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;
+    color:#120c22;background:var(--violet-bright);padding:4px 9px;border-radius:99px;}
+
+  /* ---- final showcase ---- */
+  .final{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
+  .panel{
+    border:1px solid var(--line);border-radius:18px;padding:26px;
+    background:linear-gradient(180deg, rgba(167,139,250,.04), rgba(255,255,255,0));
+  }
+  .panel h3{margin:0 0 4px;font-family:"Fraunces",serif;font-size:18px;font-weight:600;color:#fff;}
+  .panel p{margin:0 0 22px;color:var(--muted);font-size:13.5px;line-height:1.5;}
+  .big-tile{width:100%;aspect-ratio:1;border-radius:24px;}
+  .big-tile.bleed{border:none;}
+  .big-tile svg{width:100%;height:auto;display:block;}
+
+  .crop-row{display:flex;gap:18px;margin-top:22px;align-items:center;flex-wrap:wrap;}
+  .crop{display:flex;flex-direction:column;align-items:center;gap:9px;}
+  .crop .frame{width:84px;height:84px;overflow:hidden;position:relative;}
+  .crop .frame.square{border-radius:6px;}
+  .crop .frame.squircle{border-radius:24px;}
+  .crop .frame.circle{border-radius:50%;}
+  .crop .frame > div{width:100%;height:100%;
+    background:radial-gradient(125% 110% at 50% -10%, rgba(139,92,246,.34) 0%, rgba(124,58,237,.08) 42%, #121212 72%);
+    display:grid;place-items:center;}
+  .crop small{font-size:11px;color:var(--muted);letter-spacing:.05em;}
+
+  .safe-note{display:flex;align-items:center;gap:8px;margin-top:6px;color:var(--muted);font-size:12.5px;}
+  .swatch-dot{width:9px;height:9px;border-radius:50%;background:var(--violet);}
+
+  /* ---- sizes row ---- */
+  .sizes{display:flex;align-items:flex-end;gap:26px;margin-top:8px;flex-wrap:wrap;}
+  .size-item{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .size-item .tile{box-shadow:0 8px 30px rgba(0,0,0,.5);}
+  .size-item small{color:var(--muted);font-size:12px;}
+
+  /* ---- home screen mock ---- */
+  .homescreen{
+    width:228px;border-radius:34px;padding:20px 18px 26px;
+    background:linear-gradient(170deg,#241a3d 0%, #15101f 60%, #0c0a12 100%);
+    border:1px solid rgba(167,139,250,.18);
+    box-shadow:0 30px 70px rgba(0,0,0,.55);
+  }
+  .hs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 14px;margin-top:14px;}
+  .hs-app{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .hs-ic{width:44px;height:44px;border-radius:11px;}
+  .hs-ic.ph{background:linear-gradient(135deg,#3a3550,#26223a);}
+  .hs-name{font-size:8.5px;color:#cfc8e0;}
+  .hs-time{font-size:30px;font-weight:700;text-align:center;color:#fff;font-family:"Fraunces",serif;letter-spacing:.02em;}
+  .hs-date{font-size:10px;text-align:center;color:#b9b1cc;margin-top:2px;letter-spacing:.08em;text-transform:uppercase;}
+
+  .context{display:flex;gap:40px;align-items:center;flex-wrap:wrap;}
+  .context .copy{flex:1;min-width:240px;}
+
+  /* ---- concept statement ---- */
+  .statement{
+    margin-top:34px;border-left:3px solid var(--violet-deep);padding:6px 0 6px 24px;
+    max-width:760px;
+  }
+  .statement p{margin:0;font-family:"Fraunces",serif;font-size:21px;line-height:1.5;color:var(--ink);font-weight:400;}
+  .statement .why{margin-top:14px;font-family:"Nunito Sans",sans-serif;font-size:15px;color:var(--muted);line-height:1.6;font-weight:300;}
+
+  footer{margin-top:96px;border-top:1px solid var(--line);padding-top:24px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+
+  @media (max-width:860px){
+    .concepts{grid-template-columns:repeat(2,1fr);}
+    .final{grid-template-columns:1fr;}
+    .sec-sub{display:none;}
+  }
+  @media (max-width:520px){
+    .concepts{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Identidade · Ícone do aplicativo</p>
+    <h1 class="wordmark">Louvai<span class="dot">.</span></h1>
+    <p class="lede">Estudo do ícone para a instalação como <strong>PWA</strong> — o símbolo que vai morar na tela inicial, ao lado dos apps nativos. Pensado para o <strong>escuro</strong>, para ler limpo a 48px e a 512px, e para conversar com o wordmark serifado.</p>
+  </header>
+
+  <!-- ============ CONCEITOS ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2 class="sec-title">Conceitos</h2>
+      <p class="sec-sub">Cada um mostrado a 120px e a 48px — o tamanho real na tela inicial. Se lê pequeno, funciona.</p>
+    </div>
+
+    <div class="concepts">
+      <div class="concept chosen">
+        <div class="tiles">
+          <div class="tile t-lg" data-mark="A" data-size="120"></div>
+          <div class="tile t-sm" data-mark="A" data-size="48"></div>
+        </div>
+        <span class="pill">Escolhido</span>
+        <div class="c-label">
+          <span class="c-tag">A · Monograma</span>
+          <span class="c-name">L + nota</span>
+          <span class="c-desc">Um “L” serifado (eco do wordmark) cuja contraforma abriga uma nota. Marca, não ilustração.</span>
+        </div>
+      </div>
+
+      <div class="concept">
+        <div class="tiles">
+          <div class="tile t-lg" data-mark="B" data-size="120"></div>
+          <div class="tile t-sm" data-mark="B" data-size="48"></div>
+        </div>
+        <div class="c-label">
+          <span class="c-tag">B · Adoração</span>
+          <span class="c-name">Mãos + nota</span>
+          <span class="c-desc">Mãos abertas liberando uma nota que brilha — o sentido literal de “louvai”.</span>
+        </div>
+      </div>
+
+      <div class="concept">
+        <div class="tiles">
+          <div class="tile t-lg" data-mark="C" data-size="120"></div>
+          <div class="tile t-sm" data-mark="C" data-size="48"></div>
+        </div>
+        <div class="c-label">
+          <span class="c-tag">C · Cancioneiro</span>
+          <span class="c-name">Livro + luz</span>
+          <span class="c-desc">Livro aberto com uma nota/luz subindo da página — metáfora do modo “livro”.</span>
+        </div>
+      </div>
+
+      <div class="concept">
+        <div class="tiles">
+          <div class="tile t-lg" data-mark="D" data-size="120"></div>
+          <div class="tile t-sm" data-mark="D" data-size="48"></div>
+        </div>
+        <div class="c-label">
+          <span class="c-tag">D · Alternativa</span>
+          <span class="c-name">Nota-chama</span>
+          <span class="c-desc">A cabeça de nota como chama elevada — louvor que sobe. Mais abstrato.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2 class="sec-title">Conceito escolhido, finalizado</h2>
+      <p class="sec-sub">Conceito A. Versão normal e versão maskable com zona de segurança.</p>
+    </div>
+
+    <div class="final">
+      <div class="panel">
+        <h3>Normal — 512×512</h3>
+        <p>Símbolo violeta sobre o near-black #121212, com o brilho radial saindo do topo. É o ícone “quadrado” para sistemas que não recortam.</p>
+        <div class="tile big-tile" data-mark="A" data-size="440"></div>
+        <div class="safe-note"><span class="swatch-dot"></span> Fundo #121212 · símbolo na família violeta (#a78bfa → #8b5cf6), nota em #c7a9ff</div>
+      </div>
+
+      <div class="panel">
+        <h3>Maskable — zona de segurança</h3>
+        <p>Mesmo símbolo dentro dos ~80% centrais, fundo sangrando até a borda. O sistema pode recortar em círculo ou squircle — e nada essencial se perde.</p>
+        <div class="tile big-tile bleed" data-mark="A" data-size="440" data-maskable="1" data-safe="1"></div>
+        <div class="crop-row">
+          <div class="crop"><div class="frame square"><div data-mark="A" data-size="84" data-maskable="1"></div></div><small>quadrado</small></div>
+          <div class="crop"><div class="frame squircle"><div data-mark="A" data-size="84" data-maskable="1"></div></div><small>squircle</small></div>
+          <div class="crop"><div class="frame circle"><div data-mark="A" data-size="84" data-maskable="1"></div></div><small>círculo</small></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- sizes + context -->
+    <div style="margin-top:34px" class="context">
+      <div class="copy">
+        <h3 style="margin:0 0 6px;font-family:'Fraunces',serif;font-size:18px;color:#fff;font-weight:600">Os três usos, em contexto</h3>
+        <p style="margin:0 0 26px;color:var(--muted);font-size:14px;line-height:1.6;max-width:380px">A mesma silhueta atravessa do toque do dedo (48px) ao splash (512px) sem perder peso. Uma cor dominante, formas grandes, silhueta limpa.</p>
+        <div class="sizes">
+          <div class="size-item"><div class="tile t-sm" data-mark="A" data-size="48"></div><small>48 · home</small></div>
+          <div class="size-item"><div class="tile" style="width:96px;height:96px;border-radius:21px" data-mark="A" data-size="96"></div><small>192 · PWA</small></div>
+          <div class="size-item"><div class="tile" style="width:128px;height:128px;border-radius:28px" data-mark="A" data-size="128" data-maskable="1"></div><small>180 · apple-touch</small></div>
+        </div>
+      </div>
+
+      <div class="homescreen">
+        <div class="hs-time">9:41</div>
+        <div class="hs-date">Domingo · culto da noite</div>
+        <div class="hs-grid">
+          <div class="hs-app"><div class="hs-ic ph"></div><span class="hs-name">Notas</span></div>
+          <div class="hs-app"><div class="hs-ic ph"></div><span class="hs-name">Bíblia</span></div>
+          <div class="hs-app"><div class="hs-ic ph"></div><span class="hs-name">Fotos</span></div>
+          <div class="hs-app"><div class="hs-ic" data-mark="A" data-size="44" data-maskable="1" style="border-radius:11px;overflow:hidden"></div><span class="hs-name" style="color:#fff">Louvai</span></div>
+          <div class="hs-app"><div class="hs-ic ph"></div><span class="hs-name">Música</span></div>
+          <div class="hs-app"><div class="hs-ic ph"></div><span class="hs-name">Agenda</span></div>
+          <div class="hs-app"><div class="hs-ic ph"></div><span class="hs-name">Mens.</span></div>
+          <div class="hs-app"><div class="hs-ic ph"></div><span class="hs-name">Câmera</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATEMENT ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <h2 class="sec-title">O conceito</h2>
+    </div>
+    <div class="statement">
+      <p>Um “L” serifado — o mesmo gesto editorial do wordmark — cuja contraforma se torna uma nota musical, banhada pelo brilho violeta.</p>
+      <p class="why">Carrega o nome (Louvai), pertence à marca (a serifa do wordmark) e diz música sem cair em violão ou microfone. É um único símbolo dominante: lê como letra de longe e revela a nota de perto — louvor que vira canção.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>Louvai · ícone do app · estudo de identidade</span>
+    <span>theme_color &amp; background_color = #121212</span>
+  </footer>
+
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+
+// quarter note group string, around origin, given color & rotation feel
+function note(cx, cy, s, color){
+  return `<g transform="translate(${cx},${cy}) scale(${s})">
+    <rect x="31" y="-156" width="14" height="164" rx="7" fill="${color}"/>
+    <ellipse cx="0" cy="0" rx="44" ry="31" fill="${color}" transform="rotate(-21)"/>
+  </g>`;
+}
+
+function defs(){
+  return `<defs>
+    <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c7a9ff"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="0%" r="95%">
+      <stop offset="0" stop-color="rgba(139,92,246,.55)"/>
+      <stop offset="45%" stop-color="rgba(124,58,237,.10)"/>
+      <stop offset="100%" stop-color="rgba(124,58,237,0)"/>
+    </radialGradient>
+  </defs>`;
+}
+
+// ---- Concept A: serif L (Fraunces) + note in counter ----
+function markA(){
+  return `${defs()}
+    <text x="120" y="406" font-family="Fraunces" font-weight="600" font-size="408" fill="url(#lg)">L</text>
+    ${note(286, 300, 1.0, '#c7a9ff')}`;
+}
+
+// ---- Concept B: open hands releasing a note ----
+function markB(){
+  return `${defs()}
+    <g fill="none" stroke="url(#lg)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M150 360 C150 300 168 250 196 222 L196 300"/>
+      <path d="M362 360 C362 300 344 250 316 222 L316 300"/>
+      <path d="M150 360 C150 408 200 440 256 440 C312 440 362 408 362 360"/>
+    </g>
+    ${note(256, 168, 0.86, '#c7a9ff')}
+    <g stroke="#c7a9ff" stroke-width="14" stroke-linecap="round" opacity=".85">
+      <line x1="256" y1="60" x2="256" y2="36"/>
+      <line x1="320" y1="78" x2="336" y2="60"/>
+      <line x1="192" y1="78" x2="176" y2="60"/>
+    </g>`;
+}
+
+// ---- Concept C: open book + rising note/light ----
+function markC(){
+  return `${defs()}
+    <g fill="none" stroke="url(#lg)" stroke-width="28" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M256 386 C212 350 168 342 124 350 L124 220 C168 212 212 220 256 256 Z"/>
+      <path d="M256 386 C300 350 344 342 388 350 L388 220 C344 212 300 220 256 256 Z"/>
+    </g>
+    ${note(256, 150, 0.74, '#c7a9ff')}`;
+}
+
+// ---- Concept D: note-head as elevated flame ----
+function markD(){
+  return `${defs()}
+    <path d="M256 92 C300 150 356 196 356 286 C356 358 312 408 256 408 C200 408 156 358 156 286 C156 196 212 150 256 92 Z" fill="url(#lg)"/>
+    <ellipse cx="244" cy="318" rx="50" ry="35" fill="#1b1330" transform="rotate(-20 244 318)"/>
+    <rect x="284" y="176" width="15" height="150" rx="7" fill="#1b1330"/>`;
+}
+
+const MARKS={A:markA,B:markB,C:markC,D:markD};
+
+function buildSVG(mark, size, maskable){
+  const svg=document.createElementNS(NS,"svg");
+  svg.setAttribute("viewBox","0 0 512 512");
+  svg.setAttribute("width",size);
+  svg.setAttribute("height",size);
+  let inner = MARKS[mark]();
+  if(maskable){
+    // scale content to ~78% (safe zone), centered
+    inner = `<g transform="translate(256,256) scale(0.78) translate(-256,-256)">${inner}</g>`;
+  }
+  svg.innerHTML = inner;
+  return svg;
+}
+
+function render(){
+  document.querySelectorAll("[data-mark]").forEach(el=>{
+    el.innerHTML="";
+    const mark=el.getAttribute("data-mark");
+    const size=parseInt(el.getAttribute("data-size"),10);
+    const maskable=el.hasAttribute("data-maskable");
+    el.appendChild(buildSVG(mark,size,maskable));
+  });
+}
+
+if(document.fonts && document.fonts.ready){
+  document.fonts.ready.then(render);
+  // also render immediately so something shows, then re-render after font
+  render();
+}else{
+  render();
+}
+</script>
+</body>
+</html>

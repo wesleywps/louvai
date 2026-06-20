@@ -5,6 +5,7 @@
    Sai com código ≠ 0 se algo falhar.
    ========================================================================= */
 import { chromium } from "playwright";
+import { readFileSync } from "node:fs";
 
 const APP_URL = new URL("../louvai.html", import.meta.url).href;
 
@@ -1496,6 +1497,31 @@ const autoDerived = await page.evaluate(async () => {
   return merged;
 });
 ok(autoDerived, "Auto-sync sem link colado puxa do padrão derivado (membro não precisa colar nada)");
+
+// ===== v0.46.0 — ícone do app (favicon + apple-touch + manifest mínimo, SEM service worker) =====
+const head = await page.evaluate(() => {
+  const q = s => document.querySelector(s);
+  const m = q('link[rel="manifest"]');
+  return {
+    appleTouch: !!q('link[rel="apple-touch-icon"][href*="apple-touch-180"]'),
+    favSvg: !!q('link[rel="icon"][type="image/svg+xml"]'),
+    favPng: !!q('link[rel="icon"][type="image/png"]'),
+    manifest: m ? m.getAttribute("href") : null,
+    noSW: !("serviceWorker" in navigator) || true,   // v0.46.0 não registra SW (offline fica pro Inc.1 do PWA)
+  };
+});
+ok(head.appleTouch, "Head tem apple-touch-icon (ícone na tela inicial do iOS)");
+ok(head.favSvg && head.favPng, "Head tem favicon (SVG + PNG fallback) — ícone na aba do navegador");
+ok(head.manifest === "manifest.webmanifest", "Head linka o manifest.webmanifest (ícone na tela inicial do Android)");
+// não há registro de service worker nesta versão (entrega só de ícone; offline/instalável = Inc.1)
+ok(!/serviceWorker\.register/.test(readFileSync(new URL("../louvai.html", import.meta.url), "utf8")),
+   "v0.46.0 NÃO registra service worker (offline/instalável fica pro Inc.1 do PWA)");
+// manifest é JSON válido e fork-safe (relativo), apontando pros ícones reais de louvai-icons/
+const mani = JSON.parse(readFileSync(new URL("../manifest.webmanifest", import.meta.url), "utf8"));
+ok(mani.start_url === "./" && mani.scope === "./", "manifest: start_url/scope relativos './' (fork-safe; não quebra sob /louvai/)");
+ok(Array.isArray(mani.icons) && mani.icons.length >= 3 && mani.icons.some(i => i.purpose === "maskable")
+   && mani.icons.every(i => i.src.startsWith("louvai-icons/")), "manifest: ícones em louvai-icons/ com variante maskable");
+ok(mani.theme_color === "#121212" && mani.background_color === "#121212", "manifest: cores casadas com o app (#121212)");
 
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));

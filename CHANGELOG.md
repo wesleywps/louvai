@@ -8,6 +8,21 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.46.0 — Ícone do app (favicon + tela inicial), sem service worker
+**Recurso (identidade visual).** O app ganhou **ícone próprio**: na **aba** do navegador (favicon
+SVG + PNG), na **tela inicial do iOS** (`apple-touch-icon`) e na **tela inicial do Android** (via um
+`manifest.webmanifest` mínimo). Antes, "Adicionar à Tela de Início" pegava um print genérico.
+- Ícone gerado a partir da **identidade real** (monograma "L" serifado + nota musical, violeta sobre
+  near-black `#121212`) — prompt em `PROMPT-icone.md`. Arquivos em `louvai-icons/` (PNG 192/512 normal
+  + maskable 192/512, apple-touch-180, + SVG-fonte), destravados no `.gitignore` (`!louvai-icons/*.png`).
+- `manifest.webmanifest` **mínimo e fork-safe**: `start_url`/`scope`/`id` = `"./"` (funciona sob
+  `/louvai/` e em qualquer fork, sem URL cravada); cores `#121212`; ícones com variante `maskable`.
+- **Sem service worker** de propósito — esta versão entrega só a **identidade visual**; o
+  **instalável + offline 100%** é o **Incremento 1** do `PLANO-pwa.md` (próxima frente).
+- **281 verificações** (7 novas: links no head, manifest válido/relativo/maskable, ausência de SW).
+
+---
+
 ## v0.45.0 — Repositório já configurado por padrão (membro não cola link)
 **Recurso (repertório na nuvem).** O app agora **deriva sozinho o `repoUrl`** do próprio endereço, então
 o membro **abre o app hospedado e já puxa/sincroniza sem colar nada**. Antes, mesmo com a equipe partindo
