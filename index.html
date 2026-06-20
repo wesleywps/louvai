@@ -6,6 +6,14 @@
 <meta name="theme-color" content="#121212">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Louvai">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- Ícone do app (v0.46.0): favicon na aba + tela inicial (iOS apple-touch / Android manifest).
+     Caminhos relativos = funciona sob /louvai/ e em qualquer fork. Ainda SEM service worker. -->
+<link rel="icon" type="image/svg+xml" href="louvai-icons/louvai-icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="louvai-icons/icon-192.png">
+<link rel="apple-touch-icon" href="louvai-icons/apple-touch-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <title>Louvai · Cifras</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -812,7 +820,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.45.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.46.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
