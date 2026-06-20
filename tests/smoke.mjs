@@ -1510,6 +1510,8 @@ const head = await page.evaluate(() => {
     noSW: !("serviceWorker" in navigator) || true,   // v0.46.0 não registra SW (offline fica pro Inc.1 do PWA)
   };
 });
+ok(await page.evaluate(() => !!document.querySelector('#view-lib .brand svg.brandlogo')),
+   "Logo do app aparece no cabeçalho da biblioteca (SVG inline, v0.46.1)");
 ok(head.appleTouch, "Head tem apple-touch-icon (ícone na tela inicial do iOS)");
 ok(head.favSvg && head.favPng, "Head tem favicon (SVG + PNG fallback) — ícone na aba do navegador");
 ok(head.manifest === "manifest.webmanifest", "Head linka o manifest.webmanifest (ícone na tela inicial do Android)");

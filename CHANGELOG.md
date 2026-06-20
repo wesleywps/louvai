@@ -8,6 +8,19 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.46.1 — Logo do app também no cabeçalho (dentro do app)
+**Ajuste (identidade visual).** A v0.46.0 colocou o ícone na **aba** e na **tela inicial**, mas
+**dentro do app** o cabeçalho ainda mostrava só um pontinho dourado + o nome. Agora o **logo**
+(monograma "L" + nota musical, violeta) aparece como um **selo arredondado** ao lado do wordmark
+"Louvai", na biblioteca.
+- **SVG inline** (não `<img>`): nítido em qualquer tela, **funciona offline** e **não depende** do
+  arquivo em `louvai-icons/` (o app não quebra se a pasta não estiver hospedada).
+- Substitui o `.dot` pelo `.brandlogo` no cabeçalho da biblioteca; as telas de editor seguem com o
+  título contextual ("Nova cifra"/"Nova escala").
+- **282 verificações** (1 nova: logo presente no cabeçalho).
+
+---
+
 ## v0.46.0 — Ícone do app (favicon + tela inicial), sem service worker
 **Recurso (identidade visual).** O app ganhou **ícone próprio**: na **aba** do navegador (favicon
 SVG + PNG), na **tela inicial do iOS** (`apple-touch-icon`) e na **tela inicial do Android** (via um
