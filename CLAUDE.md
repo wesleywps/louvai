@@ -107,7 +107,7 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`), **contagem ao sincronizar**, **detecção/validação de tom** e a
     compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~274 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~301 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -138,10 +138,18 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   cartões (v0.32.0) · M3 arrastar p/ fechar (v0.33.0) · M7 entrada da lista (v0.34.0) · M8 progresso
   na Apresentação (v0.35.0) · M6 skeleton de carregamento (v0.36.0). Insumo: `ANALISE-ui.md`
   (G1–G12, M1–M8) e `ANALISE-icones.md` (conjunto SVG, `archive`).
+- `PLANO-pwa.md` — plano do **PWA instalável + offline 100%** (encerra a regra "arquivo único" — ver
+  "Horizonte"). Ícone + `manifest.webmanifest` mínimo já saíram (v0.46.0); falta o **service worker**
+  (Inc.1). **Status: 🟡 em andamento.**
+- `PROMPT-icone.md` — prompt p/ o Claude design **gerar o ícone do app** + passos pós-geração.
 - `index.html` — cópia **verbatim** do `louvai.html` que o **GitHub Pages serve na raiz** do site.
   Fora do git (regenerável); **sincronizar a cada entrega** (ver Ritual, passo 6).
-- `.gitignore` — ignora `node_modules/`, o `index.html`, as cópias `louvai-v*.html` e o
-  `COMMIT_MSG_tmp.txt`.
+- `manifest.webmanifest` — manifest mínimo do app (nome/cores/ícones) p/ instalar com ícone na tela
+  inicial (Android); referenciado no `<head>` do `louvai.html` (v0.46.0). **Sem service worker ainda.**
+- `louvai-icons/` — ícones do app (favicon/apple-touch/PWA): SVGs-fonte + PNGs (`icon-192/512`,
+  `icon-maskable-192/512`, `apple-touch-180`). Os PNGs são **assets deployáveis** (destravados no `.gitignore`).
+- `.gitignore` — ignora `node_modules/`, o `index.html`, as cópias `louvai-v*.html`, o
+  `COMMIT_MSG_tmp.txt` e `*.png` **exceto** `louvai-icons/*.png` (assets do ícone).
 - `mockups/` — **registros de decisões de UI** (mockups HTML versionados, abre no navegador).
   Ex.: `barra-tela-cheia-v0.48.1.html` (decisão da barra fina do modo tela cheia). Artefatos de
   histórico, não fazem parte do app.
@@ -260,6 +268,21 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   pré-preenche `#repo-url` com o padrão (transparência); `repoUrlFromField()` trata **campo == padrão como
   "sem override"** → `settings.repoUrl` fica `""` e a derivação não congela (fork-safe). **Auto-sync segue
   opt-in.** Reusa `ghRepoFromUrl` (o padrão derivado serve pro publish). Ver memória `default-repo-url`.
+- **Tela cheia da Apresentação (v0.44.0; barra fina v0.48.1):** classe `.immersive` em `#view-player`;
+  na v0.44.0 escondia tudo, agora mostra a barra **ULTRA-FINA** (Título · Tom · posição), **sem botões**.
+  `setImmersive`/`toggleImmersive`/`applyFullBtn`; botão flutuante `#pv-exitfull` p/ sair (+ Fullscreen API
+  best-effort). `curSounding` guarda o Tom soante; `refreshPresentPos()` monta `#pv-pos` = "X de Y" (normal)
+  ou "Tom X · n/total" (tela cheia). CSS em `#view-player.immersive …`.
+- **Ícone do app (v0.46.0/0.46.1):** no `<head>`, `<link rel=icon/apple-touch-icon/manifest>` apontam p/
+  `louvai-icons/` e `manifest.webmanifest` (favicon na aba + tela inicial iOS/Android; **sem service worker**
+  — só identidade). No cabeçalho da biblioteca, `.brandlogo` é o **SVG do logo inline** em `.brand` (não
+  depende de arquivo externo).
+- **Versão guia por música (v0.47.0):** `song.ref` (link do YouTube) **saneado por `safeUrl()`** (só
+  http/https — fecha XSS por href). Editor: `#e-ref`. Player: linha `#p-guide-row` + botão `#p-guide` no ⚙
+  "Esta música" (abre em nova aba só com link válido). **Sincroniza** (mora na música).
+- **Observações da música (v0.48.0):** `song.notes` (texto livre, **compartilhado** — viaja na nuvem/escala).
+  Editor: `#e-notes`. Player: `#p-notes`/`.songnote` (linha abaixo do título, **visível na Apresentação**);
+  render via `textContent` (à prova de XSS). **Sincroniza** (mora na música).
 - **Publicar na nuvem (v0.27.0):** o líder **escreve** o `louvai.json` via **API Contents do
   GitHub**. `ghRepoFromUrl` deriva `owner/repo/path` da `settings.repoUrl`; `publishRepo` faz
   GET sha → PUT (snapshot em `bytesToB64` base64 padrão; 404 cria; 409 rebusca+retry); token
@@ -329,7 +352,10 @@ commit atual** (API Contents, sem atraso do Pages, v0.39.0), **ordenar a lista**
 v0.42.0, calibrado/endurecido na v0.42.1–0.42.2), **lista de músicas compacta** (card em 2 linhas,
 tom em tile menor à esquerda, v0.43.0–0.43.1), **acessibilidade** (foco por teclado, alvo de toque
 da tag ≥44px, contraste no escuro, v0.43.2), **tela cheia na Apresentação** (v0.44.0) e **repositório já
-configurado por padrão** (repoUrl derivado do endereço — membro puxa sem colar link, v0.45.0). Ver os `PLANO-*.md`.
+configurado por padrão** (repoUrl derivado do endereço — membro puxa sem colar link, v0.45.0),
+**ícone do app** (favicon/apple-touch/manifest + logo inline no cabeçalho, v0.46.0–0.46.1), **link da versão
+guia** por música (v0.47.0), **observações da música** (v0.48.0) e **barra fina no modo tela cheia** (v0.48.1).
+Ver os `PLANO-*.md`.
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
 1. **Validação visual no celular** (dark/light) das Ondas 1–3 — Tom destacado, toast colorido,
    estados vazios, acorde no claro, o conjunto de ícones SVG, as seções do ⚙, os cards unificados,

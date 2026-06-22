@@ -134,17 +134,21 @@ instalação complexa.
   capo, tamanho de fonte, modo escuro/claro, só letra, ocultar tabs, **modos de
   leitura** (rolagem com auto-scroll opcional **ou** página), navegação por
   estrutura (☰), **diagrama de acorde ao tocar no acorde** (pegada no violão, capo-aware)
-  e tela sempre acesa (Wake Lock).
+  e tela sempre acesa (Wake Lock). Cada cifra pode ter **link da versão guia** (YouTube) e
+  **observações da música** — ambos **sincronizam** com a equipe (no player; as observações também
+  aparecem na Apresentação).
 - **Escalas:** montar o culto (músicas + itens), tom por escala, equipe, tempo
   total, **"Culto realizado"** (confirma a escala → alimenta a recência "última vez que
   tocamos" nas cifras), modo Apresentar (música a música no tom do culto, com **barra compacta**
-  que dá mais cifra na tela e **virar página como um livro** entre as músicas),
-  compartilhar.
+  que dá mais cifra na tela, **virar página como um livro** entre as músicas e **tela cheia** com
+  barra fina (Título · Tom · posição)), compartilhar.
 - **Compartilhar:** por **arquivo `.json`** (cifra, escala ou repertório), por **link
   auto-importável** (`…/#imp=…`, sem servidor — a pessoa toca e o app oferece importar) e por
   **"Atualizar do link"** (puxa um snapshot `louvai.json` com cifras + escalas publicado no
   GitHub Pages e mescla — ótimo pra celular novo / refresh da equipe) e por **"Publicar na
   nuvem"** (o líder escreve o `louvai.json` direto do celular, via token fino do GitHub).
+- **Ícone próprio:** favicon na aba + ícone na tela inicial (iOS/Android, via `manifest.webmanifest`);
+  no app, o logo aparece no cabeçalho da biblioteca. *(Instalável + offline 100% = PWA, próximo passo.)*
 - **Offline:** tudo salvo no aparelho (localStorage); funciona sem internet. **Rede de
   segurança do backup:** registra a data do último backup, avisa quando há mudanças não
   salvas (pontinho no ↥ + lembrete ao abrir) e tem "Restaurar de um arquivo" claro.
@@ -199,7 +203,9 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 - [x] **"Livro" entre músicas:** virar a última página passa pra próxima música;
   voltar retoma a última página da anterior. *(entregue na v0.19.0)*
 - [ ] **Auto-scroll mais esperto:** lembrar velocidade por música; pausar ao tocar a tela.
-- [ ] **Modo tela cheia** de apresentação (incluir ☰ estrutura na barra compacta).
+- [x] **Modo tela cheia** de apresentação — maximiza a cifra (Fullscreen API) + barra fina
+  (Título · Tom · posição). *(entregue na v0.44.0; barra fina na v0.48.1)* — a ☰ estrutura na barra
+  compacta **não** foi incluída (fica como evolução, se fizer falta).
 
 ### Tema C — Qualidade da cifra
 - [x] **Preservar a grafia original** dos acordes (Bb continua Bb até transpor).
@@ -214,7 +220,7 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 ### Tema D — Repertório e escalas
 - [x] **"Última vez que tocamos"** (derivado das escalas **confirmadas** — "Culto realizado").
   *(entregue na v0.24.0 — recência na lista e no seletor; só conta culto confirmado)*
-- [ ] **Ordenar por menos tocadas / mais recentes** (usa a recência da v0.24.0).
+- [x] **Ordenar por menos tocadas / mais recentes** (usa a recência da v0.24.0). *(entregue na v0.40.0 — folha "Ordenar por", 3 modos)*
 - [ ] **Duplicar escala** e **modelos de culto**.
 - [x] **Link da versão guia (YouTube)** por música — sincronizado (`song.ref`). *(entregue na v0.47.0)*
 - [x] **Observações da música** (compartilhadas, `song.notes`) — sincroniza; no player e na Apresentação. *(entregue na v0.48.0)*
