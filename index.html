@@ -256,6 +256,9 @@ body.light .keyhint{color:#b45309}
 /* linha fininha de info (artista · Tom atual · capo) logo abaixo da barra */
 .songhead{padding:6px 18px 2px}
 .songhead .s{color:var(--muted);font-size:13px}
+/* observações da música (compartilhadas): linha discreta c/ borda de acento; visível tb na Apresentação */
+.songhead .songnote{color:var(--muted);font-size:13px;white-space:pre-wrap;margin-top:5px;
+  border-left:3px solid var(--accent);padding-left:8px;line-height:1.4}
 .cifra{font-family:'JetBrains Mono',ui-monospace,'Courier New',monospace;
   font-size:15px;line-height:1.85;padding:8px 18px 220px;white-space:pre;
   overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -424,8 +427,18 @@ body.light .keyhint{color:#b45309}
 #view-player.present .cifra{padding-top:6px}
 /* tela cheia da Apresentação (v0.44.0): esconde a barra/cabeçalho p/ MÁXIMA cifra; o navegar fica por
    virar-página (Modo Página) e o botão flutuante de sair (canto, fora da zona de toque de virar). */
-#view-player.immersive #presentbar,#view-player.immersive .songhead{display:none}
-#view-player.immersive .cifra{padding-top:max(6px,env(safe-area-inset-top))}
+/* tela cheia (v0.48.1): em vez de esconder a barra, mostra-a ULTRA-FINA — só info + progresso,
+   sem botões; o Tom (que vivia na .songhead) vai pra barra. Maximiza a cifra mantendo o "onde estamos". */
+#view-player.immersive .songhead{display:none}                       /* Tom consolidado na barra fina */
+#view-player.immersive #presentbar{padding:5px 14px;gap:4px}         /* barra bem mais baixa (~30px) */
+#view-player.immersive .pb-nav .pbtn,
+#view-player.immersive .pb-nav .pbtn-sm{display:none}                /* sem botões em tela cheia */
+#view-player.immersive .pb-nav{padding-right:50px}                   /* livra o botão flutuante de sair (canto sup. dir.) */
+#view-player.immersive .pinfo{display:flex;align-items:baseline;gap:9px;text-align:left}
+#view-player.immersive #pv-title{flex:1;min-width:0;font-size:13px;font-weight:600}
+#view-player.immersive #pv-pos{flex:0 0 auto;margin-top:0;font-size:12.5px;font-weight:700;white-space:nowrap}
+#view-player.immersive #pv-pos .pv-tom{color:var(--accent)}
+#view-player.immersive .cifra{padding-top:6px}
 #pv-exitfull{position:fixed;top:max(10px,env(safe-area-inset-top));right:10px;z-index:60;
   width:44px;height:44px;border-radius:12px;display:none;place-items:center;color:var(--text);
   background:var(--glass2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line)}
@@ -575,6 +588,7 @@ body.light .keyhint{color:#b45309}
     <button id="pv-exitfull" aria-label="Sair da tela cheia"></button>
     <div class="songhead">
       <div class="s" id="p-sub"></div>
+      <div class="songnote hidden" id="p-notes"></div>
     </div>
     <div class="cifra" id="p-body"></div>
     <div class="scrollbar-mini" id="scrollbar-mini">
@@ -598,6 +612,7 @@ body.light .keyhint{color:#b45309}
       <button class="addrow hidden" id="e-paste" style="margin-bottom:14px">Colar cifra pronta (Cifra Club…)</button>
       <div class="field"><label>Título</label><input id="e-title" placeholder="Ex.: Tua Graça Me Basta"></div>
       <div class="field"><label>Artista / autor</label><input id="e-artist" placeholder="Opcional"></div>
+      <div class="field"><label>Versão guia (link do YouTube)</label><input id="e-ref" inputmode="url" placeholder="Opcional — cole o link do vídeo de referência"></div>
       <div class="row2">
         <div class="field"><label>Tom original</label>
           <select id="e-key"></select>
@@ -608,6 +623,8 @@ body.light .keyhint{color:#b45309}
       </div>
       <div class="field"><label>Tags (separe por vírgula)</label>
         <input id="e-tags" placeholder="adoração, lento, ceia"></div>
+      <div class="field"><label>Observações da música (a equipe toda vê)</label>
+        <textarea id="e-notes" rows="2" style="min-height:70px;white-space:pre-wrap;font-family:inherit;font-size:15px" placeholder="Ex.: começa só voz; o tom da guia é Ré, mas tocamos em Dó"></textarea></div>
       <div class="field"><label>Cifra</label>
         <textarea id="e-body" spellcheck="false" placeholder="Cole a cifra aqui…"></textarea>
         <div class="hint">
@@ -791,6 +808,9 @@ body.light .keyhint{color:#b45309}
       <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false"></button></span>
     </div>
     <div class="sheetsec">Esta música</div>
+    <div class="ctrl" id="p-guide-row" style="display:none"><span class="lbl">Versão guia (YouTube)</span>
+      <span class="grp"><button id="p-guide" aria-label="Abrir a versão guia no YouTube">Abrir</button></span>
+    </div>
     <div class="ctrl actions">
       <span class="grp"><button id="p-edit" aria-label="Editar cifra">Editar</button><button id="p-share" aria-label="Compartilhar cifra">Enviar</button></span>
     </div>
@@ -822,7 +842,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.46.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.48.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1410,7 +1430,7 @@ const ICON_ONLY={"#backupBtn":"archive","#importBtn":"download","#p-back":"arrow
   "#es-share":"share-2","#lyr-toggle":"type","#tabs-toggle":"tabs","#scrollbar-toggle":"play","#scroll-toggle":"play",
   "#pv-exitfull":"minimize"};
 const ICON_TX={"#es-present":"play","#e-delete":"trash-2","#ee-delete":"trash-2","#e-paste":"clipboard",
-  "#repo-pull":"download","#repo-export":"file-down","#repo-publish":"cloud-upload","#p-edit":"pencil","#p-share":"share-2"};
+  "#repo-pull":"download","#repo-export":"file-down","#repo-publish":"cloud-upload","#p-edit":"pencil","#p-share":"share-2","#p-guide":"play"};
 function paintIcons(){
   for(const s in ICON_ONLY){ const e=$(s); if(e) e.innerHTML=icon(ICON_ONLY[s]); }
   for(const s in ICON_TX){ const e=$(s); if(e) e.insertAdjacentHTML("afterbegin",icon(ICON_TX[s],"ic-tx")); }
@@ -1561,11 +1581,19 @@ function updatePresentBar(){
   bar.classList.remove("hidden");
   applyFullBtn();                                          // pinta o botão de tela cheia conforme o estado
   $("#pv-title").textContent = current.title;             // título pequeno no meio da barra
-  $("#pv-pos").textContent = (escalaCtx.idx+1)+" de "+escalaCtx.list.length;
+  refreshPresentPos();   // "X de Y" normal · "Tom X · n/total" em tela cheia
   const pct = escalaCtx.list.length>1 ? (escalaCtx.idx+1)/escalaCtx.list.length*100 : 100;
   $("#pv-progress span").style.width = pct+"%";          // fração visual do culto (M8)
   $("#pv-prev").disabled = escalaCtx.idx<=0;
   $("#pv-next").disabled = escalaCtx.idx>=escalaCtx.list.length-1;
+}
+// posição na barra da Apresentação: "X de Y" (normal) | "Tom <X> · n/total" em tela cheia (barra fina, v0.48.1)
+function refreshPresentPos(){
+  if(!escalaCtx) return;
+  const n=escalaCtx.idx+1, total=escalaCtx.list.length;
+  $("#pv-pos").innerHTML = $("#view-player").classList.contains("immersive")
+    ? '<span class="pv-tom">Tom '+esc(curSounding)+'</span> · '+n+'/'+total
+    : esc(n+" de "+total);
 }
 function presentGo(delta, atLast){     // retorna true se trocou de música (p/ o "livro" saber se virou)
   if(!escalaCtx) return false;
@@ -1577,6 +1605,14 @@ function presentGo(delta, atLast){     // retorna true se trocou de música (p/ 
 $("#pv-prev").onclick=()=>presentGo(-1);   // botão volta pra música anterior (1ª página, como sempre)
 $("#pv-next").onclick=()=>presentGo(1);
 function shapeShift(){ return transp - capo; }   // forma tocada = som − capo
+// link de referência (versão guia): normaliza e SÓ aceita http(s) — fecha XSS por href javascript:/data:
+// (regra nº: nada confiável vindo de .json importado vira href cru). Prepende https:// num link "pelado".
+function safeUrl(u){
+  u=String(u==null?"":u).trim(); if(!u) return "";
+  if(!/^https?:\/\//i.test(u)){ if(/^[\w.-]+\.[a-z]{2,}/i.test(u)) u="https://"+u; else return ""; }
+  try{ const p=new URL(u); return (p.protocol==="http:"||p.protocol==="https:") ? p.href : ""; }catch(e){ return ""; }
+}
+let curSounding="";   // Tom soante atual — alimenta a barra fina da tela cheia (v0.48.1)
 function drawPlayer(){
   $("#p-title").textContent=current.title;
   const minor=keyIsMinor(current.key), origRoot=keyRoot(current.key);
@@ -1592,7 +1628,14 @@ function drawPlayer(){
   if(capo>0) bits.push("Capo "+capo+" (forma em "+esc(transposeNote(origRoot,shapeShift(),ctxShape)+(minor?"m":""))+")");
   $("#p-sub").innerHTML=bits.join("  ·  ");   // linha fininha: artista · Tom atual · capo
   $("#s-tkey").textContent=sounding;            // valor do Tom no ⚙ Ajustes (controle e indicador)
+  curSounding=sounding; refreshPresentPos();    // alimenta a barra fina da tela cheia (Tom · n/total)
   $("#c-val").textContent=capo;
+  // botão "Versão guia" (YouTube) no ⚙ Esta música: só aparece com link válido; abre em nova aba
+  const guide=safeUrl(current.ref);
+  const gr=$("#p-guide-row"); if(gr){ gr.style.display=guide?"":"none"; $("#p-guide").onclick=guide?(()=>window.open(guide,"_blank","noopener")):null; }
+  // observações da música (compartilhadas): linha abaixo do título; textContent = à prova de XSS
+  const note=(current.notes||"").trim();
+  const pn=$("#p-notes"); if(pn){ pn.textContent=note; pn.classList.toggle("hidden",!note); }
   const b=$("#p-body");
   b.style.fontSize=fontSize+"px";
   const html=renderCifra(current.body, shapeShift(), showChords, ctxShape, !!settings.hideTabs);
@@ -1634,7 +1677,7 @@ function applyFullBtn(){
   if(b){ b.innerHTML=icon(on?"minimize":"maximize"); b.setAttribute("aria-label",on?"Sair da tela cheia":"Tela cheia"); b.setAttribute("aria-pressed",String(on)); }
 }
 function setImmersive(on){
-  $("#view-player").classList.toggle("immersive",on); applyFullBtn();
+  $("#view-player").classList.toggle("immersive",on); applyFullBtn(); refreshPresentPos();
   if(on){
     const el=document.documentElement, rq=el.requestFullscreen||el.webkitRequestFullscreen;
     if(rq){ try{ const p=rq.call(el); if(p&&p.catch)p.catch(()=>{}); immersiveFs=true; }catch(e){ immersiveFs=false; } }
@@ -1913,12 +1956,12 @@ function openEditor(id){
     $("#e-mode").textContent="Editar";
     $("#e-title").value=s.title; $("#e-artist").value=s.artist||"";
     $("#e-key").value=KEYS.includes(s.key)?s.key:"G"; $("#e-capo").value=s.capo||0;
-    $("#e-tags").value=(s.tags||[]).join(", "); $("#e-body").value=s.body||"";
+    $("#e-tags").value=(s.tags||[]).join(", "); $("#e-body").value=s.body||""; $("#e-ref").value=s.ref||""; $("#e-notes").value=s.notes||"";
     del.classList.remove("hidden");
   }else{
     $("#e-mode").textContent="Nova cifra";
     $("#e-title").value="";$("#e-artist").value="";$("#e-key").value="G";
-    $("#e-capo").value=0;$("#e-tags").value="";$("#e-body").value="";
+    $("#e-capo").value=0;$("#e-tags").value="";$("#e-body").value="";$("#e-ref").value="";$("#e-notes").value="";
     del.classList.add("hidden");
   }
   runLint();
@@ -2004,6 +2047,8 @@ $("#e-save").onclick=()=>{
     title, artist:$("#e-artist").value.trim(),
     key:$("#e-key").value, capo:+$("#e-capo").value,
     tags:$("#e-tags").value.split(",").map(t=>t.trim()).filter(Boolean),
+    ref:safeUrl($("#e-ref").value),
+    notes:$("#e-notes").value.trim(),
     body:$("#e-body").value, updatedAt:Date.now()
   };
   if(editingId){ Object.assign(songs.find(s=>s.id===editingId),data); }
