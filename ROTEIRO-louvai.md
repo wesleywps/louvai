@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.46.1**.
+seguir. Atualizado até a **v0.47.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -114,6 +114,7 @@ instalação complexa.
 | **v0.45.0** | recurso | **Repositório já configurado por padrão:** o app **deriva o `repoUrl` do próprio endereço** (`new URL("louvai.json", location.href)`) — o membro abre o app hospedado e **puxa/sincroniza sem colar link** (funciona em qualquer fork, sem URL cravada). Link colado tem prioridade; auto-sync segue opt-in; campo pré-preenchido (transparência) e "campo = padrão" não congela a URL (fork-safe). `file://` sem padrão. |
 | **v0.46.0** | recurso | **Ícone do app:** favicon na aba (SVG+PNG), ícone na tela inicial do **iOS** (apple-touch) e do **Android** (`manifest.webmanifest` mínimo, fork-safe `./`). Identidade violeta/near-black gerada (monograma "L" + nota; ver `PROMPT-icone.md`), em `louvai-icons/`. **Sem service worker** — instalável + offline 100% é o Inc.1 do PWA. |
 | **v0.46.1** | ajuste | **Logo no cabeçalho do app:** o símbolo (monograma "L" + nota, violeta) vira um selo arredondado ao lado do wordmark "Louvai" na biblioteca — **SVG inline** (nítido, offline, sem depender de arquivo externo). Antes o ícone só aparecia na aba/tela inicial, não dentro do app. |
+| **v0.47.0** | recurso | **Link da versão guia (YouTube) por música:** campo no editor; guardado na própria música (`song.ref`), então **sincroniza** no publicar/puxar/compartilhar/backup. Botão "▶ Versão guia" no ⚙ Ajustes (só com link válido). `safeUrl` aceita só http(s) — fecha XSS por href. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -213,6 +214,7 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   *(entregue na v0.24.0 — recência na lista e no seletor; só conta culto confirmado)*
 - [ ] **Ordenar por menos tocadas / mais recentes** (usa a recência da v0.24.0).
 - [ ] **Duplicar escala** e **modelos de culto**.
+- [x] **Link da versão guia (YouTube)** por música — sincronizado (`song.ref`). *(entregue na v0.47.0)*
 - [ ] **Campos extras na música:** BPM, tema/categoria, andamento.
 - [ ] **Itens não-musicais no modo Apresentar** (mostrar o card de aviso/oração na sequência).
 
@@ -313,4 +315,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.46.1.*
+*Última atualização deste roteiro: v0.47.0.*

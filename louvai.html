@@ -598,6 +598,7 @@ body.light .keyhint{color:#b45309}
       <button class="addrow hidden" id="e-paste" style="margin-bottom:14px">Colar cifra pronta (Cifra Club…)</button>
       <div class="field"><label>Título</label><input id="e-title" placeholder="Ex.: Tua Graça Me Basta"></div>
       <div class="field"><label>Artista / autor</label><input id="e-artist" placeholder="Opcional"></div>
+      <div class="field"><label>Versão guia (link do YouTube)</label><input id="e-ref" inputmode="url" placeholder="Opcional — cole o link do vídeo de referência"></div>
       <div class="row2">
         <div class="field"><label>Tom original</label>
           <select id="e-key"></select>
@@ -791,6 +792,9 @@ body.light .keyhint{color:#b45309}
       <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false"></button></span>
     </div>
     <div class="sheetsec">Esta música</div>
+    <div class="ctrl" id="p-guide-row" style="display:none"><span class="lbl">Versão guia (YouTube)</span>
+      <span class="grp"><button id="p-guide" aria-label="Abrir a versão guia no YouTube">Abrir</button></span>
+    </div>
     <div class="ctrl actions">
       <span class="grp"><button id="p-edit" aria-label="Editar cifra">Editar</button><button id="p-share" aria-label="Compartilhar cifra">Enviar</button></span>
     </div>
@@ -822,7 +826,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.46.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.47.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1410,7 +1414,7 @@ const ICON_ONLY={"#backupBtn":"archive","#importBtn":"download","#p-back":"arrow
   "#es-share":"share-2","#lyr-toggle":"type","#tabs-toggle":"tabs","#scrollbar-toggle":"play","#scroll-toggle":"play",
   "#pv-exitfull":"minimize"};
 const ICON_TX={"#es-present":"play","#e-delete":"trash-2","#ee-delete":"trash-2","#e-paste":"clipboard",
-  "#repo-pull":"download","#repo-export":"file-down","#repo-publish":"cloud-upload","#p-edit":"pencil","#p-share":"share-2"};
+  "#repo-pull":"download","#repo-export":"file-down","#repo-publish":"cloud-upload","#p-edit":"pencil","#p-share":"share-2","#p-guide":"play"};
 function paintIcons(){
   for(const s in ICON_ONLY){ const e=$(s); if(e) e.innerHTML=icon(ICON_ONLY[s]); }
   for(const s in ICON_TX){ const e=$(s); if(e) e.insertAdjacentHTML("afterbegin",icon(ICON_TX[s],"ic-tx")); }
@@ -1577,6 +1581,13 @@ function presentGo(delta, atLast){     // retorna true se trocou de música (p/ 
 $("#pv-prev").onclick=()=>presentGo(-1);   // botão volta pra música anterior (1ª página, como sempre)
 $("#pv-next").onclick=()=>presentGo(1);
 function shapeShift(){ return transp - capo; }   // forma tocada = som − capo
+// link de referência (versão guia): normaliza e SÓ aceita http(s) — fecha XSS por href javascript:/data:
+// (regra nº: nada confiável vindo de .json importado vira href cru). Prepende https:// num link "pelado".
+function safeUrl(u){
+  u=String(u==null?"":u).trim(); if(!u) return "";
+  if(!/^https?:\/\//i.test(u)){ if(/^[\w.-]+\.[a-z]{2,}/i.test(u)) u="https://"+u; else return ""; }
+  try{ const p=new URL(u); return (p.protocol==="http:"||p.protocol==="https:") ? p.href : ""; }catch(e){ return ""; }
+}
 function drawPlayer(){
   $("#p-title").textContent=current.title;
   const minor=keyIsMinor(current.key), origRoot=keyRoot(current.key);
@@ -1593,6 +1604,9 @@ function drawPlayer(){
   $("#p-sub").innerHTML=bits.join("  ·  ");   // linha fininha: artista · Tom atual · capo
   $("#s-tkey").textContent=sounding;            // valor do Tom no ⚙ Ajustes (controle e indicador)
   $("#c-val").textContent=capo;
+  // botão "Versão guia" (YouTube) no ⚙ Esta música: só aparece com link válido; abre em nova aba
+  const guide=safeUrl(current.ref);
+  const gr=$("#p-guide-row"); if(gr){ gr.style.display=guide?"":"none"; $("#p-guide").onclick=guide?(()=>window.open(guide,"_blank","noopener")):null; }
   const b=$("#p-body");
   b.style.fontSize=fontSize+"px";
   const html=renderCifra(current.body, shapeShift(), showChords, ctxShape, !!settings.hideTabs);
@@ -1913,12 +1927,12 @@ function openEditor(id){
     $("#e-mode").textContent="Editar";
     $("#e-title").value=s.title; $("#e-artist").value=s.artist||"";
     $("#e-key").value=KEYS.includes(s.key)?s.key:"G"; $("#e-capo").value=s.capo||0;
-    $("#e-tags").value=(s.tags||[]).join(", "); $("#e-body").value=s.body||"";
+    $("#e-tags").value=(s.tags||[]).join(", "); $("#e-body").value=s.body||""; $("#e-ref").value=s.ref||"";
     del.classList.remove("hidden");
   }else{
     $("#e-mode").textContent="Nova cifra";
     $("#e-title").value="";$("#e-artist").value="";$("#e-key").value="G";
-    $("#e-capo").value=0;$("#e-tags").value="";$("#e-body").value="";
+    $("#e-capo").value=0;$("#e-tags").value="";$("#e-body").value="";$("#e-ref").value="";
     del.classList.add("hidden");
   }
   runLint();
@@ -2004,6 +2018,7 @@ $("#e-save").onclick=()=>{
     title, artist:$("#e-artist").value.trim(),
     key:$("#e-key").value, capo:+$("#e-capo").value,
     tags:$("#e-tags").value.split(",").map(t=>t.trim()).filter(Boolean),
+    ref:safeUrl($("#e-ref").value),
     body:$("#e-body").value, updatedAt:Date.now()
   };
   if(editingId){ Object.assign(songs.find(s=>s.id===editingId),data); }

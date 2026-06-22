@@ -1498,6 +1498,58 @@ const autoDerived = await page.evaluate(async () => {
 });
 ok(autoDerived, "Auto-sync sem link colado puxa do padrão derivado (membro não precisa colar nada)");
 
+// ===== v0.47.0 — link de referência (versão guia, YouTube) por música, sincronizado =====
+const refU = await page.evaluate(() => ({
+  yt: safeUrl("https://youtu.be/abc123"),
+  bare: safeUrl("youtube.com/watch?v=x"),
+  xss: safeUrl("javascript:alert(1)"),
+  data: safeUrl("data:text/html,<script>x</script>"),
+  junk: safeUrl("isso não é link"),
+  empty: safeUrl("   "),
+}));
+ok(refU.yt === "https://youtu.be/abc123", "safeUrl aceita URL https do YouTube");
+ok(refU.bare === "https://youtube.com/watch?v=x", "safeUrl prepende https:// num link sem esquema");
+ok(refU.xss === "" && refU.data === "" && refU.junk === "" && refU.empty === "",
+   "safeUrl rejeita javascript:/data:/lixo/vazio (fecha XSS por href)");
+
+const refSave = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0; saveSongs();
+  openEditor();                                          // nova cifra
+  document.getElementById("e-title").value = "Com Ref";
+  document.getElementById("e-body").value = "C";
+  document.getElementById("e-ref").value = "https://youtu.be/guia";
+  document.getElementById("e-save").click();
+  const s = songs.find(x => x.title === "Com Ref");
+  openEditor(s.id);                                      // reabre p/ editar
+  const back = document.getElementById("e-ref").value;
+  show("lib");
+  return { onSong: s && s.ref, back };
+});
+ok(refSave.onSong === "https://youtu.be/guia", "Editor salva o link de referência NA própria música (song.ref)");
+ok(refSave.back === "https://youtu.be/guia", "Reabrir o editor repõe o link salvo");
+
+const refPlayer = await page.evaluate(() => {
+  songs.length = 0;
+  songs.push({ id:"g1", title:"Guia",    key:"C", capo:0, tags:[], updatedAt:1, body:"C", ref:"https://youtu.be/zzz" });
+  songs.push({ id:"g2", title:"SemGuia", key:"C", capo:0, tags:[], updatedAt:1, body:"C" });
+  songs.push({ id:"g3", title:"RefXSS",  key:"C", capo:0, tags:[], updatedAt:1, body:"C", ref:"javascript:alert(1)" });
+  saveSongs();
+  const vis = id => { openPlayer(id); return getComputedStyle(document.getElementById("p-guide-row")).display !== "none"; };
+  const out = { g1: vis("g1"), g2: vis("g2"), g3: vis("g3") };
+  exitPlayer();
+  return out;
+});
+ok(refPlayer.g1, "Player mostra 'Versão guia' quando a música tem link válido");
+ok(!refPlayer.g2, "Player esconde 'Versão guia' quando não há link");
+ok(!refPlayer.g3, "Player esconde 'Versão guia' quando o link é perigoso (javascript:) — sem XSS");
+
+const refSync = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id:"sx", title:"Sync", key:"C", capo:0, tags:[], updatedAt:1, body:"C", ref:"https://youtu.be/sync" });
+  return (fullEnvelope().songs.find(s => s.id === "sx") || {}).ref;
+});
+ok(refSync === "https://youtu.be/sync", "O link de referência viaja no snapshot (fullEnvelope) — sincroniza com a equipe");
+
 // ===== v0.46.0 — ícone do app (favicon + apple-touch + manifest mínimo, SEM service worker) =====
 const head = await page.evaluate(() => {
   const q = s => document.querySelector(s);

@@ -8,6 +8,22 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.47.0 — Link da versão guia (YouTube) por música, sincronizado
+**Recurso (repertório).** Some a dúvida recorrente do ministério — *"qual vídeo a gente segue pra
+música X?"*: agora dá pra guardar um **link de referência (versão guia)** em cada cifra, no editor.
+Como ele mora **na própria música** (`song.ref`), **sincroniza junto com tudo** — publicar/puxar na
+nuvem, compartilhar e backup levam o link automaticamente (mesma mesclagem por `id`/`updatedAt`), então
+a equipe inteira vê a mesma referência. (Zero plumbing de sync: viaja porque está no objeto da música.)
+- **Editor:** campo "Versão guia (link do YouTube)".
+- **Player:** botão **"▶ Versão guia"** no ⚙ Ajustes → "Esta música" (aparece só quando há link; abre
+  em nova aba). Fica no ⚙ (aberto de propósito) — sem risco de toque acidental durante a Apresentação.
+- **Segurança:** `safeUrl()` normaliza (prepende `https://` num link "pelado") e **só aceita http(s)** —
+  `javascript:`/`data:`/lixo viram vazio (fecha XSS por href, inclusive vindo de um `.json` importado).
+- **291 verificações** (9 novas: `safeUrl`, salvar/repor no editor, mostrar/esconder no player incl.
+  link perigoso, e o link viajando no snapshot).
+
+---
+
 ## v0.46.1 — Logo do app também no cabeçalho (dentro do app)
 **Ajuste (identidade visual).** A v0.46.0 colocou o ícone na **aba** e na **tela inicial**, mas
 **dentro do app** o cabeçalho ainda mostrava só um pontinho dourado + o nome. Agora o **logo**
