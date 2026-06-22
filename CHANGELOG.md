@@ -8,6 +8,20 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.48.0 — Observações da música (compartilhadas com a equipe)
+**Recurso (repertório).** Campo de **observações por música** pro que o ministério inteiro precisa saber —
+ex.: *"começa só voz", "repete o refrão 2x", "o tom da guia é Ré, mas tocamos em Dó"*. Como mora **na
+própria música** (`song.notes`), **sincroniza junto** (publicar/puxar/compartilhar/backup), então a
+anotação chega igual pra todo mundo (zero plumbing — viaja no objeto da música, como o link guia).
+- **Editor:** campo "Observações da música (a equipe toda vê)".
+- **Player:** aparece como uma **linha discreta abaixo do título** (borda de acento) e **também na
+  Apresentação ao vivo** — um cue de arranjo é justamente o que se quer ver no palco. Vazio = nada aparece.
+- **Segurança:** renderizada via `textContent` (à prova de XSS por construção — HTML no texto vira literal).
+- **298 verificações** (7 novas: salvar/repor no editor, mostrar/esconder no player, visível na
+  Apresentação, sem XSS, e a nota viajando no snapshot).
+
+---
+
 ## v0.47.0 — Link da versão guia (YouTube) por música, sincronizado
 **Recurso (repertório).** Some a dúvida recorrente do ministério — *"qual vídeo a gente segue pra
 música X?"*: agora dá pra guardar um **link de referência (versão guia)** em cada cifra, no editor.

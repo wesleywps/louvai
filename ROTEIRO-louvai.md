@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.47.0**.
+seguir. Atualizado até a **v0.48.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -115,6 +115,7 @@ instalação complexa.
 | **v0.46.0** | recurso | **Ícone do app:** favicon na aba (SVG+PNG), ícone na tela inicial do **iOS** (apple-touch) e do **Android** (`manifest.webmanifest` mínimo, fork-safe `./`). Identidade violeta/near-black gerada (monograma "L" + nota; ver `PROMPT-icone.md`), em `louvai-icons/`. **Sem service worker** — instalável + offline 100% é o Inc.1 do PWA. |
 | **v0.46.1** | ajuste | **Logo no cabeçalho do app:** o símbolo (monograma "L" + nota, violeta) vira um selo arredondado ao lado do wordmark "Louvai" na biblioteca — **SVG inline** (nítido, offline, sem depender de arquivo externo). Antes o ícone só aparecia na aba/tela inicial, não dentro do app. |
 | **v0.47.0** | recurso | **Link da versão guia (YouTube) por música:** campo no editor; guardado na própria música (`song.ref`), então **sincroniza** no publicar/puxar/compartilhar/backup. Botão "▶ Versão guia" no ⚙ Ajustes (só com link válido). `safeUrl` aceita só http(s) — fecha XSS por href. |
+| **v0.48.0** | recurso | **Observações da música (compartilhadas):** campo no editor (`song.notes`) pro que o ministério todo precisa saber ("começa só voz"; "o tom da guia ≠ o que tocamos"). **Sincroniza** como o link guia; aparece abaixo do título no player **e na Apresentação ao vivo**. `textContent` = sem XSS. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -215,6 +216,7 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 - [ ] **Ordenar por menos tocadas / mais recentes** (usa a recência da v0.24.0).
 - [ ] **Duplicar escala** e **modelos de culto**.
 - [x] **Link da versão guia (YouTube)** por música — sincronizado (`song.ref`). *(entregue na v0.47.0)*
+- [x] **Observações da música** (compartilhadas, `song.notes`) — sincroniza; no player e na Apresentação. *(entregue na v0.48.0)*
 - [ ] **Campos extras na música:** BPM, tema/categoria, andamento.
 - [ ] **Itens não-musicais no modo Apresentar** (mostrar o card de aviso/oração na sequência).
 
@@ -315,4 +317,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.47.0.*
+*Última atualização deste roteiro: v0.48.0.*

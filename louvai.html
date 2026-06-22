@@ -256,6 +256,9 @@ body.light .keyhint{color:#b45309}
 /* linha fininha de info (artista · Tom atual · capo) logo abaixo da barra */
 .songhead{padding:6px 18px 2px}
 .songhead .s{color:var(--muted);font-size:13px}
+/* observações da música (compartilhadas): linha discreta c/ borda de acento; visível tb na Apresentação */
+.songhead .songnote{color:var(--muted);font-size:13px;white-space:pre-wrap;margin-top:5px;
+  border-left:3px solid var(--accent);padding-left:8px;line-height:1.4}
 .cifra{font-family:'JetBrains Mono',ui-monospace,'Courier New',monospace;
   font-size:15px;line-height:1.85;padding:8px 18px 220px;white-space:pre;
   overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -575,6 +578,7 @@ body.light .keyhint{color:#b45309}
     <button id="pv-exitfull" aria-label="Sair da tela cheia"></button>
     <div class="songhead">
       <div class="s" id="p-sub"></div>
+      <div class="songnote hidden" id="p-notes"></div>
     </div>
     <div class="cifra" id="p-body"></div>
     <div class="scrollbar-mini" id="scrollbar-mini">
@@ -609,6 +613,8 @@ body.light .keyhint{color:#b45309}
       </div>
       <div class="field"><label>Tags (separe por vírgula)</label>
         <input id="e-tags" placeholder="adoração, lento, ceia"></div>
+      <div class="field"><label>Observações da música (a equipe toda vê)</label>
+        <textarea id="e-notes" rows="2" style="min-height:70px;white-space:pre-wrap;font-family:inherit;font-size:15px" placeholder="Ex.: começa só voz; o tom da guia é Ré, mas tocamos em Dó"></textarea></div>
       <div class="field"><label>Cifra</label>
         <textarea id="e-body" spellcheck="false" placeholder="Cole a cifra aqui…"></textarea>
         <div class="hint">
@@ -826,7 +832,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.47.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.48.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1607,6 +1613,9 @@ function drawPlayer(){
   // botão "Versão guia" (YouTube) no ⚙ Esta música: só aparece com link válido; abre em nova aba
   const guide=safeUrl(current.ref);
   const gr=$("#p-guide-row"); if(gr){ gr.style.display=guide?"":"none"; $("#p-guide").onclick=guide?(()=>window.open(guide,"_blank","noopener")):null; }
+  // observações da música (compartilhadas): linha abaixo do título; textContent = à prova de XSS
+  const note=(current.notes||"").trim();
+  const pn=$("#p-notes"); if(pn){ pn.textContent=note; pn.classList.toggle("hidden",!note); }
   const b=$("#p-body");
   b.style.fontSize=fontSize+"px";
   const html=renderCifra(current.body, shapeShift(), showChords, ctxShape, !!settings.hideTabs);
@@ -1927,12 +1936,12 @@ function openEditor(id){
     $("#e-mode").textContent="Editar";
     $("#e-title").value=s.title; $("#e-artist").value=s.artist||"";
     $("#e-key").value=KEYS.includes(s.key)?s.key:"G"; $("#e-capo").value=s.capo||0;
-    $("#e-tags").value=(s.tags||[]).join(", "); $("#e-body").value=s.body||""; $("#e-ref").value=s.ref||"";
+    $("#e-tags").value=(s.tags||[]).join(", "); $("#e-body").value=s.body||""; $("#e-ref").value=s.ref||""; $("#e-notes").value=s.notes||"";
     del.classList.remove("hidden");
   }else{
     $("#e-mode").textContent="Nova cifra";
     $("#e-title").value="";$("#e-artist").value="";$("#e-key").value="G";
-    $("#e-capo").value=0;$("#e-tags").value="";$("#e-body").value="";$("#e-ref").value="";
+    $("#e-capo").value=0;$("#e-tags").value="";$("#e-body").value="";$("#e-ref").value="";$("#e-notes").value="";
     del.classList.add("hidden");
   }
   runLint();
@@ -2019,6 +2028,7 @@ $("#e-save").onclick=()=>{
     key:$("#e-key").value, capo:+$("#e-capo").value,
     tags:$("#e-tags").value.split(",").map(t=>t.trim()).filter(Boolean),
     ref:safeUrl($("#e-ref").value),
+    notes:$("#e-notes").value.trim(),
     body:$("#e-body").value, updatedAt:Date.now()
   };
   if(editingId){ Object.assign(songs.find(s=>s.id===editingId),data); }

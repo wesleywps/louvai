@@ -1498,6 +1498,65 @@ const autoDerived = await page.evaluate(async () => {
 });
 ok(autoDerived, "Auto-sync sem link colado puxa do padrão derivado (membro não precisa colar nada)");
 
+// ===== v0.48.0 — observações da música (compartilhadas, song.notes) =====
+const noteSave = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0; saveSongs();
+  openEditor();
+  document.getElementById("e-title").value = "Com Nota";
+  document.getElementById("e-body").value = "C";
+  document.getElementById("e-notes").value = "começa só voz; tom da guia Ré, tocamos Dó";
+  document.getElementById("e-save").click();
+  const s = songs.find(x => x.title === "Com Nota");
+  openEditor(s.id);
+  const back = document.getElementById("e-notes").value;
+  show("lib");
+  return { onSong: s && s.notes, back };
+});
+ok(noteSave.onSong === "começa só voz; tom da guia Ré, tocamos Dó", "Editor salva as observações NA música (song.notes)");
+ok(noteSave.back === "começa só voz; tom da guia Ré, tocamos Dó", "Reabrir o editor repõe as observações");
+
+const notePlayer = await page.evaluate(() => {
+  songs.length = 0;
+  songs.push({ id:"n1", title:"ComNota", key:"C", capo:0, tags:[], updatedAt:1, body:"C", notes:"começa só voz" });
+  songs.push({ id:"n2", title:"SemNota", key:"C", capo:0, tags:[], updatedAt:1, body:"C" });
+  songs.push({ id:"n3", title:"NotaXSS", key:"C", capo:0, tags:[], updatedAt:1, body:"C", notes:"<b>x</b><img src=x onerror=alert(1)>" });
+  saveSongs();
+  openPlayer("n1");
+  const shown = !document.getElementById("p-notes").classList.contains("hidden");
+  const txt = document.getElementById("p-notes").textContent;
+  openPlayer("n2");
+  const hidden = document.getElementById("p-notes").classList.contains("hidden");
+  openPlayer("n3");
+  const pn = document.getElementById("p-notes");
+  const noHtml = !pn.querySelector("b") && !pn.querySelector("img");
+  const literal = pn.textContent.includes("<b>x</b>");
+  exitPlayer();
+  return { shown, txt, hidden, noHtml, literal };
+});
+ok(notePlayer.shown && notePlayer.txt === "começa só voz", "Player mostra a observação abaixo do título quando há nota");
+ok(notePlayer.hidden, "Player esconde a área de observação quando não há nota");
+ok(notePlayer.noHtml && notePlayer.literal, "Observação é renderizada como TEXTO (sem HTML/XSS) — via textContent");
+
+const noteLive = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id:"nl", title:"Live", key:"C", capo:0, tags:[], updatedAt:1, body:"C\nx", notes:"começa só voz" });
+  escalas.push({ id:"el", title:"Culto", date:"2026-01-01", team:[], items:[{kind:"song",songId:"nl",key:"",capo:0}], updatedAt:1 });
+  saveSongs(); saveEscalas();
+  openPlayer("nl", { id:"el", idx:0, list:[{songId:"nl",key:"",capo:0}] });
+  const present = document.getElementById("view-player").classList.contains("present");
+  const visible = getComputedStyle(document.getElementById("p-notes")).display !== "none";
+  exitPlayer();
+  return { present, visible };
+});
+ok(noteLive.present && noteLive.visible, "Observação aparece também na Apresentação ao vivo (.present)");
+
+const noteSync = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id:"sn", title:"SyncN", key:"C", capo:0, tags:[], updatedAt:1, body:"C", notes:"observação da equipe" });
+  return (fullEnvelope().songs.find(s => s.id === "sn") || {}).notes;
+});
+ok(noteSync === "observação da equipe", "A observação viaja no snapshot (fullEnvelope) — sincroniza com a equipe");
+
 // ===== v0.47.0 — link de referência (versão guia, YouTube) por música, sincronizado =====
 const refU = await page.evaluate(() => ({
   yt: safeUrl("https://youtu.be/abc123"),

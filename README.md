@@ -20,6 +20,7 @@ e sem backend: abre no navegador do celular/tablet e compartilha por arquivo ou 
   **"última vez que tocamos"** e **ordenar** por alfabética / recentes / **menos tocadas**
   (dá vez ao que está esquecido). Importar **avisa antes de duplicar** título repetido.
   **Link da versão guia** (YouTube) por música, que **sincroniza** com a equipe.
+  E **observações da música** (cues de arranjo: "começa só voz", "tom da guia ≠ o que tocamos") que também sincronizam.
 - **📅 Escalas / setlists** — ordem do culto, tom por escala, equipe e tempo total;
   **"Culto realizado"** alimenta a recência; **modo Apresentar** com barra compacta,
   **tela cheia** e **virar de página como um livro** entre as músicas.
@@ -31,7 +32,7 @@ e sem backend: abre no navegador do celular/tablet e compartilha por arquivo ou 
   conferência opcional do **tom pelos acordes**, importação à prova de arquivo malformado
   (sem XSS) e **acessível** (foco por teclado, contraste no escuro, alvos de toque grandes).
 
-*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.47.0**.*
+*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.48.0**.*
 
 ## Usar
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"** — desde a
