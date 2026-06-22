@@ -8,6 +8,18 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.49.0 — Dar o tom, escala como texto e duplicar (bundle)
+**Recurso (3 melhorias de uso ao vivo num só release; ordem 3→1→2, ver `PLANO-incrementos-ao-vivo.md`).**
+- **🎵 Dar o tom:** botão "Tocar a nota" no ⚙ "Esta música" toca a **tônica do tom atual** via Web Audio
+  — referência pra equipe achar a nota no palco. `noteFreq`/`playTone` (temperamento igual, A4=440); offline.
+- **📲 Compartilhar escala como texto:** no compartilhar da escala, **"Copiar como texto (WhatsApp)"** —
+  ordem do culto com **Tom · observações · link guia** por música (`escalaToText`/`shareText`).
+- **📋 Duplicar cifra/escala:** item **"Duplicar"** nos menus — clona com id novo + "(cópia)"
+  (`dupSong`/`dupEscala`; a escala volta a "não realizada"). Ícone `copy` novo no `ICONS`.
+- **305 verificações** (4 novas: duplicar cifra/escala, `noteFreq`, escala-como-texto).
+
+---
+
 ## v0.48.1 — Tela cheia mantém uma barra fininha (Tom + posição)
 **Ajuste (Apresentação ao vivo).** A tela cheia da v0.44.0 escondia tudo e o palco perdia o "onde
 estamos". Agora ela mantém uma **barra ultra-fina** no topo — **Título · Tom · 2/5 + barra de

@@ -1506,6 +1506,28 @@ const autoDerived = await page.evaluate(async () => {
 });
 ok(autoDerived, "Auto-sync sem link colado puxa do padrão derivado (membro não precisa colar nada)");
 
+// ===== v0.49.0 — dar o tom (Web Audio) + escala como texto + duplicar cifra/escala =====
+const inc = await page.evaluate(() => {
+  songs.length=0; escalas.length=0;
+  songs.push({id:"a",title:"Aleluia",artist:"X",key:"D",capo:0,tags:["t"],updatedAt:1,body:"D",ref:"https://youtu.be/x",notes:"começa só voz"});
+  escalas.push({id:"e",title:"Culto",date:"2026-01-01",team:[],items:[{kind:"song",songId:"a",key:"E",capo:0}],updatedAt:1});
+  saveSongs(); saveEscalas();
+  dupSong("a"); const sCopy=songs.find(s=>s.id!=="a"&&/cópia/.test(s.title));
+  dupEscala("e"); const eCopy=escalas.find(x=>x.id!=="e"&&/cópia/.test(x.title));
+  const fa=Math.round(noteFreq("A")), fc=Math.round(noteFreq("C"));
+  const txt=escalaToText("e");
+  return {
+    sCopy: !!sCopy && sCopy.id!=="a" && sCopy.ref==="https://youtu.be/x",
+    eCopy: !!eCopy && eCopy.id!=="e" && eCopy.items.length===1 && eCopy.done===false,
+    fa, fc,
+    txtOk: /Aleluia/.test(txt) && /Tom E/.test(txt) && /começa só voz/.test(txt) && /youtu\.be\/x/.test(txt),
+  };
+});
+ok(inc.sCopy, "Duplicar cifra: cópia com id novo, '(cópia)' e campos carregados (ref)");
+ok(inc.eCopy, "Duplicar escala: cópia com id novo, mantém items, done=false");
+ok(inc.fa===440 && inc.fc===262, "noteFreq: A4=440Hz, C4≈262Hz (temperamento igual)");
+ok(inc.txtOk, "Escala como texto inclui título, Tom (do item), observação e link guia");
+
 // ===== v0.48.0 — observações da música (compartilhadas, song.notes) =====
 const noteSave = await page.evaluate(() => {
   songs.length = 0; escalas.length = 0; saveSongs();

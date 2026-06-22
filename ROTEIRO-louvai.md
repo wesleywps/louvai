@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.48.1**.
+seguir. Atualizado até a **v0.49.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -117,6 +117,7 @@ instalação complexa.
 | **v0.47.0** | recurso | **Link da versão guia (YouTube) por música:** campo no editor; guardado na própria música (`song.ref`), então **sincroniza** no publicar/puxar/compartilhar/backup. Botão "▶ Versão guia" no ⚙ Ajustes (só com link válido). `safeUrl` aceita só http(s) — fecha XSS por href. |
 | **v0.48.0** | recurso | **Observações da música (compartilhadas):** campo no editor (`song.notes`) pro que o ministério todo precisa saber ("começa só voz"; "o tom da guia ≠ o que tocamos"). **Sincroniza** como o link guia; aparece abaixo do título no player **e na Apresentação ao vivo**. `textContent` = sem XSS. |
 | **v0.48.1** | ajuste | **Tela cheia com barra fininha:** em vez de esconder tudo, a Apresentação em tela cheia mantém uma barra ultra-fina (**Título · Tom · 2/5 + progresso**), sem botões (~70px→~34px). Tom consolidado na barra (a `.songhead` some). Desenho definido com apoio do design. |
+| **v0.49.0** | recurso | **3 melhorias de uso ao vivo:** **dar o tom** (toca a tônica do tom atual via Web Audio), **compartilhar escala como texto** (WhatsApp — Tom · observações · link guia por música) e **duplicar** cifra/escala. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -221,7 +222,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 - [x] **"Última vez que tocamos"** (derivado das escalas **confirmadas** — "Culto realizado").
   *(entregue na v0.24.0 — recência na lista e no seletor; só conta culto confirmado)*
 - [x] **Ordenar por menos tocadas / mais recentes** (usa a recência da v0.24.0). *(entregue na v0.40.0 — folha "Ordenar por", 3 modos)*
-- [ ] **Duplicar escala** e **modelos de culto**.
+- [x] **Duplicar** cifra/escala *(entregue na v0.49.0)*; **modelos de culto** ainda aberto.
+- [x] **Dar o tom** (referência sonora da tônica do tom atual, Web Audio) *(entregue na v0.49.0)*.
 - [x] **Link da versão guia (YouTube)** por música — sincronizado (`song.ref`). *(entregue na v0.47.0)*
 - [x] **Observações da música** (compartilhadas, `song.notes`) — sincroniza; no player e na Apresentação. *(entregue na v0.48.0)*
 - [ ] **Campos extras na música:** BPM, tema/categoria, andamento.
@@ -253,7 +255,7 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   confirmação** (e **"ver detalhes"** com os nomes) antes de escrever (rede de segurança).
   *(entregue na v0.27.0–v0.27.2 — ver `PLANO-publicar-nuvem.md`)*
   - [ ] *Evolução (fase online):* sync de duas vias com login/OAuth e merge de conflito real.
-- [ ] **Compartilhar escala como texto formatado** para WhatsApp (além do `.json`).
+- [x] **Compartilhar escala como texto formatado** para WhatsApp (além do `.json`). *(entregue na v0.49.0 — Tom · observações · link guia por música)*
 - [ ] **Refinar o colar** com mais exemplos reais; **exportar para ChordPro**.
 
 ### Fase futura — Online
@@ -324,4 +326,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.48.1.*
+*Última atualização deste roteiro: v0.49.0.*
