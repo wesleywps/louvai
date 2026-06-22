@@ -1384,7 +1384,7 @@ const kbdOpen = await page.evaluate(() => !document.getElementById("view-player"
 ok(kbdOpen, "Enter no card focado abre o player (ativação por teclado)");
 await page.evaluate(() => exitPlayer());
 
-// ===== v0.44.0 — modo tela cheia na Apresentação =====
+// ===== v0.44.0 / v0.48.1 — tela cheia na Apresentação: barra FINA (info + progresso, sem botões) =====
 const full = await page.evaluate(async () => {
   songs.length=0; escalas.length=0;
   songs.push({id:"fz",title:"Cheia",key:"C",capo:0,tags:[],updatedAt:1,body:"C\nx"});
@@ -1394,11 +1394,16 @@ const full = await page.evaluate(async () => {
   document.documentElement.requestFullscreen = async()=>{ req++; };
   document.exitFullscreen = async()=>{ exit++; };
   openPlayer("fz",{id:"fe",idx:0,list:[{songId:"fz",key:"",capo:0}]});
-  const vp=document.getElementById("view-player");
+  const vp=document.getElementById("view-player"), bar=document.getElementById("presentbar");
   const out={ present: vp.classList.contains("present"), hasBtn: !!document.getElementById("pv-full") };
+  out.barFullH = bar.getBoundingClientRect().height;               // Apresentação normal (com botões)
   toggleImmersive(); await new Promise(r=>setTimeout(r,10));
   out.onImm = vp.classList.contains("immersive");
-  out.barHidden = getComputedStyle(document.getElementById("presentbar")).display==="none";
+  out.barShown = getComputedStyle(bar).display!=="none";           // v0.48.1: a barra CONTINUA visível
+  out.btnHidden = getComputedStyle(document.getElementById("pv-prev")).display==="none";   // sem botões
+  out.songheadHidden = getComputedStyle(document.querySelector("#view-player .songhead")).display==="none";
+  out.pos = document.getElementById("pv-pos").textContent;         // "Tom C · 1/1"
+  out.barThinH = bar.getBoundingClientRect().height;
   out.exitShown = getComputedStyle(document.getElementById("pv-exitfull")).display!=="none";
   out.req = req;
   document.getElementById("pv-exitfull").click(); await new Promise(r=>setTimeout(r,10));
@@ -1408,7 +1413,10 @@ const full = await page.evaluate(async () => {
   return out;
 });
 ok(full.present && full.hasBtn, "Apresentação tem o botão de tela cheia (#pv-full)");
-ok(full.onImm && full.barHidden && full.exitShown, "Tela cheia esconde a barra/cabeçalho e mostra o botão flutuante de sair (maximiza a cifra)");
+ok(full.onImm && full.barShown && full.exitShown, "Tela cheia MANTÉM a barra (fina) + botão flutuante de sair");
+ok(full.btnHidden && full.songheadHidden, "Tela cheia esconde os botões da barra e a songhead (Tom vai pra barra fina)");
+ok(/Tom\s*C/.test(full.pos) && /1\/1/.test(full.pos), "Barra fina mostra Tom + posição (n/total): '"+full.pos+"'");
+ok(full.barThinH>0 && full.barThinH < full.barFullH-15, "Barra de tela cheia é bem mais fina ("+Math.round(full.barFullH)+"px → "+Math.round(full.barThinH)+"px)");
 ok(full.req >= 1, "Tela cheia pede o Fullscreen do navegador (best-effort)");
 ok(full.offImm && full.exit >= 1, "Sair (botão flutuante) volta o layout e libera o fullscreen");
 

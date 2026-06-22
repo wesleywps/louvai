@@ -8,6 +8,20 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.48.1 — Tela cheia mantém uma barra fininha (Tom + posição)
+**Ajuste (Apresentação ao vivo).** A tela cheia da v0.44.0 escondia tudo e o palco perdia o "onde
+estamos". Agora ela mantém uma **barra ultra-fina** no topo — **Título · Tom · 2/5 + barra de
+progresso** —, **sem os botões** (← ‹ › ⚙), caindo de ~70px para ~34px. Navegar segue por
+virar-página + o botão flutuante de sair.
+- O **Tom** (que vivia na `.songhead` separada) foi **consolidado na barra** (em destaque, no acento)
+  e a `.songhead` é escondida em tela cheia — fica **uma linha só**.
+- `refreshPresentPos()` formata a posição: "X de Y" no normal, "Tom X · n/total" em tela cheia.
+- Desenho definido com apoio do **design** (mockup comparando os 3 estados).
+- **301 verificações** (o teste da v0.44.0 foi atualizado: barra fina visível + botões/songhead
+  escondidos + Tom na barra + altura reduzida).
+
+---
+
 ## v0.48.0 — Observações da música (compartilhadas com a equipe)
 **Recurso (repertório).** Campo de **observações por música** pro que o ministério inteiro precisa saber —
 ex.: *"começa só voz", "repete o refrão 2x", "o tom da guia é Ré, mas tocamos em Dó"*. Como mora **na
