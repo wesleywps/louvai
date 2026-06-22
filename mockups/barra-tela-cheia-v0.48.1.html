@@ -1,0 +1,212 @@
+<!--
+  REGISTRO DE DECISÃO DE UI — Louvai
+  Tema:    Apresentação · barra do modo TELA CHEIA (imersivo)
+  Data:    2026-06-22
+  Decisão: em tela cheia, NÃO esconder a barra (como era na v0.44.0) e sim mostrá-la
+           ULTRA-FINA (~30–34px), sem botões: Título · Tom · posição (n/total) + progresso.
+           O Tom foi consolidado na barra (a .songhead some em tela cheia).
+  Status:  APROVADO pelo dono e IMPLEMENTADO na v0.48.1 (ver CHANGELOG.md / commit v0.48.1).
+  Como ler: abra este arquivo no navegador — 3 colunas: normal (~69px) × tela cheia hoje
+           (escondia tudo) × proposta (~30px). O preview usa fontes de sistema; o app real
+           usa Inter (UI) + JetBrains Mono (Tom/cifra), mas as proporções/tokens são os reais.
+  Obs.:    artefato de histórico (não faz parte do app); gerado com apoio do design.
+-->
+<title>Louvai — barra de tela cheia (proposta) · registro de decisão v0.48.1</title>
+<style>
+  :root{
+    --bg:#121212; --bg2:#161616; --panel:#1c1c1c; --panel2:#202020;
+    --line:rgba(255,255,255,.09); --text:#ffffff; --muted:#c4c4c4;
+    --accent:#a78bfa; --accent-strong:#8b5cf6; --gold:#a78bfa;
+    --glass:rgba(22,22,22,.72);
+    --ui:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,'Courier New',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(120% 60% at 50% -10%, rgba(139,92,246,.18), transparent 60%),
+      var(--bg);
+    color:var(--text); font-family:var(--ui); line-height:1.5;
+    padding:32px 18px 64px; min-height:100vh;
+  }
+  .wrap{max-width:1040px;margin:0 auto}
+  h1{font-size:22px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:28px;max-width:62ch}
+  .row{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+  .col{flex:1 1 280px;min-width:260px}
+  .caption{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 2px 10px;display:flex;align-items:center;gap:8px}
+  .tag{font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+  .tag.bad{color:#fca5a5;border-color:rgba(252,165,165,.35)}
+  .tag.ok{color:var(--accent);border-color:rgba(167,139,250,.4)}
+
+  /* moldura de "celular" */
+  .phone{
+    border-radius:22px; overflow:hidden; border:1px solid var(--line);
+    background:
+      radial-gradient(120% 42% at 50% -8%, rgba(139,92,246,.16), transparent 62%),
+      var(--bg);
+    box-shadow:0 18px 50px rgba(0,0,0,.5); position:relative;
+  }
+  .screen{height:340px;position:relative;display:flex;flex-direction:column}
+
+  /* ---- cifra de fundo (igual nos 3) ---- */
+  .cifra{font-family:var(--mono);font-size:13px;line-height:1.95;padding:10px 16px;white-space:pre;flex:1;overflow:hidden;color:var(--text)}
+  .cifra .c{color:var(--accent);font-weight:700}
+  .cifra .ly{color:#e7e7e7}
+  .sec{color:var(--accent-strong);font-weight:700}
+
+  /* ---- barra ATUAL (~69px, com botões) ---- */
+  .bar{position:sticky;top:0;background:var(--glass);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .bar.full{display:flex;flex-direction:column;gap:6px;padding:8px 12px}
+  .prog{height:3px;border-radius:999px;background:var(--line);overflow:hidden}
+  .prog>span{display:block;height:100%;width:40%;background:var(--accent);border-radius:999px}
+  .nav{display:flex;align-items:center;gap:8px}
+  .btn{width:44px;height:44px;border-radius:11px;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;color:var(--gold);font-size:20px;font-weight:700;flex:0 0 auto}
+  .btn.sm{width:40px;height:40px;border-radius:10px;font-size:16px;color:var(--text)}
+  .pinfo{flex:1;min-width:0;text-align:center;line-height:1.2}
+  .pinfo .t{display:block;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pinfo .p{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:600;margin-top:1px}
+
+  /* ---- tela cheia HOJE: sem barra + botão flutuante ---- */
+  .exit{position:absolute;top:10px;right:10px;width:40px;height:40px;border-radius:12px;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);display:grid;place-items:center;color:var(--text);font-size:18px;z-index:5}
+
+  /* ---- barra PROPOSTA (tela cheia, ~30px, sem botões) ---- */
+  .bar.thin{padding:6px 14px 0}
+  .thin .line{display:flex;align-items:baseline;gap:10px}
+  .thin .t{flex:1;min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+  .thin .meta{flex:0 0 auto;font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.2px}
+  .thin .meta .tom{color:var(--accent)}
+  .thin .meta .pos{color:var(--muted)}
+  .thin .prog{margin-top:6px}
+
+  /* régua de altura */
+  .ruler{position:absolute;left:0;top:0;width:100%;pointer-events:none}
+  .ruler .h{position:absolute;left:0;right:0;border-bottom:1px dashed rgba(167,139,250,.55)}
+  .hlabel{position:absolute;right:8px;font-family:var(--mono);font-size:10px;color:var(--accent);background:rgba(18,18,18,.85);padding:1px 6px;border-radius:6px;transform:translateY(-50%)}
+
+  .spec{margin-top:36px;border-top:1px solid var(--line);padding-top:24px}
+  .spec h2{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .card .k{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);font-weight:700;margin-bottom:8px}
+  .card ul{list-style:none;font-size:13px;color:#e2e2e2;display:flex;flex-direction:column;gap:5px}
+  .card code{font-family:var(--mono);font-size:12px;color:#fff;background:rgba(255,255,255,.06);padding:1px 5px;border-radius:5px}
+  .note{margin-top:18px;font-size:13px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <h1>Apresentação · barra de tela cheia</h1>
+  <p class="sub">Hoje a tela cheia esconde tudo e o palco perde o "onde estamos". Proposta: trocar
+  "esconder" por uma <b style="color:#fff">barra ultra-fina sem botões</b> — só o essencial do palco —
+  caindo de ~69&nbsp;px para ~30&nbsp;px. Navegação segue por virar-página + botão flutuante de sair.</p>
+
+  <div class="row">
+
+    <!-- A: Apresentação normal -->
+    <div class="col">
+      <div class="caption">Apresentação normal <span class="tag">≈ 69 px</span></div>
+      <div class="phone"><div class="screen">
+        <div class="bar full" style="position:relative">
+          <div class="prog"><span></span></div>
+          <div class="nav">
+            <div class="btn sm">‹</div>
+            <div class="btn">‹</div>
+            <div class="pinfo"><span class="t">Tua Graça Me Basta</span><span class="p">2 de 5</span></div>
+            <div class="btn">›</div>
+            <div class="btn sm">⛶</div>
+            <div class="btn sm">⚙</div>
+          </div>
+          <div class="ruler"><div class="h" style="top:69px"></div><div class="hlabel" style="top:69px">69px</div></div>
+        </div>
+        <div class="cifra"><span class="sec">[Verso]</span>
+<span class="c">D            A</span>
+<span class="ly">Tua graça me basta</span>
+<span class="c">  Bm           G</span>
+<span class="ly">Tua força em minha fraqueza</span></div>
+      </div></div>
+    </div>
+
+    <!-- B: tela cheia HOJE -->
+    <div class="col">
+      <div class="caption">Tela cheia (hoje) <span class="tag bad">esconde tudo</span></div>
+      <div class="phone"><div class="screen">
+        <div class="exit">⤡</div>
+        <div class="cifra" style="padding-top:14px"><span class="sec">[Verso]</span>
+<span class="c">D            A</span>
+<span class="ly">Tua graça me basta</span>
+<span class="c">  Bm           G</span>
+<span class="ly">Tua força em minha fraqueza</span>
+<span class="c">D                  A</span>
+<span class="ly">A Ti entrego o meu viver</span></div>
+      </div></div>
+      <p class="note" style="margin-top:10px">Mais cifra, mas some o Tom e o "2/5".</p>
+    </div>
+
+    <!-- C: tela cheia PROPOSTA -->
+    <div class="col">
+      <div class="caption">Tela cheia (proposta) <span class="tag ok">≈ 30 px</span></div>
+      <div class="phone"><div class="screen">
+        <div class="bar thin" style="position:relative">
+          <div class="line">
+            <span class="t">Tua Graça Me Basta</span>
+            <span class="meta"><span class="tom">Tom D</span> <span class="pos">· 2/5</span></span>
+          </div>
+          <div class="prog"><span></span></div>
+          <div class="ruler"><div class="h" style="top:30px"></div><div class="hlabel" style="top:30px">30px</div></div>
+        </div>
+        <div class="exit">⤡</div>
+        <div class="cifra"><span class="sec">[Verso]</span>
+<span class="c">D            A</span>
+<span class="ly">Tua graça me basta</span>
+<span class="c">  Bm           G</span>
+<span class="ly">Tua força em minha fraqueza</span>
+<span class="c">D                  A</span>
+<span class="ly">A Ti entrego o meu viver</span></div>
+      </div></div>
+      <p class="note" style="margin-top:10px">Mantém Título · <b style="color:var(--accent)">Tom</b> · 2/5 + progresso, ganha ~39px de cifra.</p>
+    </div>
+
+  </div>
+
+  <div class="spec">
+    <h2>Spec da barra fina (tela cheia)</h2>
+    <div class="grid">
+      <div class="card"><div class="k">Conteúdo</div><ul>
+        <li>Título (esq., elipse)</li>
+        <li><b style="color:var(--accent)">Tom</b> + posição <code>2/5</code> (dir.)</li>
+        <li>Barra de progresso 3px</li>
+        <li>Sem botões (← ‹ › ⚙ ⛶)</li>
+      </ul></div>
+      <div class="card"><div class="k">Layout</div><ul>
+        <li><code>sticky; top:0</code></li>
+        <li>linha: título <code>flex:1</code> + meta <code>flex:none</code></li>
+        <li>progresso full-width, embaixo</li>
+        <li>fundo glass + blur + borda</li>
+      </ul></div>
+      <div class="card"><div class="k">Tipografia</div><ul>
+        <li>Título: Inter 13px / 600</li>
+        <li>Tom: Mono 12.5px / 700 · <code>--accent</code></li>
+        <li>Posição: Mono 12.5px · <code>--muted</code></li>
+      </ul></div>
+      <div class="card"><div class="k">Alturas</div><ul>
+        <li>padding <code>6px 14px 0</code> + safe-area-top</li>
+        <li>linha de texto ~18px</li>
+        <li>progresso 3px</li>
+        <li>total ≈ <b>28–32px</b> (era ~69px)</li>
+      </ul></div>
+      <div class="card"><div class="k">Implementação</div><ul>
+        <li>tela cheia deixa de <code>display:none</code> a barra</li>
+        <li>esconde só os <code>.pbtn/.pbtn-sm</code></li>
+        <li>injeta o Tom no meta (drawPlayer)</li>
+        <li><code>#pv-exitfull</code> segue p/ sair</li>
+      </ul></div>
+      <div class="card"><div class="k">Palco / a11y</div><ul>
+        <li>Tom em acento = glance rápido</li>
+        <li>contraste mantido (sobre glass)</li>
+        <li>sem alvo de toque na barra (ok: sem botão)</li>
+        <li>respeita safe-area (notch)</li>
+      </ul></div>
+    </div>
+    <p class="note">Obs.: o app usa <b>Inter</b> (UI) e <b>JetBrains Mono</b> (Tom/cifra) de verdade; aqui o preview cai pra fontes de sistema (CDN bloqueado no artifact), mas as proporções/tokens são os reais do Louvai.</p>
+  </div>
+</div>

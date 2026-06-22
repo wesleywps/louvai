@@ -142,6 +142,9 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   Fora do git (regenerável); **sincronizar a cada entrega** (ver Ritual, passo 6).
 - `.gitignore` — ignora `node_modules/`, o `index.html`, as cópias `louvai-v*.html` e o
   `COMMIT_MSG_tmp.txt`.
+- `mockups/` — **registros de decisões de UI** (mockups HTML versionados, abre no navegador).
+  Ex.: `barra-tela-cheia-v0.48.1.html` (decisão da barra fina do modo tela cheia). Artefatos de
+  histórico, não fazem parte do app.
 - `CLAUDE.md` — este guia.
 
 ## Anatomia do `louvai.html` (onde mexer)
