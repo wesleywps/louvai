@@ -261,7 +261,8 @@ body.light .keyhint{color:#b45309}
   border-left:3px solid var(--accent);padding-left:8px;line-height:1.4}
 .cifra{font-family:'JetBrains Mono',ui-monospace,'Courier New',monospace;
   font-size:15px;line-height:1.85;padding:8px 18px 220px;white-space:pre;
-  overflow-x:auto;-webkit-overflow-scrolling:touch}
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  touch-action:pan-x pan-y}   /* mantém rolagem/deslize de página; desliga o pinch-zoom nativo p/ a pinça ajustar a fonte */
 /* sem a barra de auto-scroll (padrão): encolhe o respiro inferior — não afeta o alinhamento mono */
 .cifra.nobar{padding-bottom:calc(48px + env(safe-area-inset-bottom))}
 .cifra .chord{color:var(--chord);font-weight:700;
@@ -845,7 +846,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.49.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.50.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1300,6 +1301,7 @@ function load(){
   migrateLevita();
   try{songs=JSON.parse(localStorage.getItem(LS_SONGS))||[];}catch(e){songs=[];}
   try{settings=Object.assign({theme:"dark"},JSON.parse(localStorage.getItem(LS_SET))||{});}catch(e){}
+  if(typeof settings.fontSize==="number") fontSize=clampFont(settings.fontSize);   // tamanho da cifra é lembrado entre sessões
   try{escalas=JSON.parse(localStorage.getItem(LS_ESC))||[];}catch(e){escalas=[];}
   // semeia a cifra de exemplo só numa instalação NUNCA inicializada;
   // assim, esvaziar o repertório de propósito não faz o exemplo voltar a cada abertura.
@@ -1718,8 +1720,14 @@ $("#pv-exitfull").onclick=()=>setImmersive(false);
 }));
 $("#c-up").onclick=()=>{if(capo<11){capo++;drawPlayer();}};
 $("#c-down").onclick=()=>{if(capo>0){capo--;drawPlayer();}};
-$("#f-up").onclick=()=>{fontSize=Math.min(28,fontSize+1);drawPlayer();};
-$("#f-down").onclick=()=>{fontSize=Math.max(10,fontSize-1);drawPlayer();};
+/* Tamanho da fonte da cifra (10–28). Fonte única do ajuste — botões A−/A＋ e a pinça
+   passam por aqui; persiste em settings (lembrado ao reabrir). */
+const FONT_MIN=10, FONT_MAX=28;
+function clampFont(n){ return Math.max(FONT_MIN, Math.min(FONT_MAX, Math.round(n))); }
+function pinchFontSize(start, ratio){ return clampFont(start*ratio); }   // razão da pinça → tamanho (passo inteiro)
+function setFontSize(n){ const v=clampFont(n); if(v===fontSize) return; fontSize=v; settings.fontSize=v; saveSettings(); drawPlayer(); }
+$("#f-up").onclick=()=>setFontSize(fontSize+1);
+$("#f-down").onclick=()=>setFontSize(fontSize-1);
 // nos toggles, espelhamos o estado no aria-pressed (leitor de tela no palco precisa saber ligado/desligado)
 $("#lyr-toggle").onclick=()=>{const b=$("#lyr-toggle");showChords=!showChords;b.classList.toggle("on",!showChords);b.setAttribute("aria-pressed",String(!showChords));drawPlayer();};
 $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings();const b=$("#tabs-toggle");b.classList.toggle("on",!!settings.hideTabs);b.setAttribute("aria-pressed",String(!!settings.hideTabs));drawPlayer();};
@@ -1913,10 +1921,32 @@ function goPage(d){
   gotoPage(next,true);   // dentro da música (ou sem escala): vira a página normalmente (clampado)
 }
 /* virar página por TOQUE: metade direita avança, esquerda volta (só no modo página);
-   ignora arrastos para não conflitar com o deslizar nativo do scroll-snap. */
+   ignora arrastos para não conflitar com o deslizar nativo do scroll-snap.
+   PINÇA (2 dedos) ajusta o tamanho da fonte sem ir ao ⚙ Ajustes — mesmo resultado dos
+   botões A−/A＋ (setFontSize/pinchFontSize, passo inteiro). Gestos de 1 dedo ficam intactos. */
 let pgDownX=0,pgDownY=0,pgDownT=0;
-$("#p-body").addEventListener("pointerdown",e=>{ pgDownX=e.clientX; pgDownY=e.clientY; pgDownT=Date.now(); });
-$("#p-body").addEventListener("pointerup",e=>{
+const pgPtrs=new Map();                        // ponteiros ativos sobre a cifra (id → {x,y})
+let pinchStartDist=0, pinchStartFont=0, pinching=false, pinchWasActive=false;
+function pinchDist(){ const p=[...pgPtrs.values()]; return Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y); }
+const pbody=$("#p-body");
+pbody.addEventListener("pointerdown",e=>{
+  pgPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pgPtrs.size>=2){ pinching=true; pinchWasActive=true; pinchStartDist=pinchDist(); pinchStartFont=fontSize; }
+  pgDownX=e.clientX; pgDownY=e.clientY; pgDownT=Date.now();
+});
+pbody.addEventListener("pointermove",e=>{
+  if(!pgPtrs.has(e.pointerId)) return;
+  pgPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(!pinching || pgPtrs.size<2 || !pinchStartDist) return;
+  e.preventDefault();                          // segura a rolagem enquanto a pinça manda
+  setFontSize(pinchFontSize(pinchStartFont, pinchDist()/pinchStartDist));   // redesenha só ao cruzar passo inteiro
+},{passive:false});
+pbody.addEventListener("pointerup",e=>{
+  const wasPinch=pinchWasActive;               // qualquer dedo de uma pinça: não vira página nem abre diagrama
+  pgPtrs.delete(e.pointerId);
+  if(pgPtrs.size<2) pinching=false;
+  if(pgPtrs.size===0) pinchWasActive=false;
+  if(wasPinch) return;
   // só ignora se foi ARRASTE (mexeu) — um toque parado, mesmo demorado, ainda conta;
   // limiar de 16px acomoda o tremor natural do dedo no palco.
   const moved = Math.abs(e.clientX-pgDownX)>16 || Math.abs(e.clientY-pgDownY)>16;
@@ -1928,6 +1958,9 @@ $("#p-body").addEventListener("pointerup",e=>{
   if(moved || Date.now()-pgDownT>900) return;
   goPage(e.clientX < window.innerWidth/2 ? -1 : 1);
 });
+pbody.addEventListener("pointercancel",e=>{ pgPtrs.delete(e.pointerId); if(pgPtrs.size<2) pinching=false; if(pgPtrs.size===0) pinchWasActive=false; });
+/* iOS Safari: previne o zoom de página da pinça (esses eventos não disparam em Android/desktop) */
+["gesturestart","gesturechange","gestureend"].forEach(ev=>pbody.addEventListener(ev,e=>e.preventDefault()));
 $("#chorddiagbg").onclick=hideChordDiagram;
 /* DESLIZAR nativo (scroll-snap) atualiza o índice quando a rolagem assenta */
 let pgScrollT=null;

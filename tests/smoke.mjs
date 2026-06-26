@@ -1666,6 +1666,44 @@ ok(Array.isArray(mani.icons) && mani.icons.length >= 3 && mani.icons.some(i => i
    && mani.icons.every(i => i.src.startsWith("louvai-icons/")), "manifest: ícones em louvai-icons/ com variante maskable");
 ok(mani.theme_color === "#121212" && mani.background_color === "#121212", "manifest: cores casadas com o app (#121212)");
 
+// ===== v0.50.0 — pinça ajusta a fonte (sem ir ao ⚙ Ajustes), com persistência =====
+const pinchPure = await page.evaluate(() => ({
+  grow: pinchFontSize(15, 1.6),
+  shrinkClamp: pinchFontSize(20, 0.1),
+  growClamp: pinchFontSize(20, 3),
+  same: pinchFontSize(15, 1),
+}));
+ok(pinchPure.grow > 15 && pinchPure.grow <= 28, "pinchFontSize: afastar os dedos aumenta a fonte (15→" + pinchPure.grow + ")");
+ok(pinchPure.shrinkClamp === 10, "pinchFontSize: aproximar muito trava no mínimo (10)");
+ok(pinchPure.growClamp === 28, "pinchFontSize: afastar muito trava no máximo (28)");
+ok(pinchPure.same === 15, "pinchFontSize: razão 1 mantém a fonte");
+// touch-action desliga o pinch-zoom nativo na cifra (deixa a pinça mexer só na fonte)
+ok(await page.evaluate(() => getComputedStyle(document.getElementById("p-body")).touchAction.includes("pan")),
+   "Cifra usa touch-action pan-* (pinch-zoom nativo desligado p/ a pinça ajustar a fonte)");
+// gesto real: 2 ponteiros afastando aumentam a fonte; aproximando diminuem
+const pinchGesture = await page.evaluate(() => {
+  songs.length = 0;
+  songs.push({ id:"pz", title:"Pinça", artist:"", key:"C", capo:0, tags:[], updatedAt:1, body:"C  G  Am  F\nletra de teste pra pinça" });
+  settings.readMode = "scroll"; saveSettings();
+  saveSongs(); setFontSize(15); openPlayer("pz");
+  const b = document.getElementById("p-body");
+  const ev = (type,id,x) => b.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:id,clientX:x,clientY:300}));
+  // afastar: |Δ| 100 → ~240
+  ev("pointerdown",1,150); ev("pointerdown",2,250); ev("pointermove",1,80); ev("pointermove",2,320); ev("pointerup",1,80); ev("pointerup",2,320);
+  const bigger = fontSize;
+  // aproximar: |Δ| 260 → ~60
+  setFontSize(20);
+  ev("pointerdown",1,80); ev("pointerdown",2,340); ev("pointermove",1,190); ev("pointermove",2,250); ev("pointerup",1,190); ev("pointerup",2,250);
+  const smaller = fontSize;
+  return { bigger, smaller };
+});
+ok(pinchGesture.bigger > 15, "Pinça abrindo (2 dedos afastando) aumenta a fonte (15→" + pinchGesture.bigger + ")");
+ok(pinchGesture.smaller < 20, "Pinça fechando (2 dedos aproximando) diminui a fonte (20→" + pinchGesture.smaller + ")");
+// persistência: o tamanho escolhido é lembrado ao reabrir o app
+await page.evaluate(() => setFontSize(22));
+await page.reload(); await page.waitForTimeout(400);
+ok((await page.evaluate(() => fontSize)) === 22, "Tamanho da fonte persiste ao reabrir o app (lembrado)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

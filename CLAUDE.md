@@ -107,7 +107,7 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`), **contagem ao sincronizar**, **detecção/validação de tom** e a
     compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~301 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~313 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -283,6 +283,14 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
 - **Observações da música (v0.48.0):** `song.notes` (texto livre, **compartilhado** — viaja na nuvem/escala).
   Editor: `#e-notes`. Player: `#p-notes`/`.songnote` (linha abaixo do título, **visível na Apresentação**);
   render via `textContent` (à prova de XSS). **Sincroniza** (mora na música).
+- **Tamanho da fonte + pinça (v0.50.0):** `fontSize` (global, clamp `FONT_MIN/FONT_MAX` = 10–28) agora
+  **persiste** em `settings.fontSize` (lido no `load`). Fonte única do ajuste: `clampFont`, `pinchFontSize(start,
+  razão)` (→ passo inteiro) e `setFontSize(n)` (clampa→salva→`drawPlayer`); botões `#f-up`/`#f-down` e a pinça
+  passam por aí. **Pinça** no `#p-body`: `pgPtrs` (Map de ponteiros) + `pinching`/`pinchWasActive` no
+  `pointerdown/move/up/cancel` — 2 dedos mudam a fonte; 1 dedo (rolagem/virar-página/diagrama) intacto;
+  `pinchWasActive` suprime virar-página/diagrama ao soltar a pinça. CSS `touch-action:pan-x pan-y` na `.cifra`
+  desliga o pinch-zoom **nativo** só na cifra; iOS Safari ganha `preventDefault` em `gesturestart/change/end`
+  (não disparam em Android/desktop). No Modo Página re-pagina por passo de px (mesmo caminho dos botões).
 - **Publicar na nuvem (v0.27.0):** o líder **escreve** o `louvai.json` via **API Contents do
   GitHub**. `ghRepoFromUrl` deriva `owner/repo/path` da `settings.repoUrl`; `publishRepo` faz
   GET sha → PUT (snapshot em `bytesToB64` base64 padrão; 404 cria; 409 rebusca+retry); token
@@ -354,12 +362,13 @@ tom em tile menor à esquerda, v0.43.0–0.43.1), **acessibilidade** (foco por t
 da tag ≥44px, contraste no escuro, v0.43.2), **tela cheia na Apresentação** (v0.44.0) e **repositório já
 configurado por padrão** (repoUrl derivado do endereço — membro puxa sem colar link, v0.45.0),
 **ícone do app** (favicon/apple-touch/manifest + logo inline no cabeçalho, v0.46.0–0.46.1), **link da versão
-guia** por música (v0.47.0), **observações da música** (v0.48.0) e **barra fina no modo tela cheia** (v0.48.1).
+guia** por música (v0.47.0), **observações da música** (v0.48.0), **barra fina no modo tela cheia** (v0.48.1),
+**3 melhorias de uso ao vivo** (dar o tom / escala como texto / duplicar, v0.49.0) e **pinça ajusta a fonte**
+da cifra com tamanho persistido (v0.50.0).
 Ver os `PLANO-*.md`.
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
-1. **Validação visual no celular** (dark/light) das Ondas 1–3 — Tom destacado, toast colorido,
-   estados vazios, acorde no claro, o conjunto de ícones SVG, as seções do ⚙, os cards unificados,
-   arrastar-pra-fechar e o progresso da Apresentação só se confirmam na tela do palco.
+1. ✅ **Validação visual no celular** (dark/light) — **concluída (2026-06-26)**; o app está **em teste de
+   uso pelo ministério** (v0.49.0+). Feedback de campo pode pautar ajustes.
 2. ✅ **Ordenar a lista** (alfabética/recência/menos tocadas — v0.40.0). **QR Code despriorizado**
    (decisão 2026-06-19): com o app hospedado + nuvem, rende pouco **online** (e o QR de link exige
    internet pra abrir o app); o valor real é **offline + broadcast** e **só** pra a **estrutura da

@@ -8,6 +8,32 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.50.0 — Pinça ajusta a fonte da cifra (e o tamanho passa a ser lembrado)
+**Recurso (uso ao vivo).** Dá pra **aumentar/diminuir a fonte da cifra com o gesto de pinça** (dois
+dedos) direto sobre a cifra — sem abrir o ⚙ Ajustes. No palco, com pouca luz, é o jeito natural de
+acertar o tamanho na hora. Afasta os dedos = maior; aproxima = menor (mesmo limite e resultado dos
+botões **A−/A＋**, clamp **10–28px**).
+- **Convive com os gestos de 1 dedo:** rolagem, deslize de página, virar-página por toque e o
+  diagrama de acorde ficam intactos. A pinça só entra com **2 dedos**; ao soltá-la, não vira página
+  nem abre diagrama (rastreio de ponteiros num `Map` + flag `pinchWasActive`).
+- **De quebra, o tamanho da fonte agora persiste:** antes ele resetava pra 15px a cada recarga (valia
+  pros botões também); agora **pinça e botões gravam em `settings.fontSize`** e o app **lembra ao
+  reabrir**. Fonte única do ajuste: `clampFont`/`pinchFontSize` (razão da pinça → passo inteiro de px)
+  e `setFontSize` (clampa, salva, redesenha) — usada pelos botões e pelo gesto.
+- **No Modo Página, re-pagina** a cada passo inteiro de px (mesmo caminho dos botões), sem recalcular
+  a cada frame.
+- **Por dentro:** `#p-body` ganhou `touch-action:pan-x pan-y` (desliga o pinch-zoom **nativo** só na
+  cifra, mantendo rolagem/deslize) + `pointermove`/`pointercancel` no corpo da cifra; no **iOS Safari**,
+  `gesturestart`/`gesturechange`/`gestureend` recebem `preventDefault` (cinto e suspensório contra o
+  zoom de página — esses eventos não disparam em Android/desktop). **A hospedagem não muda** (segue
+  GitHub Pages); é JS+CSS no arquivo único, sem PWA.
+- **313 verificações** (8 novas: `pinchFontSize` cresce/clampa min/clampa max/razão-1, `touch-action`
+  na cifra, gesto real de 2 ponteiros abrindo/fechando, e a persistência ao recarregar), zero erro de JS.
+- ⚠️ **A validar no aparelho:** o comportamento de `touch-action`/pinça difere um pouco entre Android
+  Chrome e iOS Safari — daí o fallback de `gesturestart`. É o ponto a conferir em campo.
+
+---
+
 ## v0.49.0 — Dar o tom, escala como texto e duplicar (bundle)
 **Recurso (3 melhorias de uso ao vivo num só release; ordem 3→1→2, ver `PLANO-incrementos-ao-vivo.md`).**
 - **🎵 Dar o tom:** botão "Tocar a nota" no ⚙ "Esta música" toca a **tônica do tom atual** via Web Audio

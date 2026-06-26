@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.49.0**.
+seguir. Atualizado até a **v0.50.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -118,6 +118,7 @@ instalação complexa.
 | **v0.48.0** | recurso | **Observações da música (compartilhadas):** campo no editor (`song.notes`) pro que o ministério todo precisa saber ("começa só voz"; "o tom da guia ≠ o que tocamos"). **Sincroniza** como o link guia; aparece abaixo do título no player **e na Apresentação ao vivo**. `textContent` = sem XSS. |
 | **v0.48.1** | ajuste | **Tela cheia com barra fininha:** em vez de esconder tudo, a Apresentação em tela cheia mantém uma barra ultra-fina (**Título · Tom · 2/5 + progresso**), sem botões (~70px→~34px). Tom consolidado na barra (a `.songhead` some). Desenho definido com apoio do design. |
 | **v0.49.0** | recurso | **3 melhorias de uso ao vivo:** **dar o tom** (toca a tônica do tom atual via Web Audio), **compartilhar escala como texto** (WhatsApp — Tom · observações · link guia por música) e **duplicar** cifra/escala. |
+| **v0.50.0** | recurso | **Pinça ajusta a fonte da cifra:** dois dedos sobre a cifra aumentam/diminuem a fonte sem abrir o ⚙ Ajustes (clamp 10–28, mesmo dos botões A−/A＋); gestos de 1 dedo intactos. De quebra, o **tamanho da fonte passa a persistir** (`settings.fontSize`, lembrado ao reabrir). `touch-action:pan-x pan-y` na cifra + fallback `gesturestart` no iOS. Hospedagem inalterada (sem PWA). |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -132,7 +133,7 @@ instalação complexa.
 - **Player:** **barra de uma linha** (`← · Título · ☰ · ⚙`) que prioriza a cifra;
   transposição (subir/abaixar, no ⚙ Ajustes) com **grafia fiel ao tom** — preserva o
   que foi escrito e, ao transpor, escolhe ♯/♭ sozinho pelo tom (Bb nunca vira A#),
-  capo, tamanho de fonte, modo escuro/claro, só letra, ocultar tabs, **modos de
+  capo, tamanho de fonte (**ajustável por pinça** e lembrado entre sessões), modo escuro/claro, só letra, ocultar tabs, **modos de
   leitura** (rolagem com auto-scroll opcional **ou** página), navegação por
   estrutura (☰), **diagrama de acorde ao tocar no acorde** (pegada no violão, capo-aware)
   e tela sempre acesa (Wake Lock). Cada cifra pode ter **link da versão guia** (YouTube) e
@@ -167,14 +168,13 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 - [x] **Redesign visual moderno** *(entregue nas v0.10.0–v0.13.0, 4 fases — ver
   `PLANO-redesign-ui.md`)*: paleta near-black + acento violeta, Inter na UI,
   bottom nav + FAB único, player de palco com sheet Ajustes, vidro fosco e
-  microinterações. Falta apenas a **aprovação visual do dono** nas telas reais
-  (celular) antes de distribuir.
+  microinterações. **Aprovação visual do dono concluída (2026-06-26)** nas telas reais (celular).
 - [x] **Polimento "cara de app pronto"** (`PLANO-ui.md`, em ondas) — **concluído (v0.28.0→v0.36.1)**:
   **Onda 1** (v0.28.0 — tokens, Tom em destaque, toast tipado, vazios, acorde no claro, ícone do
   Backup); **Onda 2** (v0.29.0 — ícones SVG inline unificados via `ICONS`/`icon()`); **Onda 3**
   (M2 seções do ⚙ Ajustes · M4 linguagem de card · M5 `#reposheet` em cartões · M3 arrastar p/
   fechar · M7 entrada da lista · M8 progresso na Apresentação · M6 skeleton de carregamento).
-  **Falta apenas a validação visual no celular** (palco, dark/light) — ver ordem sugerida.
+  **Validação visual no celular concluída (2026-06-26)** (palco, dark/light).
 
 ### Tema A — Segurança dos dados
 - [ ] **PWA instalável de verdade** (100% offline inclusive fontes;
@@ -203,6 +203,8 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   mais cifra na tela ao vivo. *(entregue nas v0.18.0–v0.18.1; Tom no ⚙ Ajustes)*
 - [x] **"Livro" entre músicas:** virar a última página passa pra próxima música;
   voltar retoma a última página da anterior. *(entregue na v0.19.0)*
+- [x] **Ajustar a fonte com pinça** (2 dedos sobre a cifra, sem ir ao ⚙ Ajustes) + tamanho da fonte
+  **persistido** entre sessões. *(entregue na v0.50.0)*
 - [ ] **Auto-scroll mais esperto:** lembrar velocidade por música; pausar ao tocar a tela.
 - [x] **Modo tela cheia** de apresentação — maximiza a cifra (Fullscreen API) + barra fina
   (Título · Tom · posição). *(entregue na v0.44.0; barra fina na v0.48.1)* — a ☰ estrutura na barra
@@ -232,8 +234,7 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 ### Tema E — Importar e compartilhar (sem servidor)
 - [x] **Compartilhar por link auto-importável** (`…/#imp=…`, dados gzipados no fragmento,
   sem backend; recebe tocando o link, com confirmação). *(entregue na v0.21.0 — ver
-  `PLANO-compartilhar-link.md`)*. Falta a tarefa operacional do dono: **hospedar** o app
-  (GitHub Pages — passo a passo no `README` e no plano).
+  `PLANO-compartilhar-link.md`)*. **Hospedado no GitHub Pages e validado em campo (2026-06-26).**
 - [ ] **Transferência por QR Code** entre celulares — **despriorizado (decisão 2026-06-19).**
   Com o app **hospedado + nuvem**, o QR de *link* rende pouco **online** (a nuvem já sincroniza) e ainda
   **exige internet** pra abrir o app na 1ª vez. O valor real seria **offline + broadcast** (vários
@@ -266,13 +267,12 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 
 ## 5. Ordem sugerida para a próxima sessão
 
-1. **Hospedar o app + validar o link em campo** (tarefa do dono): publicar no
-   GitHub Pages (passo a passo no `README` / `PLANO-compartilhar-link.md`), gerar
-   "Enviar link" numa escala e mandar pra outro aparelho no WhatsApp → tocar → importar.
-   *(Desde a v0.45.0, hospedado o app, o membro já puxa o repertório **sem colar link** —
-   o `repoUrl` é derivado do endereço; é só abrir e tocar "Atualizar".)*
-2. **Validação visual no celular** (dark e light): o redesign, o **Modo Página** e a
-   **barra compacta da Apresentação** só se confirmam de verdade na tela real do palco.
+1. ✅ **Hospedar o app + validar o link em campo** (tarefa do dono) — **concluído (2026-06-26)**:
+   app publicado no GitHub Pages e o link validado em campo. Desde a v0.45.0 o membro puxa o
+   repertório **sem colar link** (o `repoUrl` é derivado do endereço; é só abrir e tocar "Atualizar").
+2. ✅ **Validação visual no celular** (dark e light) — **concluída (2026-06-26)**: o redesign, o
+   **Modo Página** e a **barra compacta da Apresentação** conferidos na tela real. O app (v0.49.0)
+   está **em teste de uso pelo ministério** (feedback de campo pode pautar ajustes).
 3. **PWA instalável** — fecha o **offline 100%** do app hospedado (manifest + service worker; **abre sem
    internet**) e destrava "Abrir com Louvai" pra importar arquivo em 1 toque. **Encerra a regra
    "arquivo único"** (ver `CLAUDE.md`, seção "Horizonte"). **É o investimento certo pro offline** —
@@ -326,4 +326,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 (opcional) `louvai-vX.Y.Z.html`.
 
-*Última atualização deste roteiro: v0.49.0.*
+*Última atualização deste roteiro: v0.50.0.*
