@@ -261,7 +261,8 @@ body.light .keyhint{color:#b45309}
   border-left:3px solid var(--accent);padding-left:8px;line-height:1.4}
 .cifra{font-family:'JetBrains Mono',ui-monospace,'Courier New',monospace;
   font-size:15px;line-height:1.85;padding:8px 18px 220px;white-space:pre;
-  overflow-x:auto;-webkit-overflow-scrolling:touch}
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  touch-action:pan-x pan-y}   /* mantém rolagem/deslize de página; desliga o pinch-zoom nativo p/ a pinça ajustar a fonte */
 /* sem a barra de auto-scroll (padrão): encolhe o respiro inferior — não afeta o alinhamento mono */
 .cifra.nobar{padding-bottom:calc(48px + env(safe-area-inset-bottom))}
 .cifra .chord{color:var(--chord);font-weight:700;
@@ -808,6 +809,9 @@ body.light .keyhint{color:#b45309}
       <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false"></button></span>
     </div>
     <div class="sheetsec">Esta música</div>
+    <div class="ctrl"><span class="lbl">Dar o tom</span>
+      <span class="grp"><button id="p-tom" aria-label="Tocar a nota do tom atual">Tocar a nota</button></span>
+    </div>
     <div class="ctrl" id="p-guide-row" style="display:none"><span class="lbl">Versão guia (YouTube)</span>
       <span class="grp"><button id="p-guide" aria-label="Abrir a versão guia no YouTube">Abrir</button></span>
     </div>
@@ -842,7 +846,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.48.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.50.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1297,6 +1301,7 @@ function load(){
   migrateLevita();
   try{songs=JSON.parse(localStorage.getItem(LS_SONGS))||[];}catch(e){songs=[];}
   try{settings=Object.assign({theme:"dark"},JSON.parse(localStorage.getItem(LS_SET))||{});}catch(e){}
+  if(typeof settings.fontSize==="number") fontSize=clampFont(settings.fontSize);   // tamanho da cifra é lembrado entre sessões
   try{escalas=JSON.parse(localStorage.getItem(LS_ESC))||[];}catch(e){escalas=[];}
   // semeia a cifra de exemplo só numa instalação NUNCA inicializada;
   // assim, esvaziar o repertório de propósito não faz o exemplo voltar a cada abertura.
@@ -1342,6 +1347,13 @@ function backupNote(){
   return s;
 }
 function uid(){ return "s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+// duplicar (v0.49.0): clona com id novo + "(cópia)". A escala clona os items e volta a "não realizada".
+function dupSong(id){ const s=songs.find(x=>x.id===id); if(!s) return;
+  const c=Object.assign({},s); c.id=uid(); c.title=(s.title||"Cifra")+" (cópia)"; c.tags=(s.tags||[]).slice(); c.updatedAt=Date.now();
+  songs.push(c); saveSongs(); renderLibrary(); toast("Cifra duplicada","ok"); }
+function dupEscala(id){ const e=escalas.find(x=>x.id===id); if(!e) return;
+  const c=JSON.parse(JSON.stringify(e)); c.id=uid(); c.title=(e.title||"Escala")+" (cópia)"; c.done=false; c.updatedAt=Date.now();
+  escalas.push(c); saveEscalas(); if(typeof renderEscalas==="function") renderEscalas(); toast("Escala duplicada","ok"); }
 
 function demoSong(){
   return {
@@ -1395,6 +1407,7 @@ const ICONS={
   sliders:'<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',
   x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   pencil:'<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  copy:'<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
   "share-2":'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>',
   link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   copy:'<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
@@ -1613,6 +1626,17 @@ function safeUrl(u){
   try{ const p=new URL(u); return (p.protocol==="http:"||p.protocol==="https:") ? p.href : ""; }catch(e){ return ""; }
 }
 let curSounding="";   // Tom soante atual — alimenta a barra fina da tela cheia (v0.48.1)
+// "Dar o tom" (v0.49.0): toca a tônica do tom atual via Web Audio (referência pra equipe achar a nota).
+const TONE_IDX={C:0,"C#":1,Db:1,D:2,"D#":3,Eb:3,E:4,F:5,"F#":6,Gb:6,G:7,"G#":8,Ab:8,A:9,"A#":10,Bb:10,B:11};
+function noteFreq(note,oct){ const i=TONE_IDX[note]; if(i==null) return 0; const midi=12*((oct==null?4:oct)+1)+i; return 440*Math.pow(2,(midi-69)/12); }
+let _audioCtx=null;
+function playTone(freq,dur){ if(!freq) return; dur=dur||1.4;
+  try{ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    _audioCtx=_audioCtx||new AC(); if(_audioCtx.state==="suspended") _audioCtx.resume();
+    const o=_audioCtx.createOscillator(), g=_audioCtx.createGain(); o.type="sine"; o.frequency.value=freq;
+    const t=_audioCtx.currentTime; g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.28,t+.03); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g); g.connect(_audioCtx.destination); o.start(t); o.stop(t+dur+.05);
+  }catch(e){} }
 function drawPlayer(){
   $("#p-title").textContent=current.title;
   const minor=keyIsMinor(current.key), origRoot=keyRoot(current.key);
@@ -1633,6 +1657,7 @@ function drawPlayer(){
   // botão "Versão guia" (YouTube) no ⚙ Esta música: só aparece com link válido; abre em nova aba
   const guide=safeUrl(current.ref);
   const gr=$("#p-guide-row"); if(gr){ gr.style.display=guide?"":"none"; $("#p-guide").onclick=guide?(()=>window.open(guide,"_blank","noopener")):null; }
+  const pt=$("#p-tom"); if(pt) pt.onclick=()=>playTone(noteFreq((curSounding||"").replace(/m$/,"")));   // dar o tom = tônica do tom atual
   // observações da música (compartilhadas): linha abaixo do título; textContent = à prova de XSS
   const note=(current.notes||"").trim();
   const pn=$("#p-notes"); if(pn){ pn.textContent=note; pn.classList.toggle("hidden",!note); }
@@ -1695,8 +1720,14 @@ $("#pv-exitfull").onclick=()=>setImmersive(false);
 }));
 $("#c-up").onclick=()=>{if(capo<11){capo++;drawPlayer();}};
 $("#c-down").onclick=()=>{if(capo>0){capo--;drawPlayer();}};
-$("#f-up").onclick=()=>{fontSize=Math.min(28,fontSize+1);drawPlayer();};
-$("#f-down").onclick=()=>{fontSize=Math.max(10,fontSize-1);drawPlayer();};
+/* Tamanho da fonte da cifra (10–28). Fonte única do ajuste — botões A−/A＋ e a pinça
+   passam por aqui; persiste em settings (lembrado ao reabrir). */
+const FONT_MIN=10, FONT_MAX=28;
+function clampFont(n){ return Math.max(FONT_MIN, Math.min(FONT_MAX, Math.round(n))); }
+function pinchFontSize(start, ratio){ return clampFont(start*ratio); }   // razão da pinça → tamanho (passo inteiro)
+function setFontSize(n){ const v=clampFont(n); if(v===fontSize) return; fontSize=v; settings.fontSize=v; saveSettings(); drawPlayer(); }
+$("#f-up").onclick=()=>setFontSize(fontSize+1);
+$("#f-down").onclick=()=>setFontSize(fontSize-1);
 // nos toggles, espelhamos o estado no aria-pressed (leitor de tela no palco precisa saber ligado/desligado)
 $("#lyr-toggle").onclick=()=>{const b=$("#lyr-toggle");showChords=!showChords;b.classList.toggle("on",!showChords);b.setAttribute("aria-pressed",String(!showChords));drawPlayer();};
 $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings();const b=$("#tabs-toggle");b.classList.toggle("on",!!settings.hideTabs);b.setAttribute("aria-pressed",String(!!settings.hideTabs));drawPlayer();};
@@ -1890,10 +1921,32 @@ function goPage(d){
   gotoPage(next,true);   // dentro da música (ou sem escala): vira a página normalmente (clampado)
 }
 /* virar página por TOQUE: metade direita avança, esquerda volta (só no modo página);
-   ignora arrastos para não conflitar com o deslizar nativo do scroll-snap. */
+   ignora arrastos para não conflitar com o deslizar nativo do scroll-snap.
+   PINÇA (2 dedos) ajusta o tamanho da fonte sem ir ao ⚙ Ajustes — mesmo resultado dos
+   botões A−/A＋ (setFontSize/pinchFontSize, passo inteiro). Gestos de 1 dedo ficam intactos. */
 let pgDownX=0,pgDownY=0,pgDownT=0;
-$("#p-body").addEventListener("pointerdown",e=>{ pgDownX=e.clientX; pgDownY=e.clientY; pgDownT=Date.now(); });
-$("#p-body").addEventListener("pointerup",e=>{
+const pgPtrs=new Map();                        // ponteiros ativos sobre a cifra (id → {x,y})
+let pinchStartDist=0, pinchStartFont=0, pinching=false, pinchWasActive=false;
+function pinchDist(){ const p=[...pgPtrs.values()]; return Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y); }
+const pbody=$("#p-body");
+pbody.addEventListener("pointerdown",e=>{
+  pgPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pgPtrs.size>=2){ pinching=true; pinchWasActive=true; pinchStartDist=pinchDist(); pinchStartFont=fontSize; }
+  pgDownX=e.clientX; pgDownY=e.clientY; pgDownT=Date.now();
+});
+pbody.addEventListener("pointermove",e=>{
+  if(!pgPtrs.has(e.pointerId)) return;
+  pgPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(!pinching || pgPtrs.size<2 || !pinchStartDist) return;
+  e.preventDefault();                          // segura a rolagem enquanto a pinça manda
+  setFontSize(pinchFontSize(pinchStartFont, pinchDist()/pinchStartDist));   // redesenha só ao cruzar passo inteiro
+},{passive:false});
+pbody.addEventListener("pointerup",e=>{
+  const wasPinch=pinchWasActive;               // qualquer dedo de uma pinça: não vira página nem abre diagrama
+  pgPtrs.delete(e.pointerId);
+  if(pgPtrs.size<2) pinching=false;
+  if(pgPtrs.size===0) pinchWasActive=false;
+  if(wasPinch) return;
   // só ignora se foi ARRASTE (mexeu) — um toque parado, mesmo demorado, ainda conta;
   // limiar de 16px acomoda o tremor natural do dedo no palco.
   const moved = Math.abs(e.clientX-pgDownX)>16 || Math.abs(e.clientY-pgDownY)>16;
@@ -1905,6 +1958,9 @@ $("#p-body").addEventListener("pointerup",e=>{
   if(moved || Date.now()-pgDownT>900) return;
   goPage(e.clientX < window.innerWidth/2 ? -1 : 1);
 });
+pbody.addEventListener("pointercancel",e=>{ pgPtrs.delete(e.pointerId); if(pgPtrs.size<2) pinching=false; if(pgPtrs.size===0) pinchWasActive=false; });
+/* iOS Safari: previne o zoom de página da pinça (esses eventos não disparam em Android/desktop) */
+["gesturestart","gesturechange","gestureend"].forEach(ev=>pbody.addEventListener(ev,e=>e.preventDefault()));
 $("#chorddiagbg").onclick=hideChordDiagram;
 /* DESLIZAR nativo (scroll-snap) atualiza o índice quando a rolagem assenta */
 let pgScrollT=null;
@@ -2177,6 +2233,7 @@ function shareSheet(song){
     }},
     {ic:icon("file-down"),label:"Enviar esta cifra (.json)",fn:()=>{ sendFile(); closeSheet(); }},
     {ic:icon("pencil"),label:"Editar cifra",fn:()=>{closeSheet();openEditor(song.id);}},
+    {ic:icon("copy"),label:"Duplicar cifra",fn:()=>{closeSheet();dupSong(song.id);}},
     {ic:icon("copy"),label:"Copiar texto da cifra",fn:async()=>{
       try{await navigator.clipboard.writeText(song.body);toast("Texto copiado ✓");}
       catch(e){toast("Não consegui copiar");}
@@ -2893,9 +2950,30 @@ function shareEscalaSheet(id){
       shareLink(env,"Escala: "+(e.title||"escala"),sendFile);
     }},
     {ic:icon("file-down"),label:"Enviar escala + cifras (.json)",fn:()=>{ sendFile(); closeSheet(); }},
+    {ic:icon("clipboard"),label:"Copiar como texto (WhatsApp)",fn:()=>{ closeSheet(); shareText(escalaToText(id),"Escala: "+(e.title||"escala")); }},
+    {ic:icon("copy"),label:"Duplicar escala",fn:()=>{ closeSheet(); dupEscala(id); }},
     {ic:icon("pencil"),label:"Editar escala",fn:()=>{closeSheet();openEscalaEditor(id);}},
     {ic:icon("trash-2"),label:"Excluir",danger:true,fn:()=>{closeSheet();openEscalaEditor(id);$("#ee-delete").click();}},
   ]);
+}
+// escala como TEXTO (v0.49.0) p/ mandar no grupo: ordem do culto com Tom + observações + link guia por item
+function escalaToText(id){
+  const e=escalas.find(x=>x.id===id); if(!e) return "";
+  const out=[(e.title||"Escala")+(e.date?" — "+e.date:"")]; let n=0;
+  (e.items||[]).forEach(it=>{ n++;
+    if(it.kind==="song"){ const s=songs.find(x=>x.id===it.songId); const t=s?s.title:"(cifra)"; const tom=it.key||(s&&s.key)||"";
+      out.push(n+". "+t+(tom?" — Tom "+tom:""));
+      if(s&&s.notes) out.push("   • "+s.notes);
+      const r=s&&safeUrl(s.ref); if(r) out.push("   ▶ "+r);
+    } else out.push(n+". "+(it.title||"(item)"));
+  });
+  return out.join("\n");
+}
+async function shareText(text,title){
+  if(!text) return;
+  try{ if(navigator.share){ await navigator.share(title?{title,text}:{text}); return; } }catch(err){ if(err&&err.name==="AbortError") return; }
+  try{ await navigator.clipboard.writeText(text); toast("Copiado — cole no WhatsApp","ok"); return; }catch(e){}
+  toast("Não consegui compartilhar o texto","err");
 }
 
 /* ---- abas Cifras / Escalas ---- */
