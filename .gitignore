@@ -3,8 +3,6 @@ node_modules/
 # ...exceto os ícones do PWA (PNG é asset deployável; ver PLANO-pwa.md / PROMPT-icone.md)
 !louvai-icons/*.png
 *.log
-# cópias de distribuição por versão ficam só na pasta, fora do git (ver ROTEIRO)
-louvai-v*.html
 # cópia pronta pra subir no GitHub Pages (regenerável: cp louvai.html index.html)
 index.html
 # mensagem de commit temporária (usada p/ evitar problemas de aspas no PowerShell)

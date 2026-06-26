@@ -56,8 +56,8 @@ link é montado no celular e enviado direto (WhatsApp); o servidor nunca vê os 
 5. No celular: abra a URL → **"Adicionar à Tela de Início"**. Ao gerar **"Enviar link"**
    numa escala, o app já produz `…github.io/louvai/#imp=…` (a base vem da própria URL).
 
-**Atualizar:** suba a cópia `louvai-vX.Y.Z.html` mais nova renomeada como `index.html`
-e commite — em ~1 min todos pegam a versão nova ao reabrir, sem reenviar arquivo.
+**Atualizar:** suba o `louvai.html` mais novo renomeado como `index.html` e commite —
+em ~1 min todos pegam a versão nova ao reabrir, sem reenviar arquivo.
 
 **Alternativa rápida — Netlify Drop:** arraste o `index.html` em
 <https://app.netlify.com/drop> e receba uma URL na hora.

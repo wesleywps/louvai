@@ -9,8 +9,8 @@ seguir. Atualizado até a **v0.50.0**.
 > separada de músicos. A compatibilidade com arquivos e dados antigos foi
 > preservada.
 
-> **Onde salvar:** mantenha esta pasta com o `CHANGELOG.md`, o
-> `louvai-vX.Y.Z.html` mais recente e o zip do projeto (com o histórico git).
+> **Onde salvar:** mantenha esta pasta com o `CHANGELOG.md` e o zip do projeto
+> (com o histórico git). A distribuição é pelo **GitHub Pages** (sem cópias por versão).
 
 ---
 
@@ -324,6 +324,6 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 **No chat (claude.ai):** reenvie o zip mais recente e diga de onde continuar.
 
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
-(opcional) `louvai-vX.Y.Z.html`.
+sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
 *Última atualização deste roteiro: v0.50.0.*

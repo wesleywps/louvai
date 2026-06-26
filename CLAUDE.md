@@ -87,10 +87,10 @@ arquivo `.json` (cifra, repertório ou escala).
    **verbatim** do `louvai.html` — ao entregar uma versão, copie `louvai.html` por cima do
    `index.html` para o app hospedado refletir a versão nova. Fica **fora do git** (`.gitignore`),
    por isso não aparece no `git status` — fácil de esquecer; faz parte do ritual.
-7. (Opcional) salvar uma cópia `louvai-vX.Y.Z.html` para distribuição. **Ao gerar
-   uma nova cópia, apague as cópias `louvai-v*.html` antigas da pasta** — manter só
-   **o original (`louvai.html`) e a cópia de distribuição mais recente**. As cópias
-   ficam fora do git (ver `.gitignore`) e são regeneráveis via `git checkout vX.Y.Z`.
+
+> **Distribuição é pelo GitHub Pages** (não há mais cópia `louvai-vX.Y.Z.html`): a equipe abre/atualiza
+> o app pelo endereço hospedado, e o `index.html` (passo 6) é o que carrega a versão nova. A versão de
+> qualquer ponto continua recuperável por `git checkout vX.Y.Z` se um dia for preciso um snapshot avulso.
 
 **Checklist rápido antes do commit:** APP_VERSION = package.json · CHANGELOG tem a
 versão · ROTEIRO (linha do tempo + rodapé + backlog) coerente · README na versão ·
@@ -157,8 +157,8 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   inicial (Android); referenciado no `<head>` do `louvai.html` (v0.46.0). **Sem service worker ainda.**
 - `louvai-icons/` — ícones do app (favicon/apple-touch/PWA): SVGs-fonte + PNGs (`icon-192/512`,
   `icon-maskable-192/512`, `apple-touch-180`). Os PNGs são **assets deployáveis** (destravados no `.gitignore`).
-- `.gitignore` — ignora `node_modules/`, o `index.html`, as cópias `louvai-v*.html`, o
-  `COMMIT_MSG_tmp.txt` e `*.png` **exceto** `louvai-icons/*.png` (assets do ícone).
+- `.gitignore` — ignora `node_modules/`, o `index.html`, o `COMMIT_MSG_tmp.txt` e `*.png`
+  **exceto** `louvai-icons/*.png` (assets do ícone).
 - `CLAUDE.md` — este guia.
 
 ## Anatomia do `louvai.html` (onde mexer)

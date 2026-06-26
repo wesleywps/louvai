@@ -77,7 +77,7 @@
    abrir/fechar popover; `aria-label`.
 4. **Ritual** (recurso → **v0.25.0**): `APP_VERSION`+`package.json`+`package-lock.json`;
    CHANGELOG; ROTEIRO (Tema C: marcar diagramas; ordem/rodapé); README; CLAUDE.md (anatomia:
-   engine de diagramas); `tests/smoke.mjs`; commit+tag; `index.html`/cópia de distribuição.
+   engine de diagramas); `tests/smoke.mjs`; commit+tag; sincronizar `index.html`.
 
 ## Testes (`tests/smoke.mjs`)
 - **`chordIntervals`**: amostras conferem os intervalos (m7, maj7, sus4, dim, m7b5…).

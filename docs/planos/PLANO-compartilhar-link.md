@@ -127,7 +127,7 @@ arquivo único). Documentar o passo a passo de publicação no README.
    nota de privacidade (código público, dados locais), e como o link de importação funciona.
 5. **Ritual**: `APP_VERSION`+`package.json`+`package-lock.json` = 0.21.0; CHANGELOG; ROTEIRO
    (linha do tempo, Tema A/E backlog, ordem, rodapé); CLAUDE.md (anatomia: link import);
-   `tests/smoke.mjs`; commit+tag; cópia de distribuição (apagar antigas).
+   `tests/smoke.mjs`; commit+tag.
 
 ## Testes (`tests/smoke.mjs`)
 - **Round-trip dos helpers:** `packData`/`unpackData` de um envelope de escala devolve o
@@ -195,9 +195,8 @@ arquivo único). Documentar o passo a passo de publicação no README.
    (a base vem da própria URL).
 
 **Atualizar pra uma versão nova:** repetir o passo 2 (Upload files / substituir o
-`index.html`) e commitar — em ~1 min todos pegam a versão nova ao reabrir, **sem reenviar
-arquivo**. (As cópias `louvai-vX.Y.Z.html` do ritual servem pra isso: subir a mais recente
-renomeada como `index.html`.)
+`index.html` pelo `louvai.html` mais novo renomeado) e commitar — em ~1 min todos pegam a
+versão nova ao reabrir, **sem reenviar arquivo**.
 
 **Alternativa sem conta/git — Netlify Drop:** abrir https://app.netlify.com/drop e
 **arrastar o `index.html`** → recebe uma URL na hora (criar conta grátis só pra fixar a URL).
