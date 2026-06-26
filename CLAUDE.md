@@ -120,28 +120,37 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
 - `tests/smoke.mjs` — suíte de validação (Playwright).
 - `package.json` / `package-lock.json` — metadados e scripts de teste (nome/versão
   espelham o app; mantê-los coerentes no ritual).
-- `PLANO-redesign-ui.md`, `PLANO-modos-leitura.md` — planos de execução já
+- `docs/` — **toda a documentação de projeto** (não é carregada pelo app; mover/renomear não afeta o
+  deploy). Organizada em `docs/planos/` (planos de execução), `docs/analises/` (insumos de UI) e
+  `docs/mockups/` (mockups de decisão); `docs/PROMPT-icone.md` fica na raiz de `docs/`. **Em prosa, os
+  docs são citados pelo nome** (`PLANO-ui.md`); o caminho canônico está aqui neste mapa.
+- `docs/planos/PLANO-redesign-ui.md`, `docs/planos/PLANO-modos-leitura.md` — planos de execução já
   **concluídos** (registro histórico; status no topo de cada um).
-- `PLANO-compartilhar-link.md` — plano de compartilhar por link auto-importável
-  (serverless) + hospedar no GitHub Pages — **implementado na v0.21.0** (resta hospedar).
-- `PLANO-diagramas-acorde.md` — diagramas de acorde (híbrido curado + motor de templates;
+- `docs/planos/PLANO-compartilhar-link.md` — plano de compartilhar por link auto-importável
+  (serverless) + hospedar no GitHub Pages — **implementado na v0.21.0**.
+- `docs/planos/PLANO-diagramas-acorde.md` — diagramas de acorde (híbrido curado + motor de templates;
   violão 6 cordas; toque no acorde → popover) — **implementado na v0.25.0**.
-- `PLANO-repertorio-link.md` — repertório + escalas num snapshot único (`louvai.json`)
+- `docs/planos/PLANO-repertorio-link.md` — repertório + escalas num snapshot único (`louvai.json`)
   hospedado, com "Atualizar do link" (pull, mão única) — **implementado na v0.26.0**.
-- `PLANO-validacao-tom.md` — conferir o tom pelos acordes (detecção diatônica ponderada;
+- `docs/planos/PLANO-validacao-tom.md` — conferir o tom pelos acordes (detecção diatônica ponderada;
   teoria musical + calibragem dos pesos) — **implementado na v0.42.0**.
-- `PLANO-publicar-nuvem.md` — "Publicar na nuvem" (escrever o `louvai.json` do celular via
+- `docs/planos/PLANO-publicar-nuvem.md` — "Publicar na nuvem" (escrever o `louvai.json` do celular via
   token fino do GitHub + API Contents) — **implementado na v0.27.0**.
-- `PLANO-ui.md` — polimento de UI/ícones em **ondas**, **concluído (v0.28.0→v0.36.1)**: Onda 1
+- `docs/planos/PLANO-incrementos-ao-vivo.md` — bundle de 3 melhorias de uso ao vivo (dar o tom /
+  escala como texto / duplicar) — **implementado na v0.49.0**.
+- `docs/planos/PLANO-ui.md` — polimento de UI/ícones em **ondas**, **concluído (v0.28.0→v0.36.1)**: Onda 1
   (ganhos rápidos + ícone do Backup, v0.28.0); Onda 2 (ícones SVG inline via `ICONS`/`icon()`,
   v0.29.0); Onda 3 = M2 ⚙ seções (v0.30.0) · M4 linguagem de card (v0.31.0) · M5 `#reposheet`
   cartões (v0.32.0) · M3 arrastar p/ fechar (v0.33.0) · M7 entrada da lista (v0.34.0) · M8 progresso
-  na Apresentação (v0.35.0) · M6 skeleton de carregamento (v0.36.0). Insumo: `ANALISE-ui.md`
-  (G1–G12, M1–M8) e `ANALISE-icones.md` (conjunto SVG, `archive`).
-- `PLANO-pwa.md` — plano do **PWA instalável + offline 100%** (encerra a regra "arquivo único" — ver
+  na Apresentação (v0.35.0) · M6 skeleton de carregamento (v0.36.0). Insumo: `docs/analises/ANALISE-ui.md`
+  (G1–G12, M1–M8) e `docs/analises/ANALISE-icones.md` (conjunto SVG, `archive`).
+- `docs/planos/PLANO-pwa.md` — plano do **PWA instalável + offline 100%** (encerra a regra "arquivo único" — ver
   "Horizonte"). Ícone + `manifest.webmanifest` mínimo já saíram (v0.46.0); falta o **service worker**
   (Inc.1). **Status: 🟡 em andamento.**
-- `PROMPT-icone.md` — prompt p/ o Claude design **gerar o ícone do app** + passos pós-geração.
+- `docs/PROMPT-icone.md` — prompt p/ o Claude design **gerar o ícone do app** + passos pós-geração.
+- `docs/mockups/` — **registros de decisões de UI** (mockups HTML versionados, abre no navegador).
+  Ex.: `barra-tela-cheia-v0.48.1.html` (decisão da barra fina do modo tela cheia). Artefatos de
+  histórico, não fazem parte do app.
 - `index.html` — cópia **verbatim** do `louvai.html` que o **GitHub Pages serve na raiz** do site.
   Fora do git (regenerável); **sincronizar a cada entrega** (ver Ritual, passo 6).
 - `manifest.webmanifest` — manifest mínimo do app (nome/cores/ícones) p/ instalar com ícone na tela
@@ -150,9 +159,6 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   `icon-maskable-192/512`, `apple-touch-180`). Os PNGs são **assets deployáveis** (destravados no `.gitignore`).
 - `.gitignore` — ignora `node_modules/`, o `index.html`, as cópias `louvai-v*.html`, o
   `COMMIT_MSG_tmp.txt` e `*.png` **exceto** `louvai-icons/*.png` (assets do ícone).
-- `mockups/` — **registros de decisões de UI** (mockups HTML versionados, abre no navegador).
-  Ex.: `barra-tela-cheia-v0.48.1.html` (decisão da barra fina do modo tela cheia). Artefatos de
-  histórico, não fazem parte do app.
 - `CLAUDE.md` — este guia.
 
 ## Anatomia do `louvai.html` (onde mexer)
