@@ -107,7 +107,7 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`), **contagem ao sincronizar**, **detecção/validação de tom** e a
     compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~313 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~322 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -138,6 +138,8 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   token fino do GitHub + API Contents) — **implementado na v0.27.0**.
 - `docs/planos/PLANO-incrementos-ao-vivo.md` — bundle de 3 melhorias de uso ao vivo (dar o tom /
   escala como texto / duplicar) — **implementado na v0.49.0**.
+- `docs/planos/PLANO-escala-texto.md` — escala como texto p/ WhatsApp **com a equipe escalada** (agrupada
+  por função) + cabeçalho/momento/observações — **implementado na v0.51.0** (evolui o texto da v0.49.0).
 - `docs/planos/PLANO-ui.md` — polimento de UI/ícones em **ondas**, **concluído (v0.28.0→v0.36.1)**: Onda 1
   (ganhos rápidos + ícone do Backup, v0.28.0); Onda 2 (ícones SVG inline via `ICONS`/`icon()`,
   v0.29.0); Onda 3 = M2 ⚙ seções (v0.30.0) · M4 linguagem de card (v0.31.0) · M5 `#reposheet`
@@ -315,7 +317,15 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   (`lockScreen`/`unlockScreen`, religado no `visibilitychange`).
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
-  (`escalaCtx`, `presentGo`).
+  (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).
+- **Escala como texto p/ WhatsApp (v0.49.0; ampliado v0.51.0):** `escalaToText(id)` monta a
+  mensagem do culto (item "Copiar como texto" do `shareEscalaSheet`, via `shareText`). Seções:
+  cabeçalho `🎵 *título*` + `📅 data·hora·tipo` (`fmtDate`) → `👥 *Equipe*` agrupada por função
+  (`teamByRole(team)` agrupa e ordena por `FUNCOES`, ignora sem nome) → `🎶 *Músicas*` numeradas
+  (Tom `it.key||s.key` + `· _momento_`; detalhes ▶️ `safeUrl(s.ref)` / 📝 `it.note` / 💬 `s.notes`)
+  → `📌 _e.notes_`. **Emoji só nos títulos** (sem emoji por função — colidiria 🎸); **toda
+  seção/linha some quando vazia**; texto puro (sem DOM, sem XSS). Não usa campo/storage novo.
+  Detalhe em `PLANO-escala-texto.md`.
 - **Ordenar a lista (v0.40.0):** `settings.sortMode` (`az`/`recent`/`played`); botão `#sortBtn` no
   `.libhead` abre `openSortSheet` (folha "Ordenar por", 3 modos, atual com ✓). O sort vive no
   `renderLibrary` (usa `buildLastPlayed`): `recent` = data desc (nunca tocada por último), `played` =
@@ -369,8 +379,9 @@ da tag ≥44px, contraste no escuro, v0.43.2), **tela cheia na Apresentação** 
 configurado por padrão** (repoUrl derivado do endereço — membro puxa sem colar link, v0.45.0),
 **ícone do app** (favicon/apple-touch/manifest + logo inline no cabeçalho, v0.46.0–0.46.1), **link da versão
 guia** por música (v0.47.0), **observações da música** (v0.48.0), **barra fina no modo tela cheia** (v0.48.1),
-**3 melhorias de uso ao vivo** (dar o tom / escala como texto / duplicar, v0.49.0) e **pinça ajusta a fonte**
-da cifra com tamanho persistido (v0.50.0).
+**3 melhorias de uso ao vivo** (dar o tom / escala como texto / duplicar, v0.49.0), **pinça ajusta a fonte**
+da cifra com tamanho persistido (v0.50.0) e **escala como texto p/ WhatsApp com a equipe escalada**
+(agrupada por função + cabeçalho/momento/observações, v0.51.0).
 Ver os `PLANO-*.md`.
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
 1. ✅ **Validação visual no celular** (dark/light) — **concluída (2026-06-26)**; o app está **em teste de

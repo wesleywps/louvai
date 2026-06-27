@@ -1704,6 +1704,61 @@ await page.evaluate(() => setFontSize(22));
 await page.reload(); await page.waitForTimeout(400);
 ok((await page.evaluate(() => fontSize)) === 22, "Tamanho da fonte persiste ao reabrir o app (lembrado)");
 
+// ===== v0.51.0 — escala como texto p/ WhatsApp: equipe + cabeçalho + momento + as duas obs =====
+const txt51 = await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id:"m1", title:"Bondade de Deus", key:"C", capo:0, tags:[], updatedAt:1, body:"C", ref:"https://youtu.be/xxxx", notes:"começa só voz" });
+  songs.push({ id:"m2", title:"Teu Santo Nome", key:"D", capo:0, tags:[], updatedAt:1, body:"D" });
+  escalas.push({ id:"x51", title:"Culto de Domingo", date:"2026-06-29", time:"19h00", type:"Culto",
+    team:[
+      { role:"Vocal", name:"Beltrana" },     // Vocal aparece ANTES do Ministrante na lista crua…
+      { role:"Ministrante", name:"Fulano" }, // …mas a saída agrupa e ordena por FUNCOES (Ministrante 1º)
+      { role:"Vocal", name:"Cicrana" },
+      { role:"Baixo", name:"Pedro" },
+      { role:"Vocal", name:"" },             // sem nome → ignorado (não polui o "Vocal: …")
+    ],
+    items:[
+      { kind:"song", songId:"m1", key:"G", capo:0, momento:"Adoração", note:"repetir o refrão 2x" }, // it.key=G vence s.key=C
+      { kind:"item", title:"Oração", momento:"Ministração", note:"João conduz" },                    // item não-musical
+      { kind:"song", songId:"m2", key:"", capo:0, momento:"", note:"" },                              // sem extras → sem detalhes
+    ],
+    notes:"Chegar 18h pra passagem de som", updatedAt:1 });
+  escalas.push({ id:"x51b", title:"Simples", date:"", time:"", type:"", team:[],
+    items:[{ kind:"song", songId:"m2", key:"", capo:0, momento:"", note:"" }], notes:"", updatedAt:1 });
+  saveSongs(); saveEscalas();
+  const full = escalaToText("x51"), lean = escalaToText("x51b");
+  const L = full.split("\n"); const idx = s => L.findIndex(x => x.startsWith(s));
+  const i3 = idx("3. Teu Santo Nome"); const afterSong3 = L[i3+1] || "";
+  return {
+    startsTitle: L[0] === "🎵 *Culto de Domingo*",
+    headOk: /^📅 .*· 19h00 · Culto$/.test(L[1] || ""),
+    teamHeader: full.includes("👥 *Equipe*"),
+    vocalGrouped: full.includes("\nVocal: Beltrana, Cicrana\n"),
+    noFuncEmoji: full.includes("\nMinistrante: Fulano\n"),        // linha começa pelo nome da função (sem emoji)
+    order: idx("Ministrante:") < idx("Vocal:") && idx("Vocal:") < idx("Baixo:"),
+    song1: full.includes("1. Bondade de Deus — Tom G · _Adoração_"),
+    link: full.includes("   ▶️ https://youtu.be/xxxx"),
+    itNote: full.includes("   📝 repetir o refrão 2x"),
+    sNote: full.includes("   💬 começa só voz"),
+    nonMusical: full.includes("2. Oração · _Ministração_") && full.includes("   📝 João conduz"),
+    song3: full.includes("3. Teu Santo Nome — Tom D"),
+    song3NoDetail: afterSong3 === "" || afterSong3.startsWith("📌"),
+    escNotes: full.includes("📌 _Chegar 18h pra passagem de som_"),
+    leanNoTeam: !lean.includes("👥"), leanNoHead: !lean.includes("📅"),
+    leanNoDetails: !/▶️|💬|📝|📌/.test(lean), leanSong: lean.includes("1. Teu Santo Nome — Tom D"),
+  };
+});
+ok(txt51.startsTitle && txt51.headOk, "Texto: cabeçalho com *título* e linha 📅 (data · hora · tipo)");
+ok(txt51.teamHeader && txt51.vocalGrouped, "Texto: equipe agrupada por função (Vocal: Beltrana, Cicrana)");
+ok(txt51.noFuncEmoji && txt51.order, "Texto: sem emoji por função; equipe na ordem de FUNCOES (Ministrante → Vocal → Baixo)");
+ok(txt51.song1, "Texto: música com Tom (it.key vence s.key) + momento inline (· _Adoração_)");
+ok(txt51.link && txt51.itNote && txt51.sNote, "Texto: as duas observações (📝 do culto + 💬 fixa) e o link guia (▶️)");
+ok(txt51.nonMusical, "Texto: item não-musical entra na numeração (com momento e obs)");
+ok(txt51.song3 && txt51.song3NoDetail, "Texto: música sem extras não gera linhas de detalhe (sem rótulo órfão)");
+ok(txt51.escNotes, "Texto: observação geral da escala no rodapé (📌)");
+ok(txt51.leanNoTeam && txt51.leanNoHead && txt51.leanNoDetails && txt51.leanSong,
+   "Texto enxuto (só título + 1 música): sem seção Equipe, sem 📅 e sem detalhes");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

@@ -846,7 +846,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.50.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.51.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -2956,17 +2956,44 @@ function shareEscalaSheet(id){
     {ic:icon("trash-2"),label:"Excluir",danger:true,fn:()=>{closeSheet();openEscalaEditor(id);$("#ee-delete").click();}},
   ]);
 }
-// escala como TEXTO (v0.49.0) p/ mandar no grupo: ordem do culto com Tom + observações + link guia por item
+// escala como TEXTO (v0.49.0; equipe + cabeçalho + momento + obs na v0.51.0) p/ colar no grupo do WhatsApp.
+// Emojis só nos títulos de seção; equipe agrupada por função; toda seção/linha some quando vazia (sem rótulo órfão).
+function teamByRole(team){   // Map<função, nomes[]> na ordem de FUNCOES (função fora da lista entra ao final)
+  const byRole=new Map();
+  (team||[]).forEach(t=>{ const name=(t.name||"").trim(); if(!name) return;
+    const role=(t.role||"").trim()||"Equipe";
+    if(!byRole.has(role)) byRole.set(role,[]); byRole.get(role).push(name);
+  });
+  const ordered=[];
+  FUNCOES.forEach(r=>{ if(byRole.has(r)){ ordered.push([r,byRole.get(r)]); byRole.delete(r); } });
+  byRole.forEach((names,r)=>ordered.push([r,names]));   // sobras (dado legado)
+  return ordered;
+}
 function escalaToText(id){
   const e=escalas.find(x=>x.id===id); if(!e) return "";
-  const out=[(e.title||"Escala")+(e.date?" — "+e.date:"")]; let n=0;
-  (e.items||[]).forEach(it=>{ n++;
-    if(it.kind==="song"){ const s=songs.find(x=>x.id===it.songId); const t=s?s.title:"(cifra)"; const tom=it.key||(s&&s.key)||"";
-      out.push(n+". "+t+(tom?" — Tom "+tom:""));
-      if(s&&s.notes) out.push("   • "+s.notes);
-      const r=s&&safeUrl(s.ref); if(r) out.push("   ▶ "+r);
-    } else out.push(n+". "+(it.title||"(item)"));
-  });
+  const out=["🎵 *"+(e.title||"Escala")+"*"];
+  const head=[fmtDate(e.date),e.time,e.type].filter(Boolean).join(" · ");
+  if(head) out.push("📅 "+head);
+
+  const team=teamByRole(e.team);
+  if(team.length){ out.push("","👥 *Equipe*");
+    team.forEach(([role,names])=>out.push(role+": "+names.join(", ")));
+  }
+
+  const items=e.items||[];
+  if(items.length){ out.push("","🎶 *Músicas*"); let n=0;
+    items.forEach(it=>{ n++;
+      const mom=it.momento?" · _"+it.momento+"_":"";
+      if(it.kind==="song"){ const s=songById(it.songId); const tom=it.key||(s&&s.key)||"";
+        out.push(n+". "+(s?s.title:"(cifra)")+(tom?" — Tom "+tom:"")+mom);
+        const r=s&&safeUrl(s.ref); if(r) out.push("   ▶️ "+r);
+        if(it.note) out.push("   📝 "+it.note);
+        if(s&&s.notes) out.push("   💬 "+s.notes);
+      } else out.push(n+". "+(it.title||"(item)")+mom, ...(it.note?["   📝 "+it.note]:[]));
+    });
+  }
+
+  if(e.notes) out.push("","📌 _"+e.notes+"_");
   return out.join("\n");
 }
 async function shareText(text,title){

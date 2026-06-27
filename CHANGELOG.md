@@ -8,6 +8,32 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.51.0 — Escala como texto p/ WhatsApp: agora com a equipe escalada
+**Recurso (compartilhar).** O "Copiar como texto (WhatsApp)" da escala (entregue na v0.49.0)
+passou a montar a **mensagem completa do culto** pra colar no grupo — não só a ordem das
+músicas. O pedido de campo era **incluir quem está escalado**; de quebra entraram os dados da
+escala que ajudam o grupo. **Nenhum campo novo, nenhum storage, nenhuma migração** — tudo já
+existia na escala/música; só o texto gerado mudou.
+- **👥 Equipe agrupada por função:** uma linha por função (`Vocal: Beltrana, Cicrana`), na ordem
+  de `FUNCOES` (Ministrante primeiro). Pessoas sem nome são ignoradas.
+- **📅 Cabeçalho do culto:** data · hora · tipo no topo (cada parte só aparece se preenchida).
+- **Por música:** Tom (do culto, `it.key` vence o tom da cifra) + **momento inline** (`· _Adoração_`);
+  abaixo, o **link guia** (▶️), a **observação daquela música no culto** (📝 `it.note`) e a
+  **observação fixa da música** (💬 `s.notes`) — as três só quando existem.
+- **📌 Observação geral da escala** no rodapé (`e.notes`).
+- **Itens não-musicais** (oração, ceia, aviso) entram na numeração com momento e observação.
+- **Sem rótulo órfão:** toda seção/linha some quando vazia — uma escala só com título + 1 música
+  vira uma mensagem enxuta, sem cabeçalhos vazios.
+- **Estilo:** emojis **só nos títulos de seção** (🎵 📅 👥 🎶 📌) — sem emoji por função, que
+  colidiria (🎸 em Violão/Guitarra/Baixo); usa a formatação do WhatsApp (`*negrito*` / `_itálico_`).
+- **Por dentro:** `escalaToText(id)` reescrita + helper `teamByRole(team)` (agrupa e ordena por
+  `FUNCOES`); reusa `fmtDate`, `safeUrl`, `songById`. Texto puro (sem DOM) — sem risco de XSS.
+- **322 verificações** (9 novas: cabeçalho, equipe agrupada/ordenada sem emoji, Tom+momento, as
+  duas observações + link, item não-musical, música sem extras sem órfão, rodapé, e o caso enxuto),
+  zero erro de JS.
+
+---
+
 ## v0.50.0 — Pinça ajusta a fonte da cifra (e o tamanho passa a ser lembrado)
 **Recurso (uso ao vivo).** Dá pra **aumentar/diminuir a fonte da cifra com o gesto de pinça** (dois
 dedos) direto sobre a cifra — sem abrir o ⚙ Ajustes. No palco, com pouca luz, é o jeito natural de
