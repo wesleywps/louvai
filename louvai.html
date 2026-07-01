@@ -849,7 +849,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.51.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.51.2";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1749,8 +1749,10 @@ function exitPlayer(){   // voltar do player — usado pelo ← normal E pelo �
 }
 $("#p-back").onclick=exitPlayer;
 $("#pv-back").onclick=exitPlayer;
-$("#p-edit").onclick=()=>openEditor(current.id);
-$("#p-share").onclick=()=>shareSheet(current);
+// Recolhe o ⚙ Ajustes antes de abrir editor/compartilhar: senão o painel (fixed, z-index 51)
+// fica sobreposto à cifra em edição, ou por cima do próprio sheet de compartilhar.
+$("#p-edit").onclick=()=>{closePlayerSheet();openEditor(current.id);};
+$("#p-share").onclick=()=>{closePlayerSheet();shareSheet(current);};
 
 /* sheet ⚙ Ajustes do player (os controles mantêm os IDs e handlers de sempre) */
 function openPlayerSheet(){ openS("#playerbg","#playersheet"); }

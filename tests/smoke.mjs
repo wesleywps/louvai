@@ -208,6 +208,22 @@ ok(ajustesFit.overflowY === "auto" && ajustesFit.scrolls,
 await page.locator("#playerbg").click({ position: { x: 10, y: 10 } }); await page.waitForTimeout(250);
 await page.setViewportSize({ width: 412, height: 915 });   // restaura o viewport padrão da suíte
 
+// 4e) v0.51.2 (regressão): "Editar" e "Enviar" no ⚙ Ajustes precisam RECOLHER o painel —
+//     senão ele (fixed, z-index 51) fica sobreposto à cifra em edição, ou por cima do próprio
+//     sheet de compartilhar (que vem antes no DOM), escondendo o que a pessoa quer ver.
+await page.locator("#p-settings").click(); await page.waitForTimeout(250);
+await page.locator("#p-edit").click(); await page.waitForTimeout(250);
+ok(await page.evaluate(() => !document.getElementById("playersheet").classList.contains("show")
+     && !document.getElementById("view-editor").classList.contains("hidden")),
+   "Editar recolhe o ⚙ Ajustes e mostra o editor (sem painel por cima da cifra)");
+await page.locator("#e-cancel").click(); await page.waitForTimeout(200);   // cancela → volta ao player
+await page.locator("#p-settings").click(); await page.waitForTimeout(250);
+await page.locator("#p-share").click(); await page.waitForTimeout(250);
+ok(await page.evaluate(() => !document.getElementById("playersheet").classList.contains("show")
+     && document.getElementById("sheet").classList.contains("show")),
+   "Enviar recolhe o ⚙ Ajustes e o sheet de compartilhar abre à mostra (não atrás)");
+await page.locator("#sheetbg").click(); await page.waitForTimeout(200);   // fecha o compartilhar
+
 // 5) Importar colando texto estilo Cifra Club
 await page.locator("#p-back").click(); await page.waitForTimeout(120);
 wl = await page.evaluate(() => window.__wl);

@@ -8,6 +8,24 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.51.2 — "Editar" recolhe o painel de Ajustes (não fica mais por cima da cifra)
+**Correção (uso ao vivo).** No ⚙ **Ajustes da cifra**, tocar **Editar** abria o editor **com o painel
+de Ajustes ainda por cima**: como o painel é fixo na tela (`position:fixed`), ele continuava
+sobrepondo o formulário e **não dava pra ver o que estava sendo editado**. Faltava recolher o painel
+antes de trocar de tela — o mesmo cuidado que o menu de contexto da lista (⋯ → Editar) já tomava.
+- **O que muda:** ao tocar **Editar** (ou **Enviar**), o painel de Ajustes **se recolhe** e só então
+  abre o editor / o sheet de compartilhar.
+- **Bug irmão corrigido de quebra:** **Enviar** abria o sheet de compartilhar **atrás** do painel de
+  Ajustes (ambos são `z-index:51`, e o painel vem depois no DOM, ganhando a sobreposição) — as opções
+  de compartilhamento ficavam escondidas. Recolher o painel antes resolve os dois de uma vez.
+- **Por dentro:** `#p-edit`/`#p-share` passaram a chamar `closePlayerSheet()` antes de
+  `openEditor(current.id)` / `shareSheet(current)`. Nenhuma mudança de storage, markup ou CSS.
+- **Teste de regressão:** confere que, após **Editar**, o `#playersheet` está recolhido e o editor
+  visível; e que após **Enviar**, o painel recolhe e o sheet de compartilhar aparece à mostra.
+  **326 verificações** (2 novas), zero erro de JS.
+
+---
+
 ## v0.51.1 — O painel de Ajustes da cifra não cobre mais a tela toda
 **Correção (uso ao vivo).** No celular, abrir o **⚙ Ajustes da cifra** (`#playersheet`) em telas
 mais baixas (barra do navegador à mostra, ou fonte grande) fazia o painel **crescer até cobrir a
