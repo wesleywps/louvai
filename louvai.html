@@ -468,9 +468,12 @@ body.light .keyhint{color:#b45309}
   padding:10px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(110%);
   transition:.28s cubic-bezier(.2,.9,.3,1);box-shadow:var(--shadow)}
 .sheet.show{transform:translateY(0)}
-#sheet{max-height:86dvh;display:flex;flex-direction:column}
-#sheet .grip,#sheet h3{flex:0 0 auto}
-#sheet-body{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* Teto de altura + corpo rolável: o sheet nunca cobre a tela toda (sobra a faixa do
+   backdrop no topo p/ tocar e fechar) e o conteúdo rola quando a tela é baixa. Vale
+   pro menu genérico (#sheet) e pro Ajustes da cifra (#playersheet), que tem muitas opções. */
+#sheet,#playersheet{max-height:86dvh;display:flex;flex-direction:column}
+#sheet .grip,#sheet h3,#playersheet .grip,#playersheet h3{flex:0 0 auto}
+#sheet-body,#playersheet .sheetctrls{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .sheet .grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:6px auto 14px}
 .sheet h3{margin:0 6px 10px;font-size:17px;font-weight:700;letter-spacing:-.2px}
 .sheetnote{margin:-4px 6px 12px;font-size:13px;color:var(--muted);line-height:1.4}
@@ -846,7 +849,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.51.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.51.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];

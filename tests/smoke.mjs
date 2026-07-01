@@ -186,6 +186,28 @@ await page.locator("#playerbg").click({ position: { x: 10, y: 10 } }); await pag
 ok(await page.evaluate(() => !document.getElementById("playersheet").classList.contains("show")),
    "Sheet Ajustes fecha ao tocar fora");
 
+// 4d) v0.51.1 (regressão): o ⚙ Ajustes tem MUITAS opções; em tela baixa ele estourava a
+//     viewport — grip/título saíam por cima, o backdrop sumia e não dava pra rolar nem fechar.
+//     Deve ganhar teto de altura e rolar os controles, deixando a faixa do backdrop pra fechar.
+await page.setViewportSize({ width: 412, height: 560 });   // celular com barra do navegador visível
+await page.locator("#p-settings").click(); await page.waitForTimeout(300);
+const ajustesFit = await page.evaluate(() => {
+  const sh = document.getElementById("playersheet");
+  const ctrls = sh.querySelector(".sheetctrls");
+  return {
+    within: sh.getBoundingClientRect().height <= window.innerHeight,   // não cobre a tela toda
+    gripTop: sh.getBoundingClientRect().top,                           // >0 = sobra backdrop no topo (grip à mostra + área p/ fechar)
+    overflowY: getComputedStyle(ctrls).overflowY,                      // "auto" = controles roláveis
+    scrolls: ctrls.scrollHeight > ctrls.clientHeight + 1,              // e há mesmo o que rolar nesta tela baixa
+  };
+});
+ok(ajustesFit.within && ajustesFit.gripTop > 0,
+   "⚙ Ajustes cabe na tela baixa (não cobre tudo; sobra o backdrop no topo p/ fechar)");
+ok(ajustesFit.overflowY === "auto" && ajustesFit.scrolls,
+   "⚙ Ajustes rola os controles quando não cabem na tela");
+await page.locator("#playerbg").click({ position: { x: 10, y: 10 } }); await page.waitForTimeout(250);
+await page.setViewportSize({ width: 412, height: 915 });   // restaura o viewport padrão da suíte
+
 // 5) Importar colando texto estilo Cifra Club
 await page.locator("#p-back").click(); await page.waitForTimeout(120);
 wl = await page.evaluate(() => window.__wl);

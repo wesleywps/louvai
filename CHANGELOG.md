@@ -8,6 +8,24 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.51.1 — O painel de Ajustes da cifra não cobre mais a tela toda
+**Correção (uso ao vivo).** No celular, abrir o **⚙ Ajustes da cifra** (`#playersheet`) em telas
+mais baixas (barra do navegador à mostra, ou fonte grande) fazia o painel **crescer até cobrir a
+tela inteira**: o "puxador" e o título saíam por cima da viewport, o fundo (backdrop) sumia e **não
+havia como rolar até as últimas opções nem tocar fora pra voltar à música**. O painel de Ajustes é o
+que mais tem opções (Afinação · Leitura · Esta música + ações), então era onde o problema aparecia.
+- **O que muda:** o `#playersheet` passou a ter **teto de altura** (`max-height:86dvh`) e a lista de
+  controles (`.sheetctrls`) **rola por dentro**, com o puxador e o título **fixos no topo**. Sempre
+  sobra uma faixa do backdrop no topo pra **tocar e fechar**. É exatamente o tratamento que o menu
+  genérico (`#sheet`) já tinha desde o polimento de UI — agora estendido ao Ajustes.
+- **Por dentro:** só CSS — a regra de `#sheet` (teto + corpo rolável) passou a valer também pro
+  `#playersheet`/`.sheetctrls`. Nenhuma mudança de JS, storage ou markup.
+- **Teste de regressão:** com a tela reduzida a 412×560, o teste confere que o painel **cabe na
+  viewport** (sobra backdrop no topo) e que os controles **rolam** quando não cabem — falharia com o
+  bug (painel `visible`, estourando a tela). **324 verificações** (2 novas), zero erro de JS.
+
+---
+
 ## v0.51.0 — Escala como texto p/ WhatsApp: agora com a equipe escalada
 **Recurso (compartilhar).** O "Copiar como texto (WhatsApp)" da escala (entregue na v0.49.0)
 passou a montar a **mensagem completa do culto** pra colar no grupo — não só a ordem das
