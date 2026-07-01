@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.51.2**.
+seguir. Atualizado até a **v0.51.3**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -122,6 +122,7 @@ instalação complexa.
 | **v0.51.0** | recurso | **Escala como texto p/ WhatsApp com a equipe:** o "Copiar como texto" da escala passa a montar a mensagem completa do culto — **equipe agrupada por função** (`Vocal: A, B`), **cabeçalho** (data · hora · tipo), **momento** por música, **as duas observações** (do culto + fixa) e a **obs. geral da escala**. Emojis só nos títulos de seção; sem campo/storage novo. `escalaToText` reescrita + `teamByRole`. |
 | **v0.51.1** | correção | **⚙ Ajustes da cifra não cobre mais a tela toda:** em tela baixa (barra do navegador/fonte grande) o `#playersheet` crescia até esconder o puxador/título e o backdrop — sem rolar nem fechar. Ganhou **teto de altura** (`max-height:86dvh`) + `.sheetctrls` **rolável** com puxador/título fixos (mesmo tratamento do `#sheet`). Só CSS; teste de regressão em 412×560. |
 | **v0.51.2** | correção | **"Editar" recolhe o ⚙ Ajustes:** tocar Editar abria o editor com o painel de Ajustes ainda por cima (é `fixed`), tampando a cifra em edição. `#p-edit`/`#p-share` passaram a chamar `closePlayerSheet()` antes de abrir editor/compartilhar — de quebra conserta o **Enviar**, que abria o sheet de compartilhar atrás do painel. Sem storage/markup/CSS novo; regressão para os dois. |
+| **v0.51.3** | correção | **A cifra abre no capotraste salvo:** música com capo abria no player como capo 0 (o capo só valia na Escala) — o capotraste só aparecia na edição. `openPlayer` passou a inicializar `capo = current.capo`: o ⚙ já vem no capo certo, a linha de info mostra "Capo 2 (forma em F)" e os acordes viram as formas com o capô. A Escala segue mandando pelo item. Uma linha + regressão. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -332,4 +333,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.51.2.*
+*Última atualização deste roteiro: v0.51.3.*

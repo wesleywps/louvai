@@ -8,6 +8,25 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.51.3 — A cifra abre no capotraste salvo (o capo agora aparece ao exibir)
+**Correção (uso ao vivo).** Uma música com **capotraste** salvo abria no player **como se fosse capo 0**:
+o capo só valia quando a música era aberta pela **Escala**; no uso normal ele ficava zerado e só
+aparecia **entrando na edição**. Agora o player **abre no capotraste da própria música** — como já
+fazia com o artista e o tom.
+- **O que muda:** ao abrir a cifra, o capo salvo é aplicado. Aparece **"Capo 2 (forma em F)"** na
+  linha de info (junto de artista · Tom), o **⚙ Ajustes já vem no capo certo**, e os acordes mostram
+  as **formas com o capô** — o que se toca de fato (comportamento tipo Cifra Club). Você continua
+  podendo mudar o capo no ⚙ a qualquer momento.
+- **A Escala não muda:** lá o capo continua vindo do **item da escala** (o líder define por música);
+  só o player fora da Escala passou a respeitar o capo salvo.
+- **Por dentro:** `openPlayer` inicializa `capo = current.capo||0` (antes era fixo `0`). A infra de
+  exibir o capo (`#p-sub`, `shapeShift`) já existia — faltava o player carregar o valor. Uma linha.
+- **Teste de regressão:** abre uma música com capo 2 fora da Escala e confere que o ⚙ mostra 2, a
+  linha de info traz "Capo 2" e o 1º acorde vira a forma com o capô (G soando → forma em F).
+  **329 verificações** (3 novas), zero erro de JS.
+
+---
+
 ## v0.51.2 — "Editar" recolhe o painel de Ajustes (não fica mais por cima da cifra)
 **Correção (uso ao vivo).** No ⚙ **Ajustes da cifra**, tocar **Editar** abria o editor **com o painel
 de Ajustes ainda por cima**: como o painel é fixo na tela (`position:fixed`), ele continuava

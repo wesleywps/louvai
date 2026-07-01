@@ -849,7 +849,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.51.2";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.51.3";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1572,7 +1572,7 @@ let escalaCtx=null;   // { id, idx, list:[{songId,key,capo}] } quando em modo Ap
 function openPlayer(id, ctx, atLast){   // atLast: abrir na ÚLTIMA página (ao voltar de música no "livro")
   current=songs.find(s=>s.id===id); if(!current)return;
   escalaCtx = ctx || null;
-  transp=0; capo=0; showChords=true; stopScroll();
+  transp=0; capo=current.capo||0; showChords=true; stopScroll();   // já abre no capotraste salvo (aparece na linha de info e no ⚙; na Escala o item manda — abaixo)
   $("#lyr-toggle").classList.remove("on"); $("#lyr-toggle").setAttribute("aria-pressed","false");
   $("#tabs-toggle").classList.toggle("on",!!settings.hideTabs); $("#tabs-toggle").setAttribute("aria-pressed",String(!!settings.hideTabs));
   $("#scrollbar-toggle").classList.toggle("on",!!settings.showScrollbar); $("#scrollbar-toggle").setAttribute("aria-pressed",String(!!settings.showScrollbar));

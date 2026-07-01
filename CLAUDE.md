@@ -107,7 +107,7 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
     Modo Página, menu de estrutura, Wake Lock, **compartilhar/receber por link**
     (`#imp=`), **contagem ao sincronizar**, **detecção/validação de tom** e a
     compatibilidade com o nome antigo.
-    Falhou = sai com código ≠ 0 e lista o que quebrou. (~326 verificações.)
+    Falhou = sai com código ≠ 0 e lista o que quebrou. (~329 verificações.)
 - **Manual:** abra `louvai.html` no navegador (ou no celular) e percorra o fluxo.
 
 ---
@@ -315,6 +315,9 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   artista · Tom · capo). `openPlayer`, `drawPlayer` (calcula `ctxSound`/`ctxShape`),
   `offsetToKey`, navegação por estrutura (`#p-struct`) e Wake Lock
   (`lockScreen`/`unlockScreen`, religado no `visibilitychange`).
+  **Abre no capo salvo (v0.51.3):** fora da Escala, `openPlayer` inicializa `capo = current.capo||0`
+  (antes era `0` fixo — o capotraste só aparecia na edição). Aplica às formas (`shapeShift`) e exibe
+  "Capo N (forma em …)" no `#p-sub`. **Na Escala o capo continua vindo do item** (`it.capo`).
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).

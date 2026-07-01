@@ -34,7 +34,7 @@ e sem backend: abre no navegador do celular/tablet e compartilha por arquivo ou 
   conferência opcional do **tom pelos acordes**, importação à prova de arquivo malformado
   (sem XSS) e **acessível** (foco por teclado, contraste no escuro, alvos de toque grandes).
 
-*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.51.2**.*
+*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.51.3**.*
 
 ## Usar
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"** — desde a

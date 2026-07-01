@@ -224,6 +224,27 @@ ok(await page.evaluate(() => !document.getElementById("playersheet").classList.c
    "Enviar recolhe o ⚙ Ajustes e o sheet de compartilhar abre à mostra (não atrás)");
 await page.locator("#sheetbg").click(); await page.waitForTimeout(200);   // fecha o compartilhar
 
+// 4f) v0.51.3: o player normal (fora da Escala) deve ABRIR no capotraste salvo da música.
+//     Antes o capo só valia na Escala; fora dela ficava 0 e o capo só aparecia na edição.
+const capoOpen = await page.evaluate(() => {
+  songs.push({ id: "capo-test", title: "Com Capô", artist: "Fulano", key: "G", capo: 2,
+               tags: [], updatedAt: 1, body: "[Intro]\nG  C  D\n\nGrande é o Senhor" });
+  saveSongs(); openPlayer("capo-test");
+  return {
+    cval: document.getElementById("c-val").textContent,                          // ⚙ Ajustes reflete o capo salvo
+    sub: document.getElementById("p-sub").textContent,                           // linha de info mostra "Capo 2"
+    firstChord: (document.querySelector("#p-body .chord") || {}).textContent || "",   // forma com capô (G soa, forma em F c/ capo 2)
+  };
+});
+ok(capoOpen.cval === "2", "Player abre no capotraste salvo da música (⚙ Ajustes mostra 2)");
+ok(/Capo 2/.test(capoOpen.sub), "Linha de info exibe o capotraste (Capo 2), junto do artista e do tom");
+ok(capoOpen.firstChord === "F", "Acordes mostram a forma com o capô (G soa; forma em F com capo 2)");
+await page.evaluate(() => {   // limpa a música de teste e reabre a 1ª (estado neutro p/ o próximo bloco)
+  const i = songs.findIndex(s => s.id === "capo-test"); if (i >= 0) songs.splice(i, 1);
+  saveSongs(); openPlayer(songs[0].id);
+});
+await page.waitForTimeout(150);
+
 // 5) Importar colando texto estilo Cifra Club
 await page.locator("#p-back").click(); await page.waitForTimeout(120);
 wl = await page.evaluate(() => window.__wl);
