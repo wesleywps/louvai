@@ -137,7 +137,8 @@ instalação complexa.
 - **Player:** **barra de uma linha** (`← · Título · ☰ · ⚙`) que prioriza a cifra;
   transposição (subir/abaixar, no ⚙ Ajustes) com **grafia fiel ao tom** — preserva o
   que foi escrito e, ao transpor, escolhe ♯/♭ sozinho pelo tom (Bb nunca vira A#),
-  capo, tamanho de fonte (**ajustável por pinça** e lembrado entre sessões), modo escuro/claro, só letra, ocultar tabs, **modos de
+  capo (a cifra **abre no capotraste salvo** — o capo aparece na exibição, junto de artista/Tom),
+  tamanho de fonte (**ajustável por pinça** e lembrado entre sessões), modo escuro/claro, só letra, ocultar tabs, **modos de
   leitura** (rolagem com auto-scroll opcional **ou** página), navegação por
   estrutura (☰), **diagrama de acorde ao tocar no acorde** (pegada no violão, capo-aware)
   e tela sempre acesa (Wake Lock). Cada cifra pode ter **link da versão guia** (YouTube) e

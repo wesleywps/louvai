@@ -385,6 +385,10 @@ guia** por música (v0.47.0), **observações da música** (v0.48.0), **barra fi
 **3 melhorias de uso ao vivo** (dar o tom / escala como texto / duplicar, v0.49.0), **pinça ajusta a fonte**
 da cifra com tamanho persistido (v0.50.0) e **escala como texto p/ WhatsApp com a equipe escalada**
 (agrupada por função + cabeçalho/momento/observações, v0.51.0).
+**Correções de campo (v0.51.1–v0.51.3, primeiro feedback do ministério):** o ⚙ Ajustes ganhou teto
+de altura + rolagem e não cobre mais a tela (v0.51.1); Editar/Enviar **recolhem** o painel antes de
+abrir, sem sobrepor a cifra/o compartilhar (v0.51.2); e a cifra **abre no capotraste salvo** — o capo
+aparece na exibição, não só na edição (v0.51.3).
 Ver os `PLANO-*.md`.
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
 1. ✅ **Validação visual no celular** (dark/light) — **concluída (2026-06-26)**; o app está **em teste de
