@@ -1818,6 +1818,38 @@ ok(txt51.escNotes, "Texto: observação geral da escala no rodapé (📌)");
 ok(txt51.leanNoTeam && txt51.leanNoHead && txt51.leanNoDetails && txt51.leanSong,
    "Texto enxuto (só título + 1 música): sem seção Equipe, sem 📅 e sem detalhes");
 
+// ===== v0.52.0 — Acordes ~20% maiores (Inc.1): visual, sem mexer no layout =====
+await page.evaluate(() => {
+  const body = Array.from({ length: 20 }, (_, i) => `[Trecho ${i + 1}]\nC  G  Am  F  Dm  E`).join("\n");
+  const ex = songs.find(s => s.id === "chordscaletest");
+  if (ex) ex.body = body;
+  else songs.push({ id: "chordscaletest", title: "Escala do Acorde", key: "C", capo: 0, tags: [], updatedAt: Date.now(), body });
+  saveSongs(); settings.readMode = "scroll"; openPlayer("chordscaletest");
+});
+await page.waitForTimeout(150);
+const inc1 = await page.evaluate(() => {
+  const c = document.querySelector("#p-body .chord");
+  if (!c) return null;
+  const cs = getComputedStyle(c);
+  return { display: cs.display, transform: cs.transform };
+});
+ok(!!inc1 && inc1.display === "inline-block",
+   "Inc.1: acorde renderiza como inline-block (necessário p/ o transform aplicar)");
+ok(!!inc1 && inc1.transform !== "none" && inc1.transform.startsWith("matrix(1.2"),
+   "Inc.1: acorde com transform scale ~1.2 (maior que a letra, sem font-size)");
+// guarda anti-font-size: mudar --chord-scale (visual) NÃO pode mudar a paginação (layout)
+const inc1pg = await page.evaluate(() => {
+  settings.readMode = "page"; openPlayer("chordscaletest");
+  const a = document.getElementById("p-body").dataset.pages;
+  document.documentElement.style.setProperty("--chord-scale", "2.6"); drawPlayer();
+  const b = document.getElementById("p-body").dataset.pages;
+  document.documentElement.style.removeProperty("--chord-scale"); drawPlayer();
+  setReadMode("scroll");
+  return { a: +a, b: +b };
+});
+ok(inc1pg.a >= 2 && inc1pg.a === inc1pg.b,
+   "Inc.1: mudar --chord-scale (2.6×) NÃO altera a paginação (transform é layout-neutro)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

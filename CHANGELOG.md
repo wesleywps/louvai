@@ -8,6 +8,27 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.52.0 — Acordes ~20% maiores que a letra (mais fáceis de ver no palco)
+**Recurso (uso ao vivo).** Pedido de campo do ministério: o acorde tinha o **mesmo tamanho** da letra
+e "sumia" no meio do texto. Agora ele é renderizado **~20% maior** — destaque para a informação que o
+instrumentista mais olha —, **sem desalinhar** a cifra.
+- **O que muda:** só a aparência. O acorde continua caindo exatamente sobre a sílaba certa; o Modo
+  Página, a pinça/tamanho da fonte e o toque no acorde (diagrama) seguem iguais.
+- **Por que assim (e não "fonte maior"):** a cifra é monoespaçada e a linha de acordes fica **alinhada
+  coluna a coluna** por cima da letra. Aumentar o `font-size` do acorde alargaria cada caractere e
+  **quebraria** esse alinhamento. A solução é uma **escala visual** (`transform:scale`): o acorde
+  cresce na tela mas a caixa de layout continua do tamanho de sempre → colunas e paginação intactas.
+  Ancorada em `left bottom` (fixa a coluna à esquerda; cresce só p/ cima — não recorta na página).
+- **Ajustável:** a proporção é a variável CSS `--chord-scale` (padrão `1.2`) — afina rápido se precisar.
+- **Por dentro:** `.cifra .chord` ganhou `display:inline-block;transform:scale(var(--chord-scale,1.2))`.
+  Validado adversarialmente (3 lentes céticas, com **medição empírica** em Chromium headless: as bordas
+  esquerdas dos acordes ficam **byte-idênticas** com/sem a regra; `scrollHeight`/paginação inalterados).
+- **Teste de regressão:** o acorde tem `inline-block` + `transform` scale ~1.2; mudar `--chord-scale`
+  para 2.6× **não** altera a contagem de páginas (prova que o layout não muda). **332 verificações**
+  (3 novas), zero erro de JS.
+
+---
+
 ## v0.51.3 — A cifra abre no capotraste salvo (o capo agora aparece ao exibir)
 **Correção (uso ao vivo).** Uma música com **capotraste** salvo abria no player **como se fosse capo 0**:
 o capo só valia quando a música era aberta pela **Escala**; no uso normal ele ficava zerado e só
