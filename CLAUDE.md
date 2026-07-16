@@ -344,6 +344,13 @@ PLANO atualizado se aplicável · `npm test` verde · **`npm run deploy`** (a Ac
   follow-up). **Acordes ~20% maiores (v0.52.0):** `.cifra .chord` ganhou `display:inline-block;
   transform:scale(var(--chord-scale,1.2));transform-origin:left bottom` — puramente visual (colunas e
   paginação intactas, provado empiricamente); `--chord-scale` ajusta a proporção.
+- **Temas + brilho dos acordes (v0.54.0):** 3 temas por **classe no `body`** sobre o `:root` escuro —
+  `.light` e `.orange` (laranja = fundo escuro + acento/acorde/seção laranjas, p/ pouca luz; herda o
+  resto do escuro). `settings.theme` (`dark`/`light`/`orange`), `applyTheme` (classe + `theme-color` via
+  `THEME_META`) e `openThemeSheet` (folha "Tema"; o `#themeBtn` virou **seletor**, ícone `sun-moon`).
+  **Halo** do acorde: raio `--chord-halo-r` (**6px**, era 14px — não vaza entre acordes empilhados) +
+  toggle **"Brilho dos acordes"** (`#halo-toggle`, `settings.chordHalo`) → `.cifra.no-halo .chord{
+  text-shadow:none}` (aplicado no `drawPlayer`, estado setado no `openPlayer`).
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).
@@ -416,8 +423,9 @@ de altura + rolagem e não cobre mais a tela (v0.51.1); Editar/Enviar **recolhem
 abrir, sem sobrepor a cifra/o compartilhar (v0.51.2); e a cifra **abre no capotraste salvo** — o capo
 aparece na exibição, não só na edição (v0.51.3). Depois: **acordes ~20% maiores** que a letra (escala
 visual, sem desalinhar, v0.52.0) e **salvar edição com escolha** — sobrescrever/salvar como nova no
-editor **e** salvar o tom transposto no player (`transposeBody`, v0.53.0). *Follow-up de campo aberto:*
-salvar o tom **na escala** (`it.key`), o gesto do ensaio.
+editor **e** salvar o tom transposto no player (`transposeBody`, v0.53.0), **tema Laranja** (palco/pouca
+luz) + **brilho dos acordes** reduzido/desligável (v0.54.0). *Follow-up de campo aberto:* salvar o tom
+**na escala** (`it.key`), o gesto do ensaio.
 Ver os `PLANO-*.md`.
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
 1. ✅ **Validação visual no celular** (dark/light) — **concluída (2026-06-26)**; o app está **em teste de

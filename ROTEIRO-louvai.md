@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.53.0**.
+seguir. Atualizado até a **v0.54.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -125,6 +125,7 @@ instalação complexa.
 | **v0.51.3** | correção | **A cifra abre no capotraste salvo:** música com capo abria no player como capo 0 (o capo só valia na Escala) — o capotraste só aparecia na edição. `openPlayer` passou a inicializar `capo = current.capo`: o ⚙ já vem no capo certo, a linha de info mostra "Capo 2 (forma em F)" e os acordes viram as formas com o capô. A Escala segue mandando pelo item. Uma linha + regressão. |
 | **v0.52.0** | recurso | **Acordes ~20% maiores que a letra:** pedido de campo — o acorde tinha o mesmo tamanho da letra e sumia no texto. Agora é renderizado ~20% maior, **sem desalinhar**: escala visual (`transform:scale`, **não** `font-size`, que alargaria os caracteres e quebraria as colunas monoespaçadas), ancorada em `left bottom` (fixa a coluna, cresce só p/ cima). Modo Página, pinça e toque no acorde intactos; ajustável por `--chord-scale`. Validado adversarialmente com medição empírica (bordas byte-idênticas, paginação estável). |
 | **v0.53.0** | recurso | **Salvar edição com escolha + salvar o tom transposto:** editar com mudança → folha **Sobrescrever / Salvar como nova** (título desambiguado "(Tom D)"/"(cópia)"); e transpor no player agora tem **"Salvar tom/capo"** no ⚙ (grava o tom no corpo — Sobrescrever ou nova). Honesto: *Sobrescrever* muda o tom em toda escala que herda o tom, e com capô a grafia enarmônica pode mudar (mesmo som). Só no player normal (na Apresentação o tom é do item; *salvar o tom na escala* fica p/ depois). `transposeBody` (gêmea do `renderCifra`), `songChanged`, `cloneSong` (usado no `dupSong`). Validado adversarialmente (força bruta na grafia + medição). |
+| **v0.54.0** | recurso | **Tema Laranja + brilho dos acordes ajustável:** feedback de campo — o halo dos acordes vazava entre acordes empilhados (pior com o acorde maior da v0.52.0) e faltava um tema p/ pouca luz. Halo reduzido (14px→6px) + interruptor **"Brilho dos acordes"** no ⚙ (desliga; `settings.chordHalo`); e novo tema **Laranja** (fundo escuro + acento/acordes laranja, leitura fácil no palco). O botão de tema virou **seletor** (folha Escuro/Claro/Laranja). `.orange`, `applyTheme`/`openThemeSheet`, `--chord-halo-r`/`.no-halo`. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -336,4 +337,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.53.0.*
+*Última atualização deste roteiro: v0.54.0.*

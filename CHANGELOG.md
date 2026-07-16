@@ -8,6 +8,26 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.54.0 — Tema Laranja (palco) + brilho dos acordes ajustável
+**Recursos + correção (uso ao vivo).** Feedback de campo: (a) o **brilho (halo)** dos acordes **vazava**
+— com dois acordes um em cima do outro os halos se sobrepunham (piorou com o acorde 20% maior da
+v0.52.0); (b) faltava um tema **fácil de ler no palco com pouca luz**.
+- **Halo menor + desligável:** o raio do brilho caiu de **14px → 6px** (não vaza mais entre acordes
+  empilhados) e há um novo interruptor **"Brilho dos acordes"** no ⚙ (seção *Leitura*) para **desligar**
+  de vez. Persiste entre sessões (`settings.chordHalo`).
+- **Tema Laranja:** além de *Escuro* e *Claro*, agora há **Laranja** — fundo escuro com acento e acordes
+  **laranja**, alto contraste e leitura fácil no modo Apresentação / pouca luz. O botão de tema virou um
+  **seletor** (folha "Tema" com as 3 opções, atual com ✓) — escalável para novos temas depois.
+- **Por dentro:** `.orange` (classe no `body`; herda o escuro do `:root` e troca só acento/acorde/seção);
+  `applyTheme`/`openThemeSheet`/`THEME_LABEL`/`THEME_META`; halo via `--chord-halo-r` (6px) +
+  `.cifra.no-halo .chord{text-shadow:none}` (toggle `#halo-toggle`, estado no `drawPlayer`). Ícone
+  `sun-moon` novo no `ICONS`.
+- **Teste de regressão:** o tema laranja aplica a classe e muda `--accent` (#fb923c); a folha de tema
+  abre com 3 opções; halo ligado tem text-shadow ~6px e desligar remove (`#p-body.no-halo`).
+  **361 verificações** (7 novas), zero erro de JS.
+
+---
+
 ## v0.53.0 — Salvar edição com escolha (sobrescrever ou nova) + salvar o tom transposto
 **Recurso (uso ao vivo).** Pedido de campo do ministério: ao editar uma cifra e mudar algo, faltava
 escolher entre **sobrescrever** a música ou **guardar uma nova** — e, principalmente, ao **transpor**

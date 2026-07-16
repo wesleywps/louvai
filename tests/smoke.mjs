@@ -2019,6 +2019,44 @@ const ckCoh = await page.evaluate(() => {
 ok(ckCoh.beforeAlarm === false && ckCoh.afterAlarm === false && ckCoh.key === "D",
    "Conferir tom: coerente após assar (C→D não passa a alarmar; detecção por pitch-class)");
 
+// ===== v0.54.0 — tema laranja + brilho (halo) dos acordes reduzido/desligável =====
+const themeChk = await page.evaluate(() => {
+  const read = () => getComputedStyle(document.body).getPropertyValue("--accent").trim();
+  const dark = read();
+  settings.theme = "orange"; applyTheme();
+  const orangeClass = document.body.classList.contains("orange");
+  const orangeAccent = read();
+  settings.theme = "dark"; applyTheme();
+  return { dark, orangeClass, orangeAccent, backToDark: read() };
+});
+ok(themeChk.orangeClass, "Tema laranja: body ganha a classe 'orange'");
+ok(/#fb923c/i.test(themeChk.orangeAccent) && themeChk.orangeAccent !== themeChk.dark,
+   "Tema laranja: --accent vira laranja (#fb923c), diferente do escuro");
+ok(themeChk.backToDark === themeChk.dark, "Tema: voltar pro escuro restaura o acento");
+
+// seletor de tema (folha com 3 opções: Escuro / Claro / Laranja)
+await page.evaluate(() => { settings.theme = "dark"; applyTheme(); $("#themeBtn").click(); });
+await page.waitForTimeout(200);
+const themeSheetChk = await page.locator("#sheet .sheetitem").count();
+await page.locator("#sheetbg").click({ position: { x: 10, y: 10 } });
+await page.waitForTimeout(150);
+ok(themeSheetChk === 3, "Seletor de tema: a folha abre com 3 opções (Escuro/Claro/Laranja)");
+
+// halo dos acordes: ligado tem text-shadow (raio ~6px, era 14px); desligar remove
+const haloChk = await page.evaluate(() => {
+  settings.readMode = "scroll"; settings.chordHalo = true; openPlayer("chordscaletest");
+  const csOn = getComputedStyle(document.querySelector("#p-body .chord")).textShadow;
+  settings.chordHalo = false; drawPlayer();
+  const cls = document.getElementById("p-body").classList.contains("no-halo");
+  const csOff = getComputedStyle(document.querySelector("#p-body .chord")).textShadow;
+  settings.chordHalo = true; drawPlayer();
+  return { csOn, csOff, cls };
+});
+ok(haloChk.csOn !== "none" && haloChk.csOn !== "", "Brilho dos acordes: ligado tem text-shadow (halo)");
+ok(haloChk.csOn.includes("6px"), "Brilho dos acordes: raio do halo reduzido (~6px, era 14px)");
+ok(haloChk.cls && haloChk.csOff === "none",
+   "Brilho dos acordes: desligar (chordHalo=false) remove o text-shadow (#p-body.no-halo)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 
