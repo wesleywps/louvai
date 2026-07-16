@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
 # Publicar o Louvai no GitHub Pages (uso: `npm run deploy` — depois de commitar o código pelo ritual).
 #
-# Regra do louvai.json: o REMOTO é a fonte da verdade (repertório e escalas são editados no celular
-# ou no desktop e publicados na nuvem). Antes de subir, este script:
-#   1) baixa o estado do remoto;
-#   2) guarda um BACKUP local do louvai.json vivo (backups/, ignorado pelo git);
-#   3) ADOTA esse louvai.json (nunca regride os dados da equipe);
-#   4) faz o push. A GitHub Action gera o index.html e atualiza o Pages — não subimos o index à mão.
+# louvai.json (repertório/escalas): o REMOTO é a FONTE DA VERDADE — só o app o edita (celular/desktop,
+# via "Publicar na nuvem"). Este script NUNCA sobe uma versão local do louvai.json:
+#   1) busca o remoto e guarda um BACKUP local do louvai.json vivo (em backups/, ignorado pelo git);
+#   2) se o remoto tiver novidades (ex.: a equipe publicou), INTEGRA por rebase (traz o louvai.json vivo
+#      e põe nossos commits de código por cima) — nós nunca editamos o louvai.json, então não há conflito;
+#   3) faz o push. A GitHub Action gera o index.html e atualiza o Pages.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-echo "→ Buscando o estado atual do remoto…"
+echo "→ Buscando o estado do remoto…"
 git fetch origin main
 
 mkdir -p backups
 STAMP="$(date +%Y%m%d-%H%M%S)"
 git show origin/main:louvai.json > "backups/louvai-$STAMP.json"
-echo "→ Backup do louvai.json vivo salvo em: backups/louvai-$STAMP.json"
+echo "→ Backup do louvai.json vivo (remoto): backups/louvai-$STAMP.json"
 
-# adota o louvai.json do remoto (dados vivos); só cria commit se de fato mudou
-git checkout origin/main -- louvai.json
-if ! git diff --cached --quiet -- louvai.json; then
-  git commit -m "sync: louvai.json vivo do remoto (repertório/escalas atuais)"
-  echo "→ louvai.json local atualizado a partir do remoto."
+if git merge-base --is-ancestor origin/main HEAD; then
+  echo "→ Remoto sem novidades; push será fast-forward."
+else
+  echo "→ O remoto tem novidades (ex.: louvai.json publicado pela equipe). Integrando por rebase…"
+  git rebase origin/main
 fi
 
 cp louvai.html index.html   # cópia local só p/ abrir no navegador aqui (no deploy a Action gera)
