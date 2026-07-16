@@ -267,7 +267,11 @@ body.light .keyhint{color:#b45309}
 .cifra.nobar{padding-bottom:calc(48px + env(safe-area-inset-bottom))}
 .cifra .chord{color:var(--chord);font-weight:700;
   background:var(--chord-bg);border-radius:4px;          /* sem padding lateral: não desloca o alinhamento */
-  text-shadow:0 0 14px var(--chord-halo)}
+  text-shadow:0 0 14px var(--chord-halo);
+  /* acorde ~20% maior que a letra SEM mexer no layout: transform é visual, a caixa continua 1.0×
+     (colunas monoespaçadas preservadas); origem "left bottom" fixa a borda esquerda (coluna) e cresce
+     só p/ cima (não recorta na base da página nem invade a letra abaixo). --chord-scale p/ ajustar. */
+  display:inline-block;transform:scale(var(--chord-scale,1.2));transform-origin:left bottom}
 .cifra .sec{color:var(--section);font-weight:700;font-style:normal;
   display:inline-block;margin-top:6px}
 .cifra .lyr{color:var(--lyric)}
@@ -818,6 +822,9 @@ body.light .keyhint{color:#b45309}
     <div class="ctrl" id="p-guide-row" style="display:none"><span class="lbl">Versão guia (YouTube)</span>
       <span class="grp"><button id="p-guide" aria-label="Abrir a versão guia no YouTube">Abrir</button></span>
     </div>
+    <div class="ctrl" id="p-savekey-row" style="display:none"><span class="lbl">Salvar tom/capo</span>
+      <span class="grp"><button id="p-savekey" aria-label="Salvar o tom e o capo atuais">Salvar</button></span>
+    </div>
     <div class="ctrl actions">
       <span class="grp"><button id="p-edit" aria-label="Editar cifra">Editar</button><button id="p-share" aria-label="Compartilhar cifra">Enviar</button></span>
     </div>
@@ -849,7 +856,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.51.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.53.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1283,6 +1290,24 @@ function renderCifra(body, semis, showChords, ctx, hideTabs){
   }
   return out.join("\n");
 }
+// Assar a transposição no CORPO (texto puro) — GÊMEA do renderCifra: mesmos ramos e o MESMO regex
+// /(\S+)/g (preserva TODA a whitespace; um split/join colapsaria espaços e destruiria o alinhamento
+// coluna-a-coluna do corpo GRAVADO). Só troca a emissão de <span> por texto. Reusa isChord/
+// transposeChord (regra nº3, fonte única de acorde). semis múltiplo de 12 → corpo intacto (grafia).
+function transposeBody(body, semis, ctx){
+  if(!body) return body||"";
+  if(((semis%12)+12)%12===0) return body;
+  const tx = s => s.replace(/(\S+)/g, t => isChord(t) ? transposeChord(t,semis,ctx) : t);
+  return body.replace(/\r/g,"").split("\n").map(line=>{
+    if(isSectionLine(line)) return line;                         // seção sozinha: intacta
+    const sc = line.match(/^(\s*)(\[[^\]]+\])(\s+)(\S.*)$/);      // [Seção] + resto
+    if(sc && !isChord(sc[2].replace(/^\[|\]$/g,"")))
+      return sc[1]+sc[2]+sc[3]+(isChordLine(sc[4]) ? tx(sc[4]) : sc[4]);
+    if(isChordLine(line)) return tx(line);                       // linha só de acordes
+    return line.replace(/\[([^\]]+)\]/g, (full,inner) =>         // [C] inline na letra (não toca "E" solto)
+      isChord(inner) ? '['+transposeChord(inner,semis,ctx)+']' : full);
+  }).join("\n");
+}
 
 /* ---------- Armazenamento ---------- */
 const KEYS = ["C","C#","Db","D","D#","Eb","E","F","F#","Gb","G","G#","Ab","A","A#","Bb","B",
@@ -1350,10 +1375,27 @@ function backupNote(){
   return s;
 }
 function uid(){ return "s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+// clone de música — FONTE ÚNICA (dupSong e "salvar como nova" ao transpor). Object.assign copia
+// TODOS os campos (ref/notes inclusos — não esquecer nenhum); id/updatedAt novos; tags é cópia.
+function cloneSong(src, over){
+  const c=Object.assign({}, src, over||{});
+  c.id=uid(); c.updatedAt=Date.now(); c.tags=(((over&&over.tags)||src.tags)||[]).slice();
+  return c;
+}
+// houve mudança editável? normalização SIMÉTRICA dos 2 lados (safeUrl/trim/tags nos dois) — senão uma
+// música intacta (ex.: ref antiga não-saneada) apareceria como "mudou" e abriria a folha à toa.
+function songChanged(s, d){
+  const t = x => (x==null?"":String(x));
+  const tg = a => (a||[]).map(x=>String(x).trim()).filter(Boolean).join("|");
+  return t(s.title)!==t(d.title) || t(s.artist)!==t(d.artist)
+      || t(s.key)!==t(d.key) || (+(s.capo||0))!==(+(d.capo||0))
+      || safeUrl(s.ref)!==safeUrl(d.ref) || t(s.notes).trim()!==t(d.notes).trim()
+      || t(s.body)!==t(d.body) || tg(s.tags)!==tg(d.tags);
+}
 // duplicar (v0.49.0): clona com id novo + "(cópia)". A escala clona os items e volta a "não realizada".
 function dupSong(id){ const s=songs.find(x=>x.id===id); if(!s) return;
-  const c=Object.assign({},s); c.id=uid(); c.title=(s.title||"Cifra")+" (cópia)"; c.tags=(s.tags||[]).slice(); c.updatedAt=Date.now();
-  songs.push(c); saveSongs(); renderLibrary(); toast("Cifra duplicada","ok"); }
+  songs.push(cloneSong(s,{title:(s.title||"Cifra")+" (cópia)"}));
+  saveSongs(); renderLibrary(); toast("Cifra duplicada","ok"); }
 function dupEscala(id){ const e=escalas.find(x=>x.id===id); if(!e) return;
   const c=JSON.parse(JSON.stringify(e)); c.id=uid(); c.title=(e.title||"Escala")+" (cópia)"; c.done=false; c.updatedAt=Date.now();
   escalas.push(c); saveEscalas(); if(typeof renderEscalas==="function") renderEscalas(); toast("Escala duplicada","ok"); }
@@ -1572,7 +1614,7 @@ let escalaCtx=null;   // { id, idx, list:[{songId,key,capo}] } quando em modo Ap
 function openPlayer(id, ctx, atLast){   // atLast: abrir na ÚLTIMA página (ao voltar de música no "livro")
   current=songs.find(s=>s.id===id); if(!current)return;
   escalaCtx = ctx || null;
-  transp=0; capo=0; showChords=true; stopScroll();
+  transp=0; capo=current.capo||0; showChords=true; stopScroll();   // já abre no capotraste salvo (aparece na linha de info e no ⚙; na Escala o item manda — abaixo)
   $("#lyr-toggle").classList.remove("on"); $("#lyr-toggle").setAttribute("aria-pressed","false");
   $("#tabs-toggle").classList.toggle("on",!!settings.hideTabs); $("#tabs-toggle").setAttribute("aria-pressed",String(!!settings.hideTabs));
   $("#scrollbar-toggle").classList.toggle("on",!!settings.showScrollbar); $("#scrollbar-toggle").setAttribute("aria-pressed",String(!!settings.showScrollbar));
@@ -1673,6 +1715,10 @@ function drawPlayer(){
     delete b.dataset.page; delete b.dataset.pages;
     b.innerHTML=html;
   }
+  // "Salvar tom/capo": só no player normal e só quando o usuário transpôs OU mudou o capo.
+  // capo!==(current.capo||0) — NÃO capo!==0 — senão apareceria já ao abrir música com capô salvo (v0.51.3).
+  const sk=$("#p-savekey-row");
+  if(sk) sk.style.display = (!escalaCtx && (((transp%12)+12)%12!==0 || capo!==(current.capo||0))) ? "" : "none";
   updateKeyCheck();
 }
 // "Conferir tom pelos acordes": mostra o aviso só com o toggle ligado E divergência clara
@@ -1749,8 +1795,29 @@ function exitPlayer(){   // voltar do player — usado pelo ← normal E pelo �
 }
 $("#p-back").onclick=exitPlayer;
 $("#pv-back").onclick=exitPlayer;
-$("#p-edit").onclick=()=>openEditor(current.id);
-$("#p-share").onclick=()=>shareSheet(current);
+// Recolhe o ⚙ Ajustes antes de abrir editor/compartilhar: senão o painel (fixed, z-index 51)
+// fica sobreposto à cifra em edição, ou por cima do próprio sheet de compartilhar.
+$("#p-edit").onclick=()=>{closePlayerSheet();openEditor(current.id);};
+$("#p-share").onclick=()=>{closePlayerSheet();shareSheet(current);};
+// Salvar o tom transposto / capo (v0.53.0) — só no player normal (na Apresentação o tom é do item da
+// escala). Assa por `transp` (mantém pitch e capo; body = acordes no tom soante). Com capo=0 a grafia
+// também é preservada (redraw por transp=0 é identidade); com capô a grafia enarmônica pode mudar.
+$("#p-savekey").onclick=()=>{
+  if(!current || escalaCtx) return;
+  closePlayerSheet();                                          // recolhe o painel (padrão v0.51.2)
+  const minor=keyIsMinor(current.key), root=keyRoot(current.key);
+  const ctx=spellCtx(current.key, transp);                     // grafia do Tom soante
+  const newKey=transposeNote(root, transp, ctx)+(minor?"m":"");
+  const newBody=transposeBody(current.body, transp, ctx), newCapo=capo;
+  const overwrite=()=>{ current.body=newBody; current.key=newKey; current.capo=newCapo;
+    current.updatedAt=Date.now(); transp=0; capo=newCapo; saveSongs(); drawPlayer(); toast("Tom salvo nesta música","ok"); };
+  const saveNew=()=>{ const c=cloneSong(current,{body:newBody,key:newKey,capo:newCapo,
+      title:current.title+" (Tom "+newKey+")"}); songs.push(c); saveSongs(); openPlayer(c.id); toast("Nova música em "+newKey,"ok"); };
+  openSheet("Salvar tom/capo",[
+    {ic:icon("check"),label:"Sobrescrever esta música",fn:()=>{closeSheet();overwrite();}},
+    {ic:icon("copy"),label:'Salvar como nova ("Tom '+newKey+'")',fn:()=>{closeSheet();saveNew();}},
+  ], "Tom atual: "+newKey+(newCapo?" · Capo "+newCapo:"")+". Sobrescrever regrava os acordes nesta música (vale em toda escala que herda o tom); salvar como nova mantém a original.");
+};
 
 /* sheet ⚙ Ajustes do player (os controles mantêm os IDs e handlers de sempre) */
 function openPlayerSheet(){ openS("#playerbg","#playersheet"); }
@@ -2110,9 +2177,25 @@ $("#e-save").onclick=()=>{
     notes:$("#e-notes").value.trim(),
     body:$("#e-body").value, updatedAt:Date.now()
   };
-  if(editingId){ Object.assign(songs.find(s=>s.id===editingId),data); }
-  else{ data.id=uid(); songs.push(data); editingId=data.id; }
-  saveSongs(); openPlayer(editingId); toast("Salvo","ok");
+  // salvar com escolha (v0.53.0): editando uma música existente com mudança → folha
+  // Sobrescrever / Salvar como nova ("nada salvo no escuro"). Sem mudança ou música nova → direto.
+  const overwrite=()=>{ Object.assign(songs.find(s=>s.id===editingId),data);
+    saveSongs(); openPlayer(editingId); toast("Salvo","ok"); };
+  const saveNew=(base)=>{ const nd=Object.assign({},data);
+    if(base && nd.title===base.title) nd.title += (nd.key!==base.key ? " (Tom "+nd.key+")" : " (cópia)");
+    nd.id=uid(); songs.push(nd); editingId=nd.id; saveSongs(); openPlayer(editingId); toast("Nova música salva","ok"); };
+  if(editingId){
+    const s=songs.find(x=>x.id===editingId);
+    if(s && songChanged(s,data)){
+      openSheet("Salvar alterações",[
+        {ic:icon("check"),label:"Sobrescrever esta música",fn:()=>{closeSheet();overwrite();}},
+        {ic:icon("copy"),label:"Salvar como nova música",fn:()=>{closeSheet();saveNew(s);}},
+      ],"Você fez alterações nesta cifra. Sobrescrever a atual ou salvar como uma nova música?");
+      return;
+    }
+    overwrite(); return;
+  }
+  saveNew(null);
 };
 $("#e-delete").onclick=()=>{
   if(!editingId)return;
