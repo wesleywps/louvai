@@ -2074,6 +2074,60 @@ ok(haloOff.noHalo && haloOff.shadow === "none", "Interruptor 'Brilho dos acordes
 ok(/rgba\(0, 0, 0, 0\)|transparent/.test(haloOff.bg), "Interruptor 'Brilho dos acordes' (clique REAL): remove também o chip de fundo");
 ok(haloOff.saved === false, "Interruptor persiste settings.chordHalo=false");
 
+// ===== v0.56.0 — Quebra de linha automática (não esconder ao ampliar) =====
+// (a) rewrapBody puro: parte em blocos que cabem, sem partir acorde; curto e tab intactos
+const wrapPure = await page.evaluate(() => {
+  const chord = "C       G       Am      F       C       G";
+  const lyric = "Aleluia ao Rei que vem reinar sobre toda a terra";
+  const lines = rewrapBody(chord + "\n" + lyric, 20).split("\n");
+  const chordLines = lines.filter((_, i) => i % 2 === 0);
+  return {
+    maxLen: Math.max(...lines.map(l => l.length)),
+    noSplitChord: chordLines.every(l => l.trim().split(/\s+/).filter(Boolean).every(t => isChord(t))),
+    shortUnchanged: rewrapBody("C   G\nabc def", 40) === "C   G\nabc def",
+    tabUntouched: rewrapBody("E|--0--2--3--5--7--8--10--12--|", 10) === "E|--0--2--3--5--7--8--10--12--|",
+  };
+});
+ok(wrapPure.maxLen <= 20, "rewrapBody: blocos cabem em cols (máx " + wrapPure.maxLen + " ≤ 20)");
+ok(wrapPure.noSplitChord, "rewrapBody: nenhum acorde é partido entre blocos");
+ok(wrapPure.shortUnchanged, "rewrapBody: linha que já cabe volta idêntica (sem regressão)");
+ok(wrapPure.tabUntouched, "rewrapBody: tablatura passa intacta (não quebra)");
+
+// (b) MEDIÇÃO real: fonte grande + rolagem → wrap ON não transborda pro lado
+await page.evaluate(() => {
+  const chord = "C       G       Am      F       C       G       D       Em      A";
+  const lyric = "Aleluia ao Rei que vem reinar sobre toda a terra e por todo o sempre sim";
+  const body = Array.from({ length: 8 }, () => chord + "\n" + lyric).join("\n\n");   // longo p/ forçar várias páginas
+  const ex = songs.find(s => s.id === "wrapstage");
+  const song = { id: "wrapstage", title: "Wrap Stage", key: "C", capo: 0, tags: [], updatedAt: 1, body };
+  if (ex) Object.assign(ex, song); else songs.push(song);
+  fontSize = 26; settings.wrapLines = true; settings.readMode = "scroll"; saveSongs(); openPlayer("wrapstage");
+});
+await page.waitForTimeout(200);
+const wrapOn = await page.evaluate(() => { const b = document.getElementById("p-body"); return b.scrollWidth - b.clientWidth; });
+ok(wrapOn <= 2, "Quebra ON (fonte 26, rolagem): a cifra NÃO transborda pro lado (overflowX " + wrapOn + "px ≈ 0)");
+
+// (c) interruptor REAL desliga → volta a transbordar (prova o toggle + prova que a música transborda sem wrap)
+await page.evaluate(() => openPlayerSheet());
+await page.waitForTimeout(200);
+await page.locator("#wrap-toggle").click();
+await page.waitForTimeout(200);
+const wrapOff = await page.evaluate(() => { const b = document.getElementById("p-body"); return { over: b.scrollWidth - b.clientWidth, saved: settings.wrapLines }; });
+await page.evaluate(() => { closePlayerSheet(); settings.wrapLines = true; drawPlayer(); });
+ok(wrapOff.saved === false, "Interruptor 'Quebrar linhas' (clique REAL) desliga e persiste");
+ok(wrapOff.over > 100, "Quebra OFF: a cifra volta a transbordar pro lado (overflowX " + wrapOff.over + "px)");
+
+// (d) Modo Página: ampliar a fonte AUMENTA a quantidade de páginas
+const wrapPages = await page.evaluate(() => {
+  fontSize = 14; settings.wrapLines = true; settings.readMode = "page"; openPlayer("wrapstage");
+  const small = +document.getElementById("p-body").dataset.pages;
+  fontSize = 26; drawPlayer();
+  const big = +document.getElementById("p-body").dataset.pages;
+  settings.readMode = "scroll"; fontSize = 15; drawPlayer();
+  return { small, big };
+});
+ok(wrapPages.big > wrapPages.small, "Quebra + Modo Página: ampliar a fonte aumenta as páginas (" + wrapPages.small + "→" + wrapPages.big + ")");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

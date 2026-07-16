@@ -829,6 +829,9 @@ body.light .keyhint{color:#b45309}
     <div class="ctrl toggle"><span class="lbl">Brilho dos acordes</span>
       <span class="grp"><button id="halo-toggle" aria-label="Brilho (halo) dos acordes" aria-pressed="true"></button></span>
     </div>
+    <div class="ctrl toggle"><span class="lbl">Quebrar linhas (não cortar)</span>
+      <span class="grp"><button id="wrap-toggle" aria-label="Quebrar linhas longas em blocos" aria-pressed="true"></button></span>
+    </div>
     <div class="sheetsec">Esta música</div>
     <div class="ctrl"><span class="lbl">Dar o tom</span>
       <span class="grp"><button id="p-tom" aria-label="Tocar a nota do tom atual">Tocar a nota</button></span>
@@ -870,7 +873,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.55.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.56.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1322,6 +1325,61 @@ function transposeBody(body, semis, ctx){
       isChord(inner) ? '['+transposeChord(inner,semis,ctx)+']' : full);
   }).join("\n");
 }
+// Quebra de linha automática (v0.56.0): parte linhas longas em BLOCOS que cabem em `cols` colunas mono,
+// preservando o alinhamento acorde-sobre-letra (corta o PAR nos MESMOS limites). Função PURA, roda ANTES
+// do renderCifra (que não muda — regra nº3). Ver docs/planos/PLANO-quebra-de-linha.md.
+function rewrapBody(body, cols){
+  if(!body || !cols || cols<4) return body||"";
+  const isTab = l => /^\s*[A-Ga-g][#b]?\s*\|/.test(l) && (l.match(/-/g)||[]).length>=4;
+  const lines = body.replace(/\r/g,"").split("\n");
+  const out=[];
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    if(line.length<=cols || line.trim()==="" || isSectionLine(line) || isTab(line)){ out.push(line); continue; }
+    if(isChordLine(line)){
+      const next=lines[i+1];
+      const paired = next!==undefined && next.trim()!=="" && !isChordLine(next) && !isSectionLine(next) && !isTab(next);
+      if(paired){ for(const [c,l] of chunkPair(line, next, cols)){ out.push(c); out.push(l); } i++; }
+      else for(const c of chunkOne(line, cols)) out.push(c);
+      continue;
+    }
+    for(const c of chunkOne(line, cols)) out.push(c);   // letra (com/sem [C] inline), [Seção]+acordes, etc.
+  }
+  return out.join("\n");
+}
+// corta acorde+letra nos MESMOS limites; prioriza NÃO partir acorde, prefere fim de palavra
+function chunkPair(chord, lyric, cols){
+  const maxLen=Math.max(chord.length, lyric.length);
+  const sp=(s,i)=> i>=s.length || s[i]===" ";
+  const chunks=[]; let start=0;
+  while(start<maxLen){
+    if(start+cols>=maxLen){ chunks.push([chord.slice(start), lyric.slice(start)]); break; }
+    const hi=start+cols; let best=-1, word=-1;
+    for(let e=hi; e>start+1; e--){
+      if(!sp(chord,e)) continue;             // não corta um acorde
+      if(best<0) best=e;
+      if(sp(lyric,e)){ word=e; break; }      // fronteira de acorde QUE TAMBÉM é fim de palavra
+    }
+    const e = word>0 ? word : (best>0 ? best : hi);
+    chunks.push([chord.slice(start,e), lyric.slice(start,e)]);
+    start=e; while(start<maxLen && sp(chord,start) && sp(lyric,start)) start++;   // pula espaços comuns
+  }
+  return chunks.map(([c,l])=>[c.replace(/\s+$/,""), l.replace(/\s+$/,"")]);
+}
+// corta uma linha só (acordes sem letra, ou letra) nos espaços
+function chunkOne(line, cols){
+  if(line.length<=cols) return [line];
+  const sp=i=> i>=line.length || line[i]===" ";
+  const out=[]; let start=0;
+  while(start<line.length){
+    if(start+cols>=line.length){ out.push(line.slice(start)); break; }
+    const hi=start+cols; let e=hi;
+    while(e>start+1 && !sp(e)) e--;          // recua até um espaço
+    if(e<=start+1) e=hi;                     // trecho sem espaço: corta no limite
+    out.push(line.slice(start,e)); start=e; while(start<line.length && sp(start)) start++;
+  }
+  return out.map(s=>s.replace(/\s+$/,""));
+}
 
 /* ---------- Armazenamento ---------- */
 const KEYS = ["C","C#","Db","D","D#","Eb","E","F","F#","Gb","G","G#","Ab","A","A#","Bb","B",
@@ -1635,6 +1693,7 @@ function openPlayer(id, ctx, atLast){   // atLast: abrir na ÚLTIMA página (ao 
   $("#scrollbar-toggle").classList.toggle("on",!!settings.showScrollbar); $("#scrollbar-toggle").setAttribute("aria-pressed",String(!!settings.showScrollbar));
   $("#checkkey-toggle").classList.toggle("on",!!settings.checkKey); $("#checkkey-toggle").setAttribute("aria-pressed",String(!!settings.checkKey));
   $("#halo-toggle").classList.toggle("on",settings.chordHalo!==false); $("#halo-toggle").setAttribute("aria-pressed",String(settings.chordHalo!==false));
+  $("#wrap-toggle").classList.toggle("on",settings.wrapLines!==false); $("#wrap-toggle").setAttribute("aria-pressed",String(settings.wrapLines!==false));
   $("#p-body").dataset.page=0;   // sempre abre na 1ª página (vale também p/ o modo Apresentar)
   applyReadMode();               // ajusta modo (rolagem/página) e a visibilidade da barra
   if(escalaCtx){
@@ -1698,6 +1757,20 @@ function playTone(freq,dur){ if(!freq) return; dur=dur||1.4;
     const t=_audioCtx.currentTime; g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.28,t+.03); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
     o.connect(g); g.connect(_audioCtx.destination); o.start(t); o.stop(t+dur+.05);
   }catch(e){} }
+// quantas colunas monoespaçadas cabem em #p-body (p/ a quebra em blocos, v0.56.0). Mede o FONT REAL
+// (cobre o fallback offline). Reserva 2 colunas: o acorde tem transform:scale(1.2) e cresce p/ a direita.
+function wrapCols(){
+  const b=$("#p-body");
+  const probe=document.createElement("span");
+  probe.style.cssText="position:absolute;left:-9999px;top:0;visibility:hidden;white-space:pre";
+  probe.textContent="0".repeat(80);
+  b.appendChild(probe);
+  const charW=probe.getBoundingClientRect().width/80;
+  b.removeChild(probe);
+  if(!charW || !isFinite(charW)) return 0;
+  const avail=b.clientWidth-36;   // padding horizontal (18px cada lado) — igual na rolagem e na .page
+  return Math.max(0, Math.floor(avail/charW)-2);
+}
 function drawPlayer(){
   $("#p-title").textContent=current.title;
   const minor=keyIsMinor(current.key), origRoot=keyRoot(current.key);
@@ -1724,7 +1797,17 @@ function drawPlayer(){
   const pn=$("#p-notes"); if(pn){ pn.textContent=note; pn.classList.toggle("hidden",!note); }
   const b=$("#p-body");
   b.style.fontSize=fontSize+"px";
-  const html=renderCifra(current.body, shapeShift(), showChords, ctxShape, !!settings.hideTabs);
+  // Quebra de linha (v0.56.0): quando ligada, transpõe o texto (1 etapa) e parte as linhas longas em
+  // blocos que cabem na largura ANTES do renderCifra (semis=0 = já transposto → saída idêntica quando
+  // nada é partido). Desligada = caminho de sempre (rola pro lado).
+  let html;
+  if(settings.wrapLines!==false){
+    const cols=wrapCols();
+    const shaped=transposeBody(current.body, shapeShift(), ctxShape);
+    html=renderCifra(cols>=8 ? rewrapBody(shaped, cols) : shaped, 0, showChords, ctxShape, !!settings.hideTabs);
+  } else {
+    html=renderCifra(current.body, shapeShift(), showChords, ctxShape, !!settings.hideTabs);
+  }
   if(isPageMode()){ paginate(html); }      // modo página: fatia a saída em páginas medidas
   else{                                     // modo rolagem: bloco <pre> de sempre (intocado)
     b.classList.remove("paged"); b.style.removeProperty("--page-h");
@@ -1800,6 +1883,7 @@ $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings
 $("#checkkey-toggle").onclick=()=>{settings.checkKey=!settings.checkKey;saveSettings();const b=$("#checkkey-toggle");b.classList.toggle("on",!!settings.checkKey);b.setAttribute("aria-pressed",String(!!settings.checkKey));updateKeyCheck();};
 $("#scrollbar-toggle").onclick=()=>{settings.showScrollbar=!settings.showScrollbar;saveSettings();const b=$("#scrollbar-toggle");b.classList.toggle("on",!!settings.showScrollbar);b.setAttribute("aria-pressed",String(!!settings.showScrollbar));applyScrollbar();};
 $("#halo-toggle").onclick=()=>{const on=!(settings.chordHalo!==false);settings.chordHalo=on;saveSettings();const b=$("#halo-toggle");b.classList.toggle("on",on);b.setAttribute("aria-pressed",String(on));drawPlayer();};
+$("#wrap-toggle").onclick=()=>{const on=!(settings.wrapLines!==false);settings.wrapLines=on;saveSettings();const b=$("#wrap-toggle");b.classList.toggle("on",on);b.setAttribute("aria-pressed",String(on));drawPlayer();};
 function exitPlayer(){   // voltar do player — usado pelo ← normal E pelo ← da barra compacta
   stopScroll();
   setImmersive(false);  // sai da tela cheia ao deixar o player (limpa imersivo + fullscreen)
@@ -2064,8 +2148,16 @@ $("#p-body").addEventListener("scroll",()=>{
 /* recalcula a paginação ao girar o aparelho / mudar o tamanho da tela */
 let pgResizeT=null;
 window.addEventListener("resize",()=>{
-  if(view!=="player" || !isPageMode()) return;
-  clearTimeout(pgResizeT); pgResizeT=setTimeout(drawPlayer,200);
+  // re-renderiza ao girar/redimensionar: Modo Página (re-pagina) e também rolagem com "Quebrar linhas"
+  // ligado (recalcula quantas colunas cabem). Preserva a fração de rolagem.
+  if(view!=="player") return;
+  if(!isPageMode() && settings.wrapLines===false) return;
+  clearTimeout(pgResizeT);
+  pgResizeT=setTimeout(()=>{
+    const b=$("#p-body"), scroll=!isPageMode(), frac=(scroll && b.scrollHeight)?b.scrollTop/b.scrollHeight:0;
+    drawPlayer();
+    if(scroll && frac) b.scrollTop=frac*b.scrollHeight;
+  },200);
 });
 
 /* ---------- Editor ---------- */

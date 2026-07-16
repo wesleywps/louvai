@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.55.0**.
+seguir. Atualizado até a **v0.56.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -127,6 +127,7 @@ instalação complexa.
 | **v0.53.0** | recurso | **Salvar edição com escolha + salvar o tom transposto:** editar com mudança → folha **Sobrescrever / Salvar como nova** (título desambiguado "(Tom D)"/"(cópia)"); e transpor no player agora tem **"Salvar tom/capo"** no ⚙ (grava o tom no corpo — Sobrescrever ou nova). Honesto: *Sobrescrever* muda o tom em toda escala que herda o tom, e com capô a grafia enarmônica pode mudar (mesmo som). Só no player normal (na Apresentação o tom é do item; *salvar o tom na escala* fica p/ depois). `transposeBody` (gêmea do `renderCifra`), `songChanged`, `cloneSong` (usado no `dupSong`). Validado adversarialmente (força bruta na grafia + medição). |
 | **v0.54.0** | recurso | **Tema Laranja + brilho dos acordes ajustável:** feedback de campo — o halo dos acordes vazava entre acordes empilhados (pior com o acorde maior da v0.52.0) e faltava um tema p/ pouca luz. Halo reduzido (14px→6px) + interruptor **"Brilho dos acordes"** no ⚙ (desliga; `settings.chordHalo`); e novo tema **Laranja** (fundo escuro + acento/acordes laranja, leitura fácil no palco). O botão de tema virou **seletor** (folha Escuro/Claro/Laranja). `.orange`, `applyTheme`/`openThemeSheet`, `--chord-halo-r`/`.no-halo`. |
 | **v0.55.0** | correção | **Acordes empilhados não se sobrepõem + interruptor tira o chip:** medindo com Playwright, a "sobreposição do sombreamento" era o **chip de fundo** — o `inline-block` da v0.52.0 fez o chip herdar o line-height 1.85 (~33px), então acordes um embaixo do outro se encostavam (gap −5,5px). `line-height:1.1` no `.chord` encolhe o chip (gap +11,7px) e o interruptor "Brilho dos acordes" passa a remover **halo E chip** (`text-shadow/background:none`). O teste agora clica o botão real e mede a geometria. |
+| **v0.56.0** | recurso | **Quebra de linha automática:** ao ampliar a cifra, linha longa não some mais pro lado — quebra em **blocos** que cabem, mantendo o visual de colunas (acorde por cima da letra); no Modo Página gera mais páginas, em rolagem mais linhas. Acorde nunca é cortado. Interruptor **"Quebrar linhas"** no ⚙ (padrão ligado). `rewrapBody` (pura, roda antes do `renderCifra` intacto) + `wrapCols` (mede colunas) + reusa `transposeBody`. Validado no Playwright (rolagem fonte 26 sem transbordo; Página 2→5). |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -338,4 +339,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.55.0.*
+*Última atualização deste roteiro: v0.56.0.*

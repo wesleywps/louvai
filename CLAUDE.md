@@ -161,6 +161,9 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
 - `docs/planos/PLANO-salvar-edicao-e-fonte.md` — salvar edição com escolha (sobrescrever/nova) + salvar o
   **tom transposto** no player + **acordes ~20% maiores** — **implementado (Inc.1 v0.52.0, Inc.2 v0.53.0)**,
   validado adversarialmente (3 lentes). Follow-up: salvar o tom **na escala** (`it.key`).
+- `docs/planos/PLANO-quebra-de-linha.md` — quebra de linha automática ao ampliar (não esconder a cifra):
+  parte o par acorde+letra em blocos que cabem, mantendo colunas — **implementado na v0.56.0**
+  (`rewrapBody`/`wrapCols`, validado no Playwright).
 - `docs/planos/PLANO-ui.md` — polimento de UI/ícones em **ondas**, **concluído (v0.28.0→v0.36.1)**: Onda 1
   (ganhos rápidos + ícone do Backup, v0.28.0); Onda 2 (ícones SVG inline via `ICONS`/`icon()`,
   v0.29.0); Onda 3 = M2 ⚙ seções (v0.30.0) · M4 linguagem de card (v0.31.0) · M5 `#reposheet`
@@ -364,6 +367,16 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   Halo com raio `--chord-halo-r` (**6px**, era 14px). Toggle **"Brilho dos acordes"** (`#halo-toggle`,
   `settings.chordHalo`) → `.cifra.no-halo .chord{text-shadow:none;background:none}` (tira brilho **e**
   chip; aplicado no `drawPlayer`, estado setado no `openPlayer`).
+- **Quebra de linha automática (v0.56.0):** ao ampliar, a linha longa não some pro lado — quebra em
+  **blocos** que cabem, mantendo o alinhamento acorde-sobre-letra. Função PURA **`rewrapBody(texto,cols)`**
+  (roda ANTES do `renderCifra`, que NÃO muda — regra nº3): corta o par (acorde, letra) nos MESMOS limites
+  de coluna (`chunkPair`, prioriza não partir acorde e prefere fim de palavra; `chunkOne` p/ linha só;
+  seção/tab/linha-que-cabe passam intactas). **`wrapCols()`** mede quantas colunas cabem (mede o font
+  real; reserva colunas p/ o `scale(1.2)` do acorde). No `drawPlayer`, com `settings.wrapLines!==false`:
+  `renderCifra(rewrapBody(transposeBody(body,shapeShift(),ctx), cols), 0, …)` — transpõe em 1 etapa, então
+  **saída idêntica** quando nada é partido. Toggle **"Quebrar linhas"** (`#wrap-toggle`, padrão ligado);
+  `resize` re-renderiza também em rolagem quando ligado (preserva a fração). Paginação segue de graça
+  (`paginate` mede a altura real). Validado no Playwright (sem transbordo; Página 2→5).
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).
@@ -437,8 +450,9 @@ abrir, sem sobrepor a cifra/o compartilhar (v0.51.2); e a cifra **abre no capotr
 aparece na exibição, não só na edição (v0.51.3). Depois: **acordes ~20% maiores** que a letra (escala
 visual, sem desalinhar, v0.52.0) e **salvar edição com escolha** — sobrescrever/salvar como nova no
 editor **e** salvar o tom transposto no player (`transposeBody`, v0.53.0), **tema Laranja** (palco/pouca
-luz) + **brilho dos acordes** reduzido/desligável (v0.54.0). *Follow-up de campo aberto:* salvar o tom
-**na escala** (`it.key`), o gesto do ensaio.
+luz) + **brilho dos acordes** reduzido/desligável (v0.54.0), correção da sobreposição do chip do acorde
+(v0.55.0) e **quebra de linha automática** ao ampliar — a cifra não some pro lado (v0.56.0). *Follow-up
+de campo aberto:* salvar o tom **na escala** (`it.key`), o gesto do ensaio.
 Ver os `PLANO-*.md`.
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
 1. ✅ **Validação visual no celular** (dark/light) — **concluída (2026-06-26)**; o app está **em teste de

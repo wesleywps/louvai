@@ -8,6 +8,27 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.56.0 — Quebra de linha automática: a cifra não some pro lado ao ampliar
+**Recurso (uso ao vivo, validado com Playwright).** Ao ampliar a cifra com a pinça, quando a linha
+passava da largura da tela, **letra e acordes sumiam pro lado** (só dava pra ver rolando na horizontal).
+Agora a linha longa **quebra em blocos** que cabem na tela — e isso reflete na leitura: no **Modo Página**
+gera mais páginas; em **rolagem**, mais linhas. Nada fica escondido.
+- **Mantém o visual de colunas:** cada bloco preserva os acordes alinhados por cima da letra (estilo
+  Cifra Club) — a linha só é partida em pedaços que cabem. **Acorde nunca é cortado** no meio.
+- **Interruptor "Quebrar linhas"** no ⚙ (Leitura), **ligado por padrão**. Desligado, volta ao
+  comportamento antigo (rola pro lado). Persiste (`settings.wrapLines`).
+- **Reflete na paginação/rolagem sozinho:** medido no Playwright — fonte 26 em rolagem **não transborda**
+  (overflowX 0px); no Modo Página, ampliar a fonte foi de **2 → 5 páginas**.
+- **Por dentro:** função PURA `rewrapBody(texto, cols)` roda ANTES do `renderCifra` (que **não muda** —
+  regra nº3): parte o par (acorde, letra) nos MESMOS limites de coluna, priorizando não cortar acorde e
+  preferindo fim de palavra. `wrapCols()` mede quantas colunas cabem (mede o font real; reserva colunas
+  p/ o acorde `scale(1.2)`). Reusa `transposeBody` (transpõe em 1 etapa → saída idêntica quando nada é
+  partido). O `resize` passou a re-renderizar também em rolagem quando ligado.
+- **371 verificações** (8 novas: `rewrapBody` puro + medição real de transbordo/páginas + clique real do
+  interruptor), zero erro de JS.
+
+---
+
 ## v0.55.0 — Correção: acordes empilhados não se sobrepõem + interruptor tira o chip
 **Correção (uso ao vivo, validada com Playwright).** Reporte de campo: o interruptor **"Brilho dos
 acordes"** (v0.54.0) "não removia o brilho" e a **sobreposição** entre acordes continuava. Medindo com
