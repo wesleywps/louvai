@@ -348,9 +348,12 @@ PLANO atualizado se aplicável · `npm test` verde · **`npm run deploy`** (a Ac
   `.light` e `.orange` (laranja = fundo escuro + acento/acorde/seção laranjas, p/ pouca luz; herda o
   resto do escuro). `settings.theme` (`dark`/`light`/`orange`), `applyTheme` (classe + `theme-color` via
   `THEME_META`) e `openThemeSheet` (folha "Tema"; o `#themeBtn` virou **seletor**, ícone `sun-moon`).
-  **Halo** do acorde: raio `--chord-halo-r` (**6px**, era 14px — não vaza entre acordes empilhados) +
-  toggle **"Brilho dos acordes"** (`#halo-toggle`, `settings.chordHalo`) → `.cifra.no-halo .chord{
-  text-shadow:none}` (aplicado no `drawPlayer`, estado setado no `openPlayer`).
+  **Chip/halo do acorde:** o `.chord` é `inline-block` (p/ o transform) com **`line-height:1.1`** —
+  senão o chip de fundo (`--chord-bg`) herdaria o `line-height` 1.85 da cifra (~33px) e chips de acordes
+  **empilhados** se sobrepõem (regressão da v0.52.0, corrigida na v0.55.0 — medido com Playwright).
+  Halo com raio `--chord-halo-r` (**6px**, era 14px). Toggle **"Brilho dos acordes"** (`#halo-toggle`,
+  `settings.chordHalo`) → `.cifra.no-halo .chord{text-shadow:none;background:none}` (tira brilho **e**
+  chip; aplicado no `drawPlayer`, estado setado no `openPlayer`).
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).

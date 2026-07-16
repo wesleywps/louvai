@@ -2042,20 +2042,37 @@ await page.locator("#sheetbg").click({ position: { x: 10, y: 10 } });
 await page.waitForTimeout(150);
 ok(themeSheetChk === 3, "Seletor de tema: a folha abre com 3 opções (Escuro/Claro/Laranja)");
 
-// halo dos acordes: ligado tem text-shadow (raio ~6px, era 14px); desligar remove
+// halo/chip dos acordes: (a) chip de acordes EMPILHADOS não se sobrepõe; (b) o interruptor REAL
+// (clique no #halo-toggle) remove o brilho E o chip. Mede a geometria (regressão da v0.52.0).
 const haloChk = await page.evaluate(() => {
-  settings.readMode = "scroll"; settings.chordHalo = true; openPlayer("chordscaletest");
-  const csOn = getComputedStyle(document.querySelector("#p-body .chord")).textShadow;
-  settings.chordHalo = false; drawPlayer();
-  const cls = document.getElementById("p-body").classList.contains("no-halo");
-  const csOff = getComputedStyle(document.querySelector("#p-body .chord")).textShadow;
-  settings.chordHalo = true; drawPlayer();
-  return { csOn, csOff, cls };
+  const body = "C     G     D\nF     A     E\nMinha letra aqui";   // 2 linhas de acorde empilhadas
+  const ex = songs.find(s => s.id === "halostack");
+  const song = { id: "halostack", title: "Halo Stack", key: "C", capo: 0, tags: [], updatedAt: 1, body };
+  if (ex) Object.assign(ex, song); else songs.push(song);
+  delete settings.chordHalo; saveSongs(); settings.readMode = "scroll"; openPlayer("halostack");
+  const ch = [...document.querySelectorAll("#p-body .chord")];
+  const c = ch.find(x => x.textContent === "C"), f = ch.find(x => x.textContent === "F");
+  const gap = f.getBoundingClientRect().top - c.getBoundingClientRect().bottom;
+  const cs = getComputedStyle(c);
+  return { gap, csOn: cs.textShadow, boxH: c.getBoundingClientRect().height };
 });
-ok(haloChk.csOn !== "none" && haloChk.csOn !== "", "Brilho dos acordes: ligado tem text-shadow (halo)");
-ok(haloChk.csOn.includes("6px"), "Brilho dos acordes: raio do halo reduzido (~6px, era 14px)");
-ok(haloChk.cls && haloChk.csOff === "none",
-   "Brilho dos acordes: desligar (chordHalo=false) remove o text-shadow (#p-body.no-halo)");
+ok(haloChk.gap > 0, "Acordes empilhados: o chip NÃO se sobrepõe verticalmente (gap " + haloChk.gap.toFixed(1) + "px > 0)");
+ok(haloChk.csOn !== "none" && haloChk.csOn.includes("6px"), "Brilho dos acordes: ligado, halo ~6px (era 14px)");
+// clica o INTERRUPTOR REAL (abre o ⚙ e clica no botão — caminho do usuário, não settings direto)
+await page.evaluate(() => openPlayerSheet());
+await page.waitForTimeout(200);
+await page.locator("#halo-toggle").click();
+await page.waitForTimeout(200);
+const haloOff = await page.evaluate(() => {
+  const c = [...document.querySelectorAll("#p-body .chord")].find(x => x.textContent === "C");
+  const cs = getComputedStyle(c);
+  return { noHalo: document.getElementById("p-body").classList.contains("no-halo"),
+           shadow: cs.textShadow, bg: cs.backgroundColor, saved: settings.chordHalo };
+});
+await page.evaluate(() => closePlayerSheet());
+ok(haloOff.noHalo && haloOff.shadow === "none", "Interruptor 'Brilho dos acordes' (clique REAL): remove o text-shadow");
+ok(/rgba\(0, 0, 0, 0\)|transparent/.test(haloOff.bg), "Interruptor 'Brilho dos acordes' (clique REAL): remove também o chip de fundo");
+ok(haloOff.saved === false, "Interruptor persiste settings.chordHalo=false");
 
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));

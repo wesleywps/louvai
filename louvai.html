@@ -279,8 +279,10 @@ body.light .keyhint{color:#b45309}
   /* acorde ~20% maior que a letra SEM mexer no layout: transform é visual, a caixa continua 1.0×
      (colunas monoespaçadas preservadas); origem "left bottom" fixa a borda esquerda (coluna) e cresce
      só p/ cima (não recorta na base da página nem invade a letra abaixo). --chord-scale p/ ajustar. */
-  display:inline-block;transform:scale(var(--chord-scale,1.2));transform-origin:left bottom}
-.cifra.no-halo .chord{text-shadow:none}   /* "Brilho dos acordes" desligado (v0.54.0) */
+  display:inline-block;line-height:1.1;transform:scale(var(--chord-scale,1.2));transform-origin:left bottom}
+  /* line-height:1.1 no chip: o inline-block (necessário p/ o transform) fica curto — senão o chip de
+     fundo herda o line-height 1.85 da cifra (~33px) e chips de acordes empilhados se sobrepõem (v0.55.0). */
+.cifra.no-halo .chord{text-shadow:none;background:none}   /* "Brilho dos acordes" off: sem halo E sem chip (v0.54.0/0.55.0) */
 .cifra .sec{color:var(--section);font-weight:700;font-style:normal;
   display:inline-block;margin-top:6px}
 .cifra .lyr{color:var(--lyric)}
@@ -868,7 +870,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.54.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.55.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];

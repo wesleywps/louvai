@@ -8,6 +8,24 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.55.0 — Correção: acordes empilhados não se sobrepõem + interruptor tira o chip
+**Correção (uso ao vivo, validada com Playwright).** Reporte de campo: o interruptor **"Brilho dos
+acordes"** (v0.54.0) "não removia o brilho" e a **sobreposição** entre acordes continuava. Medindo com
+o Playwright, a causa real apareceu — **não era o halo, era o chip de fundo do acorde**. O
+`display:inline-block` adotado na v0.52.0 (p/ o acorde 20% maior) fez o chip **herdar o `line-height`
+da cifra** (1.85 → ~33px de altura), então os chips de acordes **um embaixo do outro** se encostavam
+(gap vertical medido: **−5,5px**).
+- **Chip encolhido:** `line-height:1.1` no `.chord` deixa o chip justo ao texto (~20px). Acordes
+  empilhados voltam a ter folga — gap **+11,7px** (medido), sem sobreposição.
+- **Interruptor agora remove tudo:** "Brilho dos acordes" desligado passa a tirar **o brilho E o chip**
+  (`text-shadow:none; background:none`) → vira texto colorido puro, como se esperava.
+- **Honestidade sobre o teste:** o interruptor sempre removeu o `text-shadow`; o que continuava visível
+  era o chip. O teste da v0.54.0 não pegou isso porque mexia em `settings` direto — agora ele **clica o
+  botão real** e **mede a geometria** dos acordes empilhados (gap > 0).
+- **363 verificações** (2 novas), zero erro de JS.
+
+---
+
 ## v0.54.0 — Tema Laranja (palco) + brilho dos acordes ajustável
 **Recursos + correção (uso ao vivo).** Feedback de campo: (a) o **brilho (halo)** dos acordes **vazava**
 — com dois acordes um em cima do outro os halos se sobrepunham (piorou com o acorde 20% maior da
