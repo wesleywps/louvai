@@ -7,3 +7,6 @@ node_modules/
 index.html
 # mensagem de commit temporária (usada p/ evitar problemas de aspas no PowerShell)
 COMMIT_MSG_tmp.txt
+# backups locais do louvai.json VIVO (baixados do remoto a cada deploy) — histórico de dados
+# da equipe na máquina; não versionar (o remoto já é a fonte da verdade). Ver scripts/publish.sh.
+backups/

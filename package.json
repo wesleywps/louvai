@@ -6,7 +6,8 @@
   "description": "App de cifras offline-first para ministério de música (arquivo único HTML).",
   "scripts": {
     "test": "node tests/smoke.mjs",
-    "test:install": "playwright install chromium"
+    "test:install": "playwright install chromium",
+    "deploy": "bash scripts/publish.sh"
   },
   "devDependencies": {
     "playwright": "^1.56.0"
