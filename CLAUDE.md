@@ -83,18 +83,26 @@ arquivo `.json` (cifra, repertório ou escala).
    `git tag vX.Y.Z` (commit de versão direto no branch de trabalho, como o histórico).
    **Nunca** inclua rodapé `Co-Authored-By` (nem outras assinaturas de ferramenta)
    na mensagem de commit — o histórico é em pt-BR e sem co-autoria de assistente.
-6. **Sincronizar o `index.html`** (cópia que o **GitHub Pages serve na raiz**): é uma cópia
-   **verbatim** do `louvai.html` — ao entregar uma versão, copie `louvai.html` por cima do
-   `index.html` para o app hospedado refletir a versão nova. Fica **fora do git** (`.gitignore`),
-   por isso não aparece no `git status` — fácil de esquecer; faz parte do ritual.
+6. **Publicar (GitHub Pages via Action):** com o código já commitado, rode **`npm run deploy`**
+   (= `git push` p/ `github.com/wesleywps/louvai`, branch `main`). A **GitHub Action**
+   (`.github/workflows/deploy.yml`) **gera o `index.html`** a partir do `louvai.html` e publica no
+   Pages em ~1–2 min. **Não** se sobe `index.html` à mão (é gitignored — a Action gera); o `cp
+   louvai.html index.html` local serve só p/ abrir no navegador aqui.
+   - **`louvai.json` (repertório/escalas): o REMOTO é a fonte da verdade** (editado no celular/desktop
+     pelo próprio app). `npm run deploy` **baixa um backup** do `louvai.json` vivo (em `backups/`,
+     ignorado) e **adota o remoto** antes de subir — **nunca** regride os dados da equipe. Se o push
+     for rejeitado (a equipe publicou nesse meio-tempo), rode `npm run deploy` de novo.
+   - **Ativação (uma vez):** `gh auth login` como `wesleywps` + repo → *Settings ▸ Pages ▸ Source =
+     GitHub Actions*.
 
-> **Distribuição é pelo GitHub Pages** (não há mais cópia `louvai-vX.Y.Z.html`): a equipe abre/atualiza
-> o app pelo endereço hospedado, e o `index.html` (passo 6) é o que carrega a versão nova. A versão de
-> qualquer ponto continua recuperável por `git checkout vX.Y.Z` se um dia for preciso um snapshot avulso.
+> **Distribuição é pelo GitHub Pages** (`https://wesleywps.github.io/louvai/`): a equipe abre/atualiza
+> pelo endereço hospedado; o `index.html` que a Action gera carrega a versão nova. A versão de qualquer
+> ponto continua recuperável por `git checkout vX.Y.Z`. (Antes da Action, o `index.html` era subido à
+> mão pela web — ver memória `hosting-github-pages`.)
 
-**Checklist rápido antes do commit:** APP_VERSION = package.json · CHANGELOG tem a
+**Checklist rápido antes de publicar:** APP_VERSION = package.json · CHANGELOG tem a
 versão · ROTEIRO (linha do tempo + rodapé + backlog) coerente · README na versão ·
-PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizado**.
+PLANO atualizado se aplicável · `npm test` verde · **`npm run deploy`** (a Action gera o `index.html`).
 
 ## Como testar
 - **Automático (recomendado):**
