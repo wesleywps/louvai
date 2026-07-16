@@ -140,6 +140,9 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   escala como texto / duplicar) — **implementado na v0.49.0**.
 - `docs/planos/PLANO-escala-texto.md` — escala como texto p/ WhatsApp **com a equipe escalada** (agrupada
   por função) + cabeçalho/momento/observações — **implementado na v0.51.0** (evolui o texto da v0.49.0).
+- `docs/planos/PLANO-salvar-edicao-e-fonte.md` — salvar edição com escolha (sobrescrever/nova) + salvar o
+  **tom transposto** no player + **acordes ~20% maiores** — **implementado (Inc.1 v0.52.0, Inc.2 v0.53.0)**,
+  validado adversarialmente (3 lentes). Follow-up: salvar o tom **na escala** (`it.key`).
 - `docs/planos/PLANO-ui.md` — polimento de UI/ícones em **ondas**, **concluído (v0.28.0→v0.36.1)**: Onda 1
   (ganhos rápidos + ícone do Backup, v0.28.0); Onda 2 (ícones SVG inline via `ICONS`/`icon()`,
   v0.29.0); Onda 3 = M2 ⚙ seções (v0.30.0) · M4 linguagem de card (v0.31.0) · M5 `#reposheet`
@@ -318,6 +321,21 @@ PLANO atualizado se aplicável · `npm test` verde · **`index.html` sincronizad
   **Abre no capo salvo (v0.51.3):** fora da Escala, `openPlayer` inicializa `capo = current.capo||0`
   (antes era `0` fixo — o capotraste só aparecia na edição). Aplica às formas (`shapeShift`) e exibe
   "Capo N (forma em …)" no `#p-sub`. **Na Escala o capo continua vindo do item** (`it.capo`).
+- **Salvar edição com escolha + salvar o tom (v0.53.0):** `songChanged(stored,data)` (comparação
+  **simétrica** dos 8 campos — `safeUrl`/`trim`/`tags` nos dois lados) e `cloneSong(src,over)` (fonte
+  única de clone; `dupSong` passou a usá-la — não esquece `ref`/`notes`). No **editor** (`#e-save`),
+  música existente com mudança → folha `openSheet` **Sobrescrever / Salvar como nova** (título ganha
+  "(Tom X)" se o tom mudou, senão "(cópia)"). No **player**, `#p-savekey`/`#p-savekey-row` (⚙ "Esta
+  música") aparece via `drawPlayer` quando `!escalaCtx && (transp%12!==0 || capo!==(current.capo||0))`
+  — **`!==current.capo`, não `!==0`** (senão volta o bug do capo da v0.51.3). Assa por `transp` (mantém
+  pitch/capo; `body` = acordes no tom soante) via **`transposeBody(body,semis,ctx)`** — gêmea do
+  `renderCifra` (mesmos ramos e o **MESMO regex** `/(\S+)/g` p/ preservar espaços; reusa `isChord`/
+  `transposeChord`, regra nº3). ⚠️ **"Sem salto visual" só com capo 0**; com capô a grafia enarmônica
+  pode ser reescolhida (mesmo som — `Bb`↔`A#`). *Sobrescrever* muda o tom em escalas que herdam o tom;
+  por isso o botão **some na Apresentação** (o tom por-culto é do `it.key` — *salvar na escala* é
+  follow-up). **Acordes ~20% maiores (v0.52.0):** `.cifra .chord` ganhou `display:inline-block;
+  transform:scale(var(--chord-scale,1.2));transform-origin:left bottom` — puramente visual (colunas e
+  paginação intactas, provado empiricamente); `--chord-scale` ajusta a proporção.
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).
@@ -388,7 +406,10 @@ da cifra com tamanho persistido (v0.50.0) e **escala como texto p/ WhatsApp com 
 **Correções de campo (v0.51.1–v0.51.3, primeiro feedback do ministério):** o ⚙ Ajustes ganhou teto
 de altura + rolagem e não cobre mais a tela (v0.51.1); Editar/Enviar **recolhem** o painel antes de
 abrir, sem sobrepor a cifra/o compartilhar (v0.51.2); e a cifra **abre no capotraste salvo** — o capo
-aparece na exibição, não só na edição (v0.51.3).
+aparece na exibição, não só na edição (v0.51.3). Depois: **acordes ~20% maiores** que a letra (escala
+visual, sem desalinhar, v0.52.0) e **salvar edição com escolha** — sobrescrever/salvar como nova no
+editor **e** salvar o tom transposto no player (`transposeBody`, v0.53.0). *Follow-up de campo aberto:*
+salvar o tom **na escala** (`it.key`), o gesto do ensaio.
 Ver os `PLANO-*.md`.
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
 1. ✅ **Validação visual no celular** (dark/light) — **concluída (2026-06-26)**; o app está **em teste de

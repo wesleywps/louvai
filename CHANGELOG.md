@@ -8,6 +8,42 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.53.0 — Salvar edição com escolha (sobrescrever ou nova) + salvar o tom transposto
+**Recurso (uso ao vivo).** Pedido de campo do ministério: ao editar uma cifra e mudar algo, faltava
+escolher entre **sobrescrever** a música ou **guardar uma nova** — e, principalmente, ao **transpor**
+no player ("precisei mudar o tom") não havia como **salvar** aquilo (a transposição era sempre
+temporária). Agora dá para as duas coisas, sem sair do fluxo.
+- **No editor (lápis):** ao salvar uma música existente **com alterações**, aparece a folha
+  **Sobrescrever esta música** / **Salvar como nova música**. "Salvar como nova" desambigua o título
+  sozinho: **"(Tom D)"** quando você mudou a tonalidade, **"(cópia)"** caso contrário. Sem alteração
+  (ou cifra nova) salva direto, como antes. (Fiel ao "nada salvo no escuro".)
+- **No player, ao transpor:** surge **"Salvar tom/capo"** no ⚙ (seção *Esta música*) assim que você
+  **transpõe** ou **muda o capo**. Toca e escolhe **Sobrescrever** (grava o tom novo na própria música)
+  ou **Salvar como nova** (ex.: "Oceanos (Tom D)", mantendo a original). O tom transposto é **gravado
+  no corpo** da cifra — reabrir já mostra o tom novo.
+- **Honesto (o que a confirmação avisa):** *Sobrescrever* regrava os acordes na música e, por tabela,
+  muda o tom em **toda escala que herda o tom** daquela música (item de escala sem tom próprio) —
+  igual ao que trocar a tonalidade no editor sempre fez. Com **capô**, a **grafia** de um acorde pode
+  ser reescolhida (ex.: `Bb`↔`A#`) — é enarmônico, **mesmo som, mesma forma** (com capo 0 a grafia é
+  idêntica). Por isso *Salvar como nova* (que preserva a original) é o caminho mais conservador.
+- **Só no player normal:** durante a **Apresentação** o botão não aparece — ali o tom é do **item da
+  escala** (evita mudar a música no meio do culto). *Salvar o tom **na escala** fica como próximo passo.*
+- **Por dentro:** `transposeBody(body,semis,ctx)` (gêmea do `renderCifra` — mesmos ramos e o **mesmo
+  regex** `/(\S+)/g`, preserva os espaços; reusa `isChord`/`transposeChord`, regra nº3); `songChanged`
+  (comparação **simétrica** dos 8 campos); `cloneSong` (fonte única de clone — `dupSong` passou a usá-la,
+  não esquece `ref`/`notes`); folha via `openSheet`; `#p-savekey` + toggle no `drawPlayer`
+  (`capo!==current.capo`, não `!==0`, senão reapareceria o bug do capo da v0.51.3).
+- **Validado adversarialmente** (3 lentes céticas, com força bruta na grafia e medição em Chromium):
+  derrubou a promessa ingênua de "sem salto visual com capô" (2968 divergências enarmônicas) → virou
+  garantia honesta por **pitch**; pegou o risco de `transposeBody` colapsar espaços e de transpor um
+  token de acorde "pelado" na letra (`"[G] E aí"` mantém o "E").
+- **Teste de regressão:** `transposeBody` **===** `renderCifra` sem os `<span>` (cobre todos os ramos);
+  `songChanged` simétrico; folha real (editor e player) via cliques; capo salvo → botão escondido ao
+  abrir (âncora v0.51.3); *Sobrescrever* com capo 0 sem salto; "conferir tom" coerente após assar.
+  **354 verificações** (22 novas), zero erro de JS.
+
+---
+
 ## v0.52.0 — Acordes ~20% maiores que a letra (mais fáceis de ver no palco)
 **Recurso (uso ao vivo).** Pedido de campo do ministério: o acorde tinha o **mesmo tamanho** da letra
 e "sumia" no meio do texto. Agora ele é renderizado **~20% maior** — destaque para a informação que o

@@ -3,7 +3,11 @@
 > **Como retomar:** abra o Claude Code nesta pasta e peça
 > *"vamos executar o PLANO-salvar-edicao-e-fonte.md"*.
 >
-> **Status: 🟡 EM ANDAMENTO** (app na v0.51.3 ao planejar). Pedido de campo do ministério
+> **Status: ✅ CONCLUÍDO.** Inc.1 entregue na **v0.52.0** (acordes ~20% maiores); Inc.2 na **v0.53.0**
+> (salvar edição com escolha + salvar o tom transposto). Suíte: **354 verificações**, zero erro de JS.
+> Follow-up em aberto: *salvar o tom **na escala*** (`it.key`) — ver "Fora de escopo".
+>
+> _(Planejado com app na v0.51.3.)_ Pedido de campo do ministério
 > (culto de 2026-07-15): (1) ao editar uma cifra e mudar algo (tom, capo, anotações, corpo),
 > um **modal de escolha** — *sobrescrever* a música ou *salvar como nova* (ex.: "musica1 Tom G" e
 > "musica1 Tom D"); (2) **acordes pequenos** em relação à letra — aumentar a proporção.

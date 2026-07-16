@@ -18,7 +18,8 @@ e sem backend: abre no navegador do celular/tablet e compartilha por arquivo ou 
   **acordes ~20% maiores** que a letra (mais fáceis de ver, sem desalinhar),
   navegação pela **estrutura** da música, **ajuste da fonte por pinça** (dois dedos, sem abrir
   menu; o tamanho fica lembrado) e **tela sempre acesa** (Wake Lock).
-- **📚 Repertório** — busca e tags, criar/editar/excluir, **importar colando do Cifra Club**,
+- **📚 Repertório** — busca e tags, criar/editar/excluir com **escolha ao salvar** (sobrescrever ou
+  **salvar como nova** — ex.: a mesma música em outro tom), **importar colando do Cifra Club**,
   **"última vez que tocamos"** e **ordenar** por alfabética / recentes / **menos tocadas**
   (dá vez ao que está esquecido). Importar **avisa antes de duplicar** título repetido.
   **Link da versão guia** (YouTube) por música, que **sincroniza** com a equipe.
@@ -35,7 +36,7 @@ e sem backend: abre no navegador do celular/tablet e compartilha por arquivo ou 
   conferência opcional do **tom pelos acordes**, importação à prova de arquivo malformado
   (sem XSS) e **acessível** (foco por teclado, contraste no escuro, alvos de toque grandes).
 
-*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.52.0**.*
+*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.53.0**.*
 
 ## Usar
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"** — desde a

@@ -1850,6 +1850,175 @@ const inc1pg = await page.evaluate(() => {
 ok(inc1pg.a >= 2 && inc1pg.a === inc1pg.b,
    "Inc.1: mudar --chord-scale (2.6×) NÃO altera a paginação (transform é layout-neutro)");
 
+// ===== v0.53.0 — Salvar edição com escolha + salvar o tom no player (Inc.2) =====
+
+// A) transposeBody: prova de equivalência com renderCifra SEM os <span> (mesma classificação de
+//    linha e mesma transposição) — cobre todos os ramos de uma vez (a armadilha do "renderer gêmeo").
+const tbEquiv = await page.evaluate(() => {
+  const body = [
+    "[Intro] C  G  Am  F  |  x2",   // [Seção] + acordes (com token neutro)
+    "Amei [C]porque [G]sim",        // letra com [C] inline
+    "[G] E aí, tudo bem",           // [G] inline; o "E" solto NÃO pode ser transposto
+    "E|--0--2--3--|",               // tablatura crua (fica intacta)
+    "[Refrão]",                     // seção sozinha
+    "C   G   D",                    // linha só de acordes
+  ].join("\n");
+  const ctx = spellCtx("C", 2);
+  const strip = h => h.replace(/<span class="[^"]*">/g, "").replace(/<\/span>/g, "");
+  return { r: strip(renderCifra(body, 2, true, ctx, false)), tb: transposeBody(body, 2, ctx) };
+});
+ok(tbEquiv.r === tbEquiv.tb,
+   "transposeBody === renderCifra sem os <span> (mesmos ramos: seção+acordes, [C] inline, 'E' solto, tab)");
+const tbMore = await page.evaluate(() => ({
+  bare: transposeBody("[G] E aí", 2, spellCtx("C", 2)),
+  ident: transposeBody("C  G  Am", 12, spellCtx("C", 12)),
+  round: transposeBody(transposeBody("C  G  Am  F", 2, spellCtx("C", 2)), -2, spellCtx("D", -2)),
+  spaces: transposeBody("C   G   D", 2, spellCtx("C", 2)),
+}));
+ok(tbMore.bare === "[A] E aí", "transposeBody: 'E' solto na letra fica intacto (só o [G] transpõe)");
+ok(tbMore.ident === "C  G  Am", "transposeBody: múltiplo de 12 devolve o corpo idêntico (grafia preservada)");
+ok(tbMore.round === "C  G  Am  F", "transposeBody: round-trip (+2 depois −2) volta ao equivalente");
+ok(tbMore.spaces === "D   A   E", "transposeBody: transposição de mesma largura preserva o alinhamento");
+
+// B) songChanged: normalização simétrica dos 2 lados
+const chg = await page.evaluate(() => {
+  const base = { title:"X", artist:"A", key:"G", capo:0, ref:"", notes:"n", body:"G  C", tags:["a","b"] };
+  const chk = over => songChanged(base, Object.assign({}, base, over));
+  return {
+    none: songChanged(base, Object.assign({}, base)),
+    all: chk({title:"Y"}) && chk({artist:"B"}) && chk({key:"D"}) && chk({capo:2})
+         && chk({ref:"https://y.tube"}) && chk({notes:"m"}) && chk({body:"G  D"}) && chk({tags:["a"]}),
+    normalized: songChanged(base, Object.assign({}, base, { tags:["a"," b "] })),  // ['a','b'] normalizado
+  };
+});
+ok(chg.none === false, "songChanged: sem alteração → false (não abre folha à toa)");
+ok(chg.all === true, "songChanged: detecta mudança em cada um dos 8 campos");
+ok(chg.normalized === false, "songChanged: tags só com espaço extra → sem mudança (normalização simétrica)");
+
+// C) cloneSong preserva TODOS os campos (ref/notes) — fonte única do clone
+const clone = await page.evaluate(() => {
+  const src = { id:"orig", title:"T", artist:"A", key:"G", capo:1, ref:"https://y.tube/x", notes:"obs", body:"G", tags:["t1"] };
+  const c = cloneSong(src, { title:"T (cópia)" });
+  return c.id!==src.id && c.title==="T (cópia)" && c.ref===src.ref && c.notes===src.notes
+      && c.capo===src.capo && c.tags.join()==="t1" && c.tags!==src.tags;
+});
+ok(clone, "cloneSong: id novo + título sobrescrito; ref/notes/capo preservados; tags é cópia (não a mesma ref)");
+
+// D) Fluxo B — visibilidade do "Salvar tom/capo"
+const skVis = await page.evaluate(() => {
+  const id = "savekeytest";
+  const song = { id, title:"Salvar Tom", key:"G", capo:2, tags:[], updatedAt:1, body:"G  C  D\nletra" };
+  const ex = songs.find(s => s.id===id); if (ex) Object.assign(ex, song); else songs.push(song);
+  saveSongs();
+  const disp = () => document.getElementById("p-savekey-row").style.display;
+  openPlayer(id);            const onOpen = disp();      // abre no capo salvo (transp0/capo2) → escondido
+  transposeBy(1);            const onTransp = disp();    // transpôs → visível
+  transposeBy(-1);           const backToKey = disp();   // voltou ao tom (capo intacto) → escondido
+  capo = 3; drawPlayer();    const onCapo = disp();       // só o capo mudou → visível
+  capo = 2;
+  openPlayer(id, { id:"e", idx:0, list:[{ songId:id, key:"A", capo:2 }] }); const inPresent = disp(); // escala → escondido
+  openPlayer(id);            // limpa o estado de escala
+  return { onOpen, onTransp, backToKey, onCapo, inPresent };
+});
+ok(skVis.onOpen === "none", "Fluxo B: música com capo salvo abre com 'Salvar tom/capo' ESCONDIDO (âncora v0.51.3)");
+ok(skVis.onTransp !== "none", "Fluxo B: ao transpor, 'Salvar tom/capo' aparece");
+ok(skVis.backToKey === "none", "Fluxo B: voltar ao tom salvo (capo intacto) esconde de novo");
+ok(skVis.onCapo !== "none", "Fluxo B: mudar só o capo também mostra 'Salvar tom/capo'");
+ok(skVis.inPresent === "none", "Fluxo B: na Apresentação (escalaCtx) o botão fica escondido");
+
+// E) Fluxo B — "Sobrescrever" pelo HANDLER REAL (botão → folha → item), capo=0: corpo assado, sem salto
+await page.evaluate(() => {
+  const id = "baketest2";
+  const song = { id, title:"Assar2", key:"C", capo:0, tags:[], updatedAt:1, body:"C  G  Am  F\nletra" };
+  const ex = songs.find(s => s.id===id); if (ex) Object.assign(ex, song); else songs.push(song);
+  saveSongs(); settings.readMode = "scroll"; openPlayer(id); transposeBy(2);
+});
+await page.waitForTimeout(120);
+const beforeUI = await page.evaluate(() => document.getElementById("p-body").innerHTML);
+await page.evaluate(() => $("#p-savekey").click());   // abre a folha de escolha
+await page.waitForTimeout(200);
+const sheetBcount = await page.locator("#sheet .sheetitem").count();
+await page.locator("#sheet .sheetitem").first().click();   // Sobrescrever
+await page.waitForTimeout(200);
+const ovUI = await page.evaluate(() => {
+  const s = songs.find(x => x.id==="baketest2");
+  return { key:s.key, bodyOk:/D  A  Bm  G/.test(s.body), after:document.getElementById("p-body").innerHTML };
+});
+ok(sheetBcount >= 2, "Fluxo B: tocar 'Salvar tom/capo' abre a folha (Sobrescrever / Salvar como nova)");
+ok(ovUI.key === "D" && ovUI.bodyOk, "Fluxo B Sobrescrever (handler real): key→D e o corpo é assado (C G Am F → D A Bm G)");
+ok(ovUI.after === beforeUI, "Fluxo B Sobrescrever (capo=0): sem salto visual — #p-body idêntico antes/depois");
+
+// F) Fluxo A (editor): mudar o corpo → folha; "Salvar como nova" cria 2ª música
+await page.evaluate(() => {
+  const id = "editchoicetest";
+  const song = { id, title:"Editar Escolha", key:"G", capo:0, tags:[], ref:"", notes:"", updatedAt:1, body:"G  C" };
+  const ex = songs.find(s => s.id===id); if (ex) Object.assign(ex, song); else songs.push(song);
+  saveSongs(); openEditor(id);
+});
+await page.waitForTimeout(120);
+await page.fill("#e-body", "G  C  D");
+const beforeA = await page.evaluate(() => songs.filter(s => s.title.startsWith("Editar Escolha")).length);
+await page.click("#e-save"); await page.waitForTimeout(200);
+const sheetAcount = await page.locator("#sheet .sheetitem").count();
+await page.locator("#sheet .sheetitem").nth(1).click();   // Salvar como nova
+await page.waitForTimeout(200);
+const afterA = await page.evaluate(() => {
+  const list = songs.filter(s => s.title.startsWith("Editar Escolha"));
+  return { n:list.length, hasCopy:list.some(s => /\(cópia\)$/.test(s.title)) };
+});
+ok(sheetAcount >= 2, "Fluxo A: editar o corpo e Salvar abre a folha (Sobrescrever / Salvar como nova)");
+ok(afterA.n === beforeA + 1 && afterA.hasCopy, "Fluxo A 'Salvar como nova' (só corpo): cria 2ª música com sufixo '(cópia)'");
+
+// F2) Fluxo A — tom mudado → sufixo "(Tom X)"
+await page.evaluate(() => {
+  const id = "editkeytest";
+  const song = { id, title:"Tom Muda", key:"G", capo:0, tags:[], ref:"", notes:"", updatedAt:1, body:"G  C" };
+  const ex = songs.find(s => s.id===id); if (ex) Object.assign(ex, song); else songs.push(song);
+  saveSongs(); openEditor(id);
+});
+await page.waitForTimeout(100);
+await page.selectOption("#e-key", "D");
+await page.click("#e-save"); await page.waitForTimeout(200);
+await page.locator("#sheet .sheetitem").nth(1).click();   // Salvar como nova
+await page.waitForTimeout(200);
+const tomNew = await page.evaluate(() => songs.some(s => s.title === "Tom Muda (Tom D)"));
+ok(tomNew, "Fluxo A 'Salvar como nova' com tom mudado: título vira 'Tom Muda (Tom D)'");
+
+// G) Fluxo A — salvar SEM mudar nada → sem folha, sem duplicata
+await page.evaluate(() => {
+  const id = "nochangetest";
+  const song = { id, title:"Sem Mudança", key:"G", capo:0, tags:[], ref:"", notes:"", updatedAt:1, body:"G  C" };
+  const ex = songs.find(s => s.id===id); if (ex) Object.assign(ex, song); else songs.push(song);
+  saveSongs(); openEditor(id);
+});
+await page.waitForTimeout(100);
+await page.click("#e-save"); await page.waitForTimeout(200);
+const nochange = await page.evaluate(() => ({
+  sheetShown: document.getElementById("sheet").classList.contains("show"),
+  n: songs.filter(s => s.title.startsWith("Sem Mudança")).length,
+}));
+ok(!nochange.sheetShown && nochange.n === 1, "Fluxo A: salvar sem alterar nada → sem folha, sem duplicata");
+
+// H) "Conferir tom": continua coerente após assar (detectKey é por pitch-class, insensível à grafia)
+const ckCoh = await page.evaluate(() => {
+  settings.checkKey = true;
+  const id = "ckcohtest";
+  const song = { id, title:"Coerência Tom", key:"C", capo:0, tags:[], updatedAt:1, body:"C  F  G  C" };
+  const ex = songs.find(s => s.id===id); if (ex) Object.assign(ex, song); else songs.push(song);
+  saveSongs(); openPlayer(id);
+  const beforeAlarm = !document.getElementById("keycheck").classList.contains("hidden");
+  transposeBy(2);
+  const s = songs.find(x => x.id===id), ctx = spellCtx(s.key, transp);
+  s.body = transposeBody(s.body, transp, ctx);
+  s.key = transposeNote(keyRoot(s.key), transp, ctx) + (keyIsMinor(s.key) ? "m" : "");
+  transp = 0; saveSongs(); drawPlayer();
+  const afterAlarm = !document.getElementById("keycheck").classList.contains("hidden");
+  settings.checkKey = false; drawPlayer();
+  return { beforeAlarm, afterAlarm, key:s.key };
+});
+ok(ckCoh.beforeAlarm === false && ckCoh.afterAlarm === false && ckCoh.key === "D",
+   "Conferir tom: coerente após assar (C→D não passa a alarmar; detecção por pitch-class)");
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 
