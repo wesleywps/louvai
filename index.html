@@ -60,6 +60,14 @@
   --section:#0f766e;
   --danger:#dc2626; --shadow:0 18px 50px -24px rgba(40,25,80,.18);
 }
+.orange{
+  /* tema laranja (v0.54.0): base escura + acento/acorde LARANJA — leitura fácil no palco com pouca luz.
+     Herda fundos/texto do escuro (:root); troca só acento/acorde/seção. */
+  --accent:#fb923c; --accent-strong:#f97316; --accent-soft:#fdba74; --accent-ink:#2a1206;
+  --accent-glow:rgba(249,115,22,.45);
+  --chord:#ffb454; --chord-bg:rgba(249,115,22,.2); --chord-halo:rgba(251,146,60,.5);
+  --section:#fcd34d;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 /* foco visível por teclado (a11y v0.43.2): só no foco por teclado (:focus-visible), não no toque/clique.
    Inputs têm o próprio realce (.field …:focus); aqui cobrimos botões, chips, links e os divs clicáveis
@@ -267,11 +275,14 @@ body.light .keyhint{color:#b45309}
 .cifra.nobar{padding-bottom:calc(48px + env(safe-area-inset-bottom))}
 .cifra .chord{color:var(--chord);font-weight:700;
   background:var(--chord-bg);border-radius:4px;          /* sem padding lateral: não desloca o alinhamento */
-  text-shadow:0 0 14px var(--chord-halo);
+  text-shadow:0 0 var(--chord-halo-r,6px) var(--chord-halo);   /* halo menor (v0.54.0): raio reduzido p/ não vazar entre acordes empilhados; some com "Brilho dos acordes" off */
   /* acorde ~20% maior que a letra SEM mexer no layout: transform é visual, a caixa continua 1.0×
      (colunas monoespaçadas preservadas); origem "left bottom" fixa a borda esquerda (coluna) e cresce
      só p/ cima (não recorta na base da página nem invade a letra abaixo). --chord-scale p/ ajustar. */
-  display:inline-block;transform:scale(var(--chord-scale,1.2));transform-origin:left bottom}
+  display:inline-block;line-height:1.1;transform:scale(var(--chord-scale,1.2));transform-origin:left bottom}
+  /* line-height:1.1 no chip: o inline-block (necessário p/ o transform) fica curto — senão o chip de
+     fundo herda o line-height 1.85 da cifra (~33px) e chips de acordes empilhados se sobrepõem (v0.55.0). */
+.cifra.no-halo .chord{text-shadow:none;background:none}   /* "Brilho dos acordes" off: sem halo E sem chip (v0.54.0/0.55.0) */
 .cifra .sec{color:var(--section);font-weight:700;font-style:normal;
   display:inline-block;margin-top:6px}
 .cifra .lyr{color:var(--lyric)}
@@ -815,6 +826,9 @@ body.light .keyhint{color:#b45309}
     <div class="ctrl toggle" id="scrollbar-ctrl"><span class="lbl">Mostrar barra de auto-scroll</span>
       <span class="grp"><button id="scrollbar-toggle" aria-label="Mostrar barra de auto-scroll" aria-pressed="false"></button></span>
     </div>
+    <div class="ctrl toggle"><span class="lbl">Brilho dos acordes</span>
+      <span class="grp"><button id="halo-toggle" aria-label="Brilho (halo) dos acordes" aria-pressed="true"></button></span>
+    </div>
     <div class="sheetsec">Esta música</div>
     <div class="ctrl"><span class="lbl">Dar o tom</span>
       <span class="grp"><button id="p-tom" aria-label="Tocar a nota do tom atual">Tocar a nota</button></span>
@@ -856,7 +870,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.53.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.55.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1467,6 +1481,7 @@ const ICONS={
   "calendar-days":'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
   moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  "sun-moon":'<path d="M12 8a2.83 2.83 0 0 0 4 4 4 4 0 1 1-4-4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.3 17.7-1.4 1.4"/><path d="m19.1 4.9-1.4 1.4"/>',
   type:'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/>',
   tabs:'<line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/>',
   clipboard:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
@@ -1619,6 +1634,7 @@ function openPlayer(id, ctx, atLast){   // atLast: abrir na ÚLTIMA página (ao 
   $("#tabs-toggle").classList.toggle("on",!!settings.hideTabs); $("#tabs-toggle").setAttribute("aria-pressed",String(!!settings.hideTabs));
   $("#scrollbar-toggle").classList.toggle("on",!!settings.showScrollbar); $("#scrollbar-toggle").setAttribute("aria-pressed",String(!!settings.showScrollbar));
   $("#checkkey-toggle").classList.toggle("on",!!settings.checkKey); $("#checkkey-toggle").setAttribute("aria-pressed",String(!!settings.checkKey));
+  $("#halo-toggle").classList.toggle("on",settings.chordHalo!==false); $("#halo-toggle").setAttribute("aria-pressed",String(settings.chordHalo!==false));
   $("#p-body").dataset.page=0;   // sempre abre na 1ª página (vale também p/ o modo Apresentar)
   applyReadMode();               // ajusta modo (rolagem/página) e a visibilidade da barra
   if(escalaCtx){
@@ -1719,6 +1735,7 @@ function drawPlayer(){
   // capo!==(current.capo||0) — NÃO capo!==0 — senão apareceria já ao abrir música com capô salvo (v0.51.3).
   const sk=$("#p-savekey-row");
   if(sk) sk.style.display = (!escalaCtx && (((transp%12)+12)%12!==0 || capo!==(current.capo||0))) ? "" : "none";
+  b.classList.toggle("no-halo", settings.chordHalo===false);   // "Brilho dos acordes" off → sem text-shadow
   updateKeyCheck();
 }
 // "Conferir tom pelos acordes": mostra o aviso só com o toggle ligado E divergência clara
@@ -1782,6 +1799,7 @@ $("#lyr-toggle").onclick=()=>{const b=$("#lyr-toggle");showChords=!showChords;b.
 $("#tabs-toggle").onclick=()=>{settings.hideTabs=!settings.hideTabs;saveSettings();const b=$("#tabs-toggle");b.classList.toggle("on",!!settings.hideTabs);b.setAttribute("aria-pressed",String(!!settings.hideTabs));drawPlayer();};
 $("#checkkey-toggle").onclick=()=>{settings.checkKey=!settings.checkKey;saveSettings();const b=$("#checkkey-toggle");b.classList.toggle("on",!!settings.checkKey);b.setAttribute("aria-pressed",String(!!settings.checkKey));updateKeyCheck();};
 $("#scrollbar-toggle").onclick=()=>{settings.showScrollbar=!settings.showScrollbar;saveSettings();const b=$("#scrollbar-toggle");b.classList.toggle("on",!!settings.showScrollbar);b.setAttribute("aria-pressed",String(!!settings.showScrollbar));applyScrollbar();};
+$("#halo-toggle").onclick=()=>{const on=!(settings.chordHalo!==false);settings.chordHalo=on;saveSettings();const b=$("#halo-toggle");b.classList.toggle("on",on);b.setAttribute("aria-pressed",String(on));drawPlayer();};
 function exitPlayer(){   // voltar do player — usado pelo ← normal E pelo ← da barra compacta
   stopScroll();
   setImmersive(false);  // sai da tela cheia ao deixar o player (limpa imersivo + fullscreen)
@@ -3166,12 +3184,25 @@ function toast(msg, type){   // type: "ok" | "err" | "warn" (faixa de cor + temp
 }
 
 /* ---------- Tema ---------- */
+// Temas (v0.54.0): escuro (padrão), claro e laranja (palco/pouca luz). Classe no body sobre o :root escuro.
+const THEME_LABEL={dark:"Escuro",light:"Claro",orange:"Laranja (palco)"};
+const THEME_META={dark:"#121212",light:"#f6f5f8",orange:"#121212"};
 function applyTheme(){
-  document.body.classList.toggle("light",settings.theme==="light");
-  $("#themeBtn").innerHTML=icon(settings.theme==="light"?"moon":"sun");
-  document.querySelector('meta[name=theme-color]').setAttribute("content",settings.theme==="light"?"#f6f5f8":"#121212");
+  const t=THEME_LABEL[settings.theme]?settings.theme:"dark";
+  document.body.classList.toggle("light",t==="light");
+  document.body.classList.toggle("orange",t==="orange");
+  $("#themeBtn").innerHTML=icon("sun-moon");
+  document.querySelector('meta[name=theme-color]').setAttribute("content",THEME_META[t]);
 }
-$("#themeBtn").onclick=()=>{settings.theme=settings.theme==="light"?"dark":"light";saveSettings();applyTheme();};
+function openThemeSheet(){
+  const cur=THEME_LABEL[settings.theme]?settings.theme:"dark";
+  openSheet("Tema", ["dark","light","orange"].map(t=>({
+    ic:icon(t==="light"?"sun":t==="orange"?"sun-moon":"moon"),
+    label:THEME_LABEL[t]+(t===cur?"   ✓":""),
+    fn:()=>{closeSheet();settings.theme=t;saveSettings();applyTheme();}
+  })));
+}
+$("#themeBtn").onclick=openThemeSheet;
 
 /* ---------- Busca ---------- */
 $("#search").oninput=renderLibrary;
