@@ -64,9 +64,18 @@ arquivo `.json` (cifra, repertório ou escala).
 > ficar sempre coerentes entre si e com a versão atual.
 
 1. **Implementar** a mudança em `louvai.html`.
-2. **Testar de verdade** (ver "Como testar"). Não entregar sem validar. Quando a
-   entrega for um **bugfix**, adicione um **teste de regressão** que falharia com o
-   bug e passa com a correção (de preferência reproduzindo a condição real).
+2. **Testar de verdade — SEMPRE via Playwright.** Toda validação passa pela suíte `npm test`
+   (`tests/smoke.mjs`, Chromium headless): **rode e veja verde antes de entregar** — nada de "deve
+   funcionar" sem rodar. **Mudança de UI tem que exercer o caminho REAL do usuário:** **clicar o
+   controle de verdade** (`page.locator(...).click()` / `$("#id").click()`), **nunca** só mexer em
+   `settings`/chamar a função por dentro; e **medir o resultado RENDERIZADO** (computed style,
+   `getBoundingClientRect`), não só o estado lógico. **Por quê (lição da v0.55.0):** um teste que apenas
+   fazia `settings.chordHalo=false` passou verde, mas o interruptor real deixava o **chip** do acorde na
+   tela — o bug (sobreposição) só aparecia **clicando o botão e medindo a geometria**. Um verde que não
+   reproduz o gesto do usuário não vale. Quando a entrega for um **bugfix**, adicione um **teste de
+   regressão** que falharia com o bug e passa com a correção, **reproduzindo a condição real** (interação
+   + medição). *(Precisa investigar/medir algo fora da suíte? Escreva um `tests/_*.mjs` temporário com
+   Playwright, valide, e apague antes do commit — foi como a v0.55.0 foi diagnosticada.)*
 3. **Subir a versão** (Semver `vMAIOR.MENOR.CORREÇÃO`: CORREÇÃO = conserto,
    MENOR = recurso novo, MAIOR = mudança grande/incompatível) em **AMBOS**:
    - `APP_VERSION` (topo do `<script>` em `louvai.html`);
@@ -102,7 +111,8 @@ arquivo `.json` (cifra, repertório ou escala).
 
 **Checklist rápido antes de publicar:** APP_VERSION = package.json · CHANGELOG tem a
 versão · ROTEIRO (linha do tempo + rodapé + backlog) coerente · README na versão ·
-PLANO atualizado se aplicável · `npm test` verde · **`npm run deploy`** (a Action gera o `index.html`).
+PLANO atualizado se aplicável · **`npm test` (Playwright) verde — UI validada pelo CLIQUE real do
+controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a Action gera o `index.html`).
 
 ## Como testar
 - **Automático (recomendado):**
