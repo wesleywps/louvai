@@ -51,21 +51,22 @@ quando alguém abre o endereço) — **não é backend**: os dados das pessoas c
 só no aparelho; o que fica público é o **código** do app (já era compartilhável). O
 link é montado no celular e enviado direto (WhatsApp); o servidor nunca vê os dados.
 
-**GitHub Pages (recomendado, ~10 min, uma vez):**
-1. Crie um repositório **público** chamado `louvai` (a URL vira `usuario.github.io/louvai/`).
-2. Suba o `louvai.html` mais recente **renomeado para `index.html`** (o Pages serve o
-   `index.html` da raiz). *Add file → Upload files → Commit.*
-3. **Settings → Pages**: *Source* = **Deploy from a branch**, *Branch* = **main** ·
-   **/ (root)** → **Save**.
-4. Aguarde ~1 min: aparece *"Your site is live at …"*. Esse é o endereço pra divulgar.
-5. No celular: abra a URL → **"Adicionar à Tela de Início"**. Ao gerar **"Enviar link"**
-   numa escala, o app já produz `…github.io/louvai/#imp=…` (a base vem da própria URL).
+**GitHub Pages via Action (deploy automático):** o código-fonte (`louvai.html`) fica no
+repositório e, **a cada push, o GitHub gera o `index.html`** e publica no Pages — não se sobe o
+`index.html` à mão.
+1. Crie um repositório **público** chamado `louvai` e suba o projeto (a URL vira
+   `usuario.github.io/louvai/`).
+2. **Settings → Pages → Source = GitHub Actions** (o workflow `.github/workflows/deploy.yml` já
+   vem no projeto e cuida do resto: copia `louvai.html`→`index.html` + assets e publica).
+3. No celular: abra a URL → **"Adicionar à Tela de Início"**. Ao gerar **"Enviar link"** numa
+   escala, o app já produz `…github.io/louvai/#imp=…` (a base vem da própria URL).
 
-**Atualizar:** suba o `louvai.html` mais novo renomeado como `index.html` e commite —
-em ~1 min todos pegam a versão nova ao reabrir, sem reenviar arquivo.
+**Publicar uma versão:** `npm run deploy` (ou `git push origin main`). A Action gera o `index.html`
+a partir do `louvai.html` e atualiza o Pages em ~1–2 min — todos pegam a versão nova ao reabrir.
 
-**Alternativa rápida — Netlify Drop:** arraste o `index.html` em
-<https://app.netlify.com/drop> e receba uma URL na hora.
+**Alternativa manual (sem git):** suba o `louvai.html` **renomeado como `index.html`** pela web
+(*Add file → Upload files*) com *Pages → Source = Deploy from a branch*; ou arraste o `index.html`
+em **Netlify Drop** (<https://app.netlify.com/drop>).
 
 > **Offline (honesto):** sem *service worker*, o 1º acesso (e checar atualização)
 > pede internet; depois o navegador costuma cachear. Offline 100% garantido +

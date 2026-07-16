@@ -177,13 +177,21 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
 - `docs/mockups/` — **registros de decisões de UI** (mockups HTML versionados, abre no navegador).
   Ex.: `barra-tela-cheia-v0.48.1.html` (decisão da barra fina do modo tela cheia). Artefatos de
   histórico, não fazem parte do app.
-- `index.html` — cópia **verbatim** do `louvai.html` que o **GitHub Pages serve na raiz** do site.
-  Fora do git (regenerável); **sincronizar a cada entrega** (ver Ritual, passo 6).
+- `index.html` — cópia do `louvai.html` que o **GitHub Pages serve na raiz**. Agora é **gerado pela
+  GitHub Action** no deploy (`.github/workflows/deploy.yml`); localmente é só uma cópia p/ abrir no
+  navegador. Fora do git (regenerável); **não** se sobe à mão (ver Ritual, passo 6).
+- `.github/workflows/deploy.yml` — **Action de deploy** (Pages nativo): a cada push no `main`, copia
+  `louvai.html`→`index.html` (+ `louvai.json`/`manifest.webmanifest`/`louvai-icons`) e publica no Pages.
+  Requer *Settings ▸ Pages ▸ Source = GitHub Actions* (uma vez). Repo: `github.com/wesleywps/louvai`.
+- `scripts/publish.sh` — **`npm run deploy`**: faz backup do `louvai.json` vivo do remoto (fonte da
+  verdade — só o app o edita), integra o remoto e faz o `git push` (dispara a Action). Ver memória
+  `hosting-github-pages` e `validate-via-playwright`.
+- `backups/` — backups locais do `louvai.json` vivo (um por deploy, carimbo de data/hora); **fora do git**.
 - `manifest.webmanifest` — manifest mínimo do app (nome/cores/ícones) p/ instalar com ícone na tela
   inicial (Android); referenciado no `<head>` do `louvai.html` (v0.46.0). **Sem service worker ainda.**
 - `louvai-icons/` — ícones do app (favicon/apple-touch/PWA): SVGs-fonte + PNGs (`icon-192/512`,
   `icon-maskable-192/512`, `apple-touch-180`). Os PNGs são **assets deployáveis** (destravados no `.gitignore`).
-- `.gitignore` — ignora `node_modules/`, o `index.html`, o `COMMIT_MSG_tmp.txt` e `*.png`
+- `.gitignore` — ignora `node_modules/`, o `index.html`, `backups/`, o `COMMIT_MSG_tmp.txt` e `*.png`
   **exceto** `louvai-icons/*.png` (assets do ícone).
 - `CLAUDE.md` — este guia.
 
