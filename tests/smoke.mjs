@@ -2144,7 +2144,8 @@ await pageNav.addInitScript(() => {
     { id: "ne1", title: "Culto de teste", date: "2026-09-06", team: [],
       items: [{ kind: "song", songId: "n1" }, { kind: "song", songId: "n2" }] }]));
 });
-const navDepth = () => pageNav.evaluate(() => (history.state && history.state.louvai ? history.state.louvai.stack.length : -1));
+const navDepth = () => pageNav.evaluate(() => (history.state && history.state.louvai
+  ? history.state.louvai.stack.filter(e => e.t !== "guard").length : -1));
 const navVis = id => pageNav.locator(id).isVisible();
 const navShown = async id => (await pageNav.locator(id + ".show").count()) === 1;
 const navFresh = async () => { await pageNav.goto(APP_URL); await pageNav.waitForTimeout(300); };
@@ -2241,6 +2242,41 @@ await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout
 const navHash = await pageNav.evaluate(() => { clearImpHash();
   return { stack: history.state && history.state.louvai ? history.state.louvai.stack.length : -1, hash: location.hash }; });
 ok(navHash.stack === 2 && navHash.hash === "", "clearImpHash() limpa o #imp= preservando a pilha de navegação");
+// (h) v0.58.0 — confirmação de intenção antes de sair do app.
+// Página NOVA: aqui o histórico precisa ser só [em branco, app] p/ o 2º voltar poder sair de verdade.
+// E o repertório entra com backup recente, senão o lembrete do boot ocupa o toast que vamos medir.
+const pageExit = await ctxNav.newPage();
+await pageExit.addInitScript(() => {
+  localStorage.setItem("louvai.settings.v1", JSON.stringify({ theme: "dark", seeded: true, lastBackup: Date.now(), dirtySinceBackup: false }));
+  localStorage.setItem("louvai.songs.v1", JSON.stringify([
+    { id: "x1", title: "Sair Um", artist: "A", key: "C", body: "[Intro]\nC G\nletra", tags: [] }]));
+});
+await pageExit.goto(APP_URL); await pageExit.waitForTimeout(400);
+await pageExit.locator("#search").click();              // gesto real: é ele que arma a guarda
+await pageExit.waitForTimeout(200);
+await pageExit.goBack(); await pageExit.waitForTimeout(400);
+const avisoSaida = await pageExit.evaluate(() => { const t = document.getElementById("toast");
+  return { visivel: t.classList.contains("show"), texto: t.textContent }; });
+ok(await pageExit.locator("#view-lib").isVisible() && avisoSaida.visivel && /voltar de novo/i.test(avisoSaida.texto),
+  "Na lista, o primeiro voltar NÃO sai: avisa \"" + avisoSaida.texto + "\"");
+const urlAntesDeSair = pageExit.url();
+await pageExit.goBack().catch(() => {}); await pageExit.waitForTimeout(400);
+ok(pageExit.url() !== urlAntesDeSair,
+  "O segundo voltar sai de verdade, não prende o usuário no app (saiu para " + pageExit.url() + ")");
+await pageExit.close();
+
+// (i) a guarda não pode virar um passo a mais na navegação normal
+await navFresh();
+await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout(280);
+ok(await navVis("#view-player") && (await navDepth()) === 2,
+  "Com a guarda armada, abrir a cifra NÃO gasta um voltar a mais (a guarda cede o lugar)");
+await pageNav.goBack(); await pageNav.waitForTimeout(400);
+ok(await navVis("#view-lib"), "Um voltar sai da cifra direto para a lista (a guarda não atrapalha)");
+await pageNav.goBack(); await pageNav.waitForTimeout(400);
+const rearmou = await pageNav.evaluate(() => document.getElementById("toast").classList.contains("show"));
+ok(await navVis("#view-lib") && rearmou,
+  "Ao voltar pra lista a guarda REARMA: o próximo voltar avisa em vez de sair");
+
 ok(navErrors.length === 0, "Voltar: nenhum erro de JS no fluxo de navegação" + (navErrors.length ? ": " + navErrors.join(" | ") : ""));
 await ctxNav.close();
 

@@ -873,7 +873,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.57.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.58.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1594,6 +1594,7 @@ function navSync(stack,mode){
 function navOpen(entry){
   if(navOff||navApplying||navQuiet) return;
   const top=navStack[navStack.length-1];
+  if(top&&top.t==="guard"){ navSync(navStack.slice(0,-1).concat([entry]),"replace"); return; }   // a guarda cede o lugar
   if(top&&top.t===entry.t&&top.id===entry.id){ navSync(navStack.slice(0,-1).concat([entry]),"replace"); return; }
   if(entry.t==="view"){
     // "voltar" escrito como abertura (exitPlayer→openEscala, #e-cancel→openPlayer): se a tela já
@@ -1637,14 +1638,31 @@ function navRender(stack){
     navStack=stack;
   } finally { navApplying=false; }
 }
+/* Confirmação antes de sair do app (v0.58.0): na lista, o primeiro voltar NÃO sai — avisa
+   "Toque voltar de novo para sair" (padrão Android). Nenhuma API deixa a página se fechar,
+   então quem sai é o próprio gesto: a proteção é uma entrada-guarda que o 1º voltar consome.
+   Ela é armada só DEPOIS de um gesto do usuário — o Chrome ignora entradas criadas sem
+   interação (history manipulation intervention) e, sem toque nenhum, sair não atrapalha. */
+function navArmExit(){
+  if(navOff||navApplying||navQuiet) return;
+  if(navStack.length!==1) return;                       // guarda só existe na raiz
+  navSync(navStack.concat([{t:"guard"}]),"push");
+}
 function navInit(){
   navStack=[{t:"view",id:"lib"}];
   navSync(navStack,"replace");   // carimba a raiz: sem isso o 1º push vira replace e o back sai do app
   addEventListener("popstate",ev=>{
     if(navOff) return;
+    const stack=(ev.state&&ev.state.louvai&&ev.state.louvai.stack)||[{t:"view",id:"lib"}];
+    const guardaConsumida=navStack.some(e=>e.t==="guard")&&!stack.some(e=>e.t==="guard");
     navPendingBack=0;
-    navRender((ev.state&&ev.state.louvai&&ev.state.louvai.stack)||[{t:"view",id:"lib"}]);
+    navRender(stack);
+    if(guardaConsumida&&navStack.length===1){ toast("Toque voltar de novo para sair"); return; }
+    navArmExit();                // voltou pra lista: rearma (o próximo voltar avisa antes de sair)
   });
+  // o gesto do usuário rearma a guarda depois que ela foi consumida (e a arma na 1ª interação)
+  addEventListener("pointerdown",navArmExit,{passive:true});
+  addEventListener("keydown",navArmExit);
 }
 
 function show(v){

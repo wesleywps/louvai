@@ -8,6 +8,32 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.58.0 — Confirmação antes de sair: "toque voltar de novo para sair"
+**Recurso (uso ao vivo, validado com Playwright).** Complemento da v0.57.0: com o voltar navegando
+dentro do app, faltava a última rede de segurança — **na lista, um voltar distraído ainda fechava o
+Louvai**. Agora o primeiro voltar na lista **não sai**: avisa **"Toque voltar de novo para sair"**
+(padrão Android). O segundo voltar sai normalmente.
+- **Não prende ninguém:** o segundo toque sai de verdade (medido no teste, que confirma a saída do
+  documento). Nada de diálogo que trava.
+- **Não gasta um passo a mais:** abrir uma cifra com o aviso armado **não** cria um voltar extra — a
+  entrada-guarda cede o lugar para a cifra (`replace`).
+- **Rearma sozinho:** ao voltar da cifra pra lista, ou no toque seguinte do usuário, a proteção volta
+  a valer.
+- **Por que não um diálogo "Sair? [Sim/Não]":** nenhuma API deixa a página fechar a própria aba/app —
+  quem sai é o gesto de voltar. Um botão "Sair" simplesmente não sairia. Por isso a confirmação é a
+  nativa: o primeiro voltar avisa, o segundo executa.
+- **Por dentro:** `navArmExit()` empilha uma entrada `{t:"guard"}` **só na raiz** e **só depois de um
+  gesto** do usuário (`pointerdown`/`keydown`) — o Chrome ignora entradas criadas sem interação
+  (*history manipulation intervention*), e sem nenhum toque sair não atrapalha ninguém. O `popstate`
+  detecta a guarda consumida e mostra o toast; `navOpen` faz a guarda **ceder o lugar** para a camada
+  que abrir. A guarda não conta como camada do app.
+- **Limitação:** voltar da cifra e apertar voltar **de novo na sequência, sem tocar na tela**, pode
+  sair sem o aviso (o navegador ignora a guarda rearmada sem gesto no meio). Qualquer toque restaura
+  a proteção.
+- **393 verificações** (5 novas), zero erro de JS.
+
+---
+
 ## v0.57.0 — O botão voltar do celular anda dentro do app
 **Recurso (uso ao vivo, validado com Playwright).** Reporte de campo: apertar **voltar** no celular
 **fechava o app**. Se a pessoa estava com o ⚙ Ajustes aberto no meio da Apresentação, o gesto reflexo

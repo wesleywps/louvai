@@ -9,6 +9,13 @@
 > nasceram corrigidas no código). Na entrega: **17 casos novos** na suíte (388 verificações no total),
 > com clique real do controle e medição do render — inclusive `elementFromPoint` provando que o item
 > da folha ficou clicável (a falha #2).
+>
+> **Evolução entregue na v0.58.0 — confirmação de intenção antes de sair:** na raiz, o 1º voltar
+> avisa *"Toque voltar de novo para sair"* em vez de fechar o app. Implementado com uma entrada-guarda
+> (`navArmExit`) armada **só após um gesto** do usuário — a intervenção do Chrome (armadilha já
+> registrada aqui) ignoraria uma guarda criada no boot. **Diálogo com botão "Sair" foi descartado:**
+> nenhuma API permite que a página feche a própria aba/app, então o botão não sairia; quem sai é o
+> gesto. A guarda cede o lugar (`replace`) ao abrir uma camada, para não custar um voltar a mais.
 
 Pedido de campo: **no celular, o botão voltar sai do app.** Se a pessoa está com o ⚙ Ajustes aberto
 no meio da Apresentação e toca em voltar (gesto reflexo no Android), o navegador **fecha o Louvai**

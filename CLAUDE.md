@@ -406,6 +406,11 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   `clearImpHash` passou a **preservar** o `history.state`. `navSuppress` para aberturas **sem gesto**
   (folha do `#imp=` no boot — o Chrome ignora entradas criadas sem interação). **Não** empilham:
   virar página, o "livro", `switchTab` e o auto-scroll. `navOff` desliga tudo se o History falhar.
+  **Confirmação antes de sair (v0.58.0):** `navArmExit()` empilha `{t:"guard"}` **só na raiz** e **só
+  após um gesto** (`pointerdown`/`keydown`) — entrada criada sem interação seria ignorada pelo Chrome.
+  O `popstate` vê a guarda consumida → toast "Toque voltar de novo para sair" (o 2º voltar sai mesmo:
+  **não** existe API p/ a página se fechar, então nada de diálogo com botão "Sair"). Em `navOpen` a
+  guarda **cede o lugar** (`replace`) — não gasta um voltar a mais — e ela rearma ao voltar pra raiz.
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).
