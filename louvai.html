@@ -873,7 +873,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.58.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.58.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1594,12 +1594,14 @@ function navSync(stack,mode){
 function navOpen(entry){
   if(navOff||navApplying||navQuiet) return;
   const top=navStack[navStack.length-1];
-  if(top&&top.t==="guard"){ navSync(navStack.slice(0,-1).concat([entry]),"replace"); return; }   // a guarda cede o lugar
   if(top&&top.t===entry.t&&top.id===entry.id){ navSync(navStack.slice(0,-1).concat([entry]),"replace"); return; }
   if(entry.t==="view"){
     // "voltar" escrito como abertura (exitPlayer→openEscala, #e-cancel→openPlayer): se a tela já
     // está na pilha, isso é voltar até ela — nunca empilhar de novo (senão o back não sai nunca)
     let at=-1; navStack.forEach((e,i)=>{ if(e.t==="view"&&e.id===entry.id) at=i; });
+    // para NA guarda quando ela está logo acima da tela de destino: voltar pela seta do app não
+    // pode consumi-la em silêncio (senão o voltar seguinte sai do app sem avisar)
+    if(at>=0&&navStack[at+1]&&navStack[at+1].t==="guard") at++;
     if(at>=0){ const back=(navStack.length-1-at)+navPendingBack; navPendingBack=0; if(back>0) history.go(-back); return; }
   }
   // fechar+abrir no mesmo toque (o ⚙ recolhe antes de Editar/Enviar, v0.51.2): reaproveita a
@@ -1645,7 +1647,7 @@ function navRender(stack){
    interação (history manipulation intervention) e, sem toque nenhum, sair não atrapalha. */
 function navArmExit(){
   if(navOff||navApplying||navQuiet) return;
-  if(navStack.length!==1) return;                       // guarda só existe na raiz
+  if(navStack.length!==1||navStack[0].t!=="view") return;   // só com a raiz no topo (não duplica)
   navSync(navStack.concat([{t:"guard"}]),"push");
 }
 function navInit(){

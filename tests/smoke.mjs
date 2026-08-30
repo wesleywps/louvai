@@ -2136,7 +2136,7 @@ const pageNav = await ctxNav.newPage();
 const navErrors = [];
 pageNav.on("pageerror", e => navErrors.push(e.message));
 await pageNav.addInitScript(() => {
-  localStorage.setItem("louvai.settings.v1", JSON.stringify({ theme: "dark", seeded: true }));
+  localStorage.setItem("louvai.settings.v1", JSON.stringify({ theme: "dark", seeded: true, lastBackup: Date.now(), dirtySinceBackup: false }));
   localStorage.setItem("louvai.songs.v1", JSON.stringify([
     { id: "n1", title: "Voltar Um", artist: "A", key: "C", body: "[Intro]\nC G\nprimeira letra", tags: [] },
     { id: "n2", title: "Voltar Dois", artist: "B", key: "D", body: "[Intro]\nD A\nsegunda letra", tags: [] }]));
@@ -2240,7 +2240,8 @@ ok(navDiagOn && !(await navVis("#chorddiag")) && await navVis("#view-player"),
 await navFresh();
 await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout(250);
 const navHash = await pageNav.evaluate(() => { clearImpHash();
-  return { stack: history.state && history.state.louvai ? history.state.louvai.stack.length : -1, hash: location.hash }; });
+  return { stack: history.state && history.state.louvai
+    ? history.state.louvai.stack.filter(e => e.t !== "guard").length : -1, hash: location.hash }; });
 ok(navHash.stack === 2 && navHash.hash === "", "clearImpHash() limpa o #imp= preservando a pilha de navegação");
 // (h) v0.58.0 — confirmação de intenção antes de sair do app.
 // Página NOVA: aqui o histórico precisa ser só [em branco, app] p/ o 2º voltar poder sair de verdade.
@@ -2269,13 +2270,41 @@ await pageExit.close();
 await navFresh();
 await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout(280);
 ok(await navVis("#view-player") && (await navDepth()) === 2,
-  "Com a guarda armada, abrir a cifra NÃO gasta um voltar a mais (a guarda cede o lugar)");
+  "Com a guarda armada, abrir a cifra empilha POR CIMA dela (sem custar um voltar a mais)");
 await pageNav.goBack(); await pageNav.waitForTimeout(400);
 ok(await navVis("#view-lib"), "Um voltar sai da cifra direto para a lista (a guarda não atrapalha)");
 await pageNav.goBack(); await pageNav.waitForTimeout(400);
 const rearmou = await pageNav.evaluate(() => document.getElementById("toast").classList.contains("show"));
 ok(await navVis("#view-lib") && rearmou,
   "Ao voltar pra lista a guarda REARMA: o próximo voltar avisa em vez de sair");
+
+// (j) v0.58.1 — REGRESSÃO do reporte de campo: a guarda tem de sobreviver à ida-e-volta da cifra.
+// O bug: ela era substituída ao abrir a cifra e depois recriada DENTRO do popstate — sem gesto do
+// usuário, e o Chrome ignora entrada criada sem interação, então o voltar seguinte saía do app.
+await navFresh();
+await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout(280);
+const pilhaComCifra = await pageNav.evaluate(() => history.state.louvai.stack.map(e => e.t + (e.id ? ":" + e.id : "")).join(">"));
+ok(pilhaComCifra === "view:lib>guard>view:player",
+  "A guarda fica ABAIXO da cifra (nasce do toque real, não recriada no popstate): " + pilhaComCifra);
+await pageNav.goBack(); await pageNav.waitForTimeout(400);   // sai da cifra — SEM tocar na tela
+const naListaComGuarda = await pageNav.evaluate(() => ({
+  guarda: history.state.louvai.stack.some(e => e.t === "guard"),
+  toast: document.getElementById("toast").classList.contains("show") }));
+ok(await navVis("#view-lib") && naListaComGuarda.guarda && !naListaComGuarda.toast,
+  "Voltar da cifra cai na lista COM a guarda intacta (e sem aviso prematuro)");
+await pageNav.goBack(); await pageNav.waitForTimeout(400);   // de novo, ainda sem tocar na tela
+const avisoAposCifra = await pageNav.evaluate(() => document.getElementById("toast").textContent);
+ok(await navVis("#view-lib") && /voltar de novo/i.test(avisoAposCifra),
+  "Depois de sair da cifra, o voltar seguinte AVISA em vez de fechar o app (o bug de campo)");
+
+// (k) o ← do próprio app também não pode consumir a guarda em silêncio
+await navFresh();
+await pageNav.locator("#tab-escalas").click(); await pageNav.waitForTimeout(250);
+await pageNav.locator(".escard").first().click(); await pageNav.waitForTimeout(280);
+await pageNav.locator("#es-back").click(); await pageNav.waitForTimeout(450);
+const guardaAposSeta = await pageNav.evaluate(() => history.state.louvai.stack.some(e => e.t === "guard"));
+ok(await navVis("#view-lib") && guardaAposSeta,
+  "Voltar pela seta do app (escala →  lista) preserva a guarda");
 
 ok(navErrors.length === 0, "Voltar: nenhum erro de JS no fluxo de navegação" + (navErrors.length ? ": " + navErrors.join(" | ") : ""));
 await ctxNav.close();

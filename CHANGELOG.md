@@ -8,6 +8,27 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.58.1 — Correção: o aviso de saída sumia depois de abrir uma cifra
+**Correção (reporte de campo, validada com Playwright).** Testando no celular: ao **voltar de uma
+cifra para a lista**, o voltar seguinte **fechava o app sem avisar** — a confirmação da v0.58.0 só
+funcionava se a pessoa ficasse na lista o tempo todo.
+- **Causa (achada revalidando a implementação, não pelo teste — que passava):** a entrada-guarda
+  nascia do **toque real** do usuário (válida), mas ao abrir a cifra ela **cedia o lugar** para a
+  cifra; ao voltar, o app **recriava a guarda dentro do `popstate`** — ou seja, **sem gesto nenhum**.
+  O Chrome **ignora entradas criadas sem interação** (*history manipulation intervention*), então a
+  guarda recriada era pulada e o voltar saía direto. Em Chromium headless essa intervenção **não
+  existe**, por isso a suíte da v0.58.0 ficou verde e o bug só apareceu no aparelho.
+- **Correção:** a guarda **não cede mais o lugar** — as camadas empilham **por cima** dela
+  (`lista > guarda > cifra`), preservando a entrada que nasceu do toque. Ela deixa de ser recriada no
+  `popstate`. Continua **não custando um voltar a mais**: sair da cifra para a lista é um toque só.
+- **Mesma armadilha na seta do app:** voltar pela seta ← (ex.: escala → lista) calculava quantas
+  entradas recuar **ignorando a guarda** e a consumia em silêncio. Agora o cálculo **para na guarda**
+  quando ela está logo acima da tela de destino.
+- **397 verificações** (4 novas, incluindo a regressão exata do reporte: cifra → voltar → voltar
+  **sem tocar na tela** tem de avisar, não sair).
+
+---
+
 ## v0.58.0 — Confirmação antes de sair: "toque voltar de novo para sair"
 **Recurso (uso ao vivo, validado com Playwright).** Complemento da v0.57.0: com o voltar navegando
 dentro do app, faltava a última rede de segurança — **na lista, um voltar distraído ainda fechava o

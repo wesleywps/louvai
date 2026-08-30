@@ -15,7 +15,12 @@
 > (`navArmExit`) armada **só após um gesto** do usuário — a intervenção do Chrome (armadilha já
 > registrada aqui) ignoraria uma guarda criada no boot. **Diálogo com botão "Sair" foi descartado:**
 > nenhuma API permite que a página feche a própria aba/app, então o botão não sairia; quem sai é o
-> gesto. A guarda cede o lugar (`replace`) ao abrir uma camada, para não custar um voltar a mais.
+> gesto. **Armadilha nº10, achada em campo (corrigida na v0.58.1):** a guarda não pode ser
+> substituída ao abrir uma camada nem recriada dentro do `popstate` — recriada sem gesto, o Chrome a
+> ignora e o voltar sai do app sem avisar. Ela fica **abaixo** das camadas (`lib > guard > player`) e
+> o "voltar até a tela" **para nela**. **Headless não reproduz a intervenção** — o teste da v0.58.0
+> passava com o bug: quando o comportamento depender de *user activation*, o verde da suíte não
+> substitui o teste no aparelho.
 
 Pedido de campo: **no celular, o botão voltar sai do app.** Se a pessoa está com o ⚙ Ajustes aberto
 no meio da Apresentação e toca em voltar (gesto reflexo no Android), o navegador **fecha o Louvai**

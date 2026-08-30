@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.58.0**.
+seguir. Atualizado até a **v0.58.1**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -132,6 +132,8 @@ instalação complexa.
 | **v0.57.0** | recurso | **O botão voltar do celular anda dentro do app:** apertar voltar fechava o Louvai (inclusive com o ⚙ aberto no meio do culto). Agora fecha a camada aberta — folha, diagrama de acorde ou tela cheia —, depois sai da cifra, depois volta pra lista, e **só sai do app na raiz**. Virar página/trocar de música/trocar de aba não viram histórico. Pilha de navegação no `history.state` + `popstate` como fonte única (`navOpen`/`navCloseTop`/`navRender`), enxertada no funil `openS`/`closeS` e no `show`. Desenho **validado adversarialmente** antes de codar (9 falhas achadas com protótipo medido). |
 
 | **v0.58.0** | recurso | **Confirmação antes de sair do app:** na lista, o primeiro voltar não fecha mais o Louvai — avisa **"Toque voltar de novo para sair"** (padrão Android); o segundo sai de verdade. Entrada-guarda (`navArmExit`) armada só na raiz e **só depois de um gesto** (o Chrome ignora entradas criadas sem interação); ela **cede o lugar** ao abrir uma cifra, então não gasta um voltar a mais, e rearma ao voltar pra lista. |
+
+| **v0.58.1** | correção | **O aviso de saída sumia depois de abrir uma cifra:** ao voltar da cifra pra lista, o voltar seguinte fechava o app sem avisar. A guarda nascia com o toque do usuário, mas era **substituída** ao abrir a cifra e **recriada dentro do `popstate`** — sem gesto, e o Chrome ignora entrada criada sem interação (headless não reproduz, por isso o teste da v0.58.0 passava). Agora as camadas empilham **por cima** da guarda e o voltar pela seta do app **para nela** em vez de consumi-la em silêncio. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -348,4 +350,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.58.0.*
+*Última atualização deste roteiro: v0.58.1.*

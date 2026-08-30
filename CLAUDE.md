@@ -410,7 +410,12 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   após um gesto** (`pointerdown`/`keydown`) — entrada criada sem interação seria ignorada pelo Chrome.
   O `popstate` vê a guarda consumida → toast "Toque voltar de novo para sair" (o 2º voltar sai mesmo:
   **não** existe API p/ a página se fechar, então nada de diálogo com botão "Sair"). Em `navOpen` a
-  guarda **cede o lugar** (`replace`) — não gasta um voltar a mais — e ela rearma ao voltar pra raiz.
+  guarda **não cede o lugar** (correção v0.58.1): as camadas empilham **por cima** dela
+  (`lib > guard > player`), preservando a entrada que **nasceu do toque** — antes ela era substituída
+  e recriada **dentro do `popstate`**, ou seja, sem gesto, e o Chrome a ignorava (o voltar saía do app
+  sem avisar; **headless não reproduz** essa intervenção). O "voltar até a tela" **para na guarda**
+  quando ela está logo acima do destino, senão a seta ← do app a consumiria em silêncio. Ainda assim
+  não custa um voltar a mais: a entrada da guarda **renderiza a lista**.
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).
