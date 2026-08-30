@@ -186,6 +186,11 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   (M2 seções do ⚙ Ajustes · M4 linguagem de card · M5 `#reposheet` em cartões · M3 arrastar p/
   fechar · M7 entrada da lista · M8 progresso na Apresentação · M6 skeleton de carregamento).
   **Validação visual no celular concluída (2026-06-26)** (palco, dark/light).
+- [ ] **Botão "voltar" do celular navega dentro do app** (`PLANO-botao-voltar.md`) — hoje o voltar do
+  Android **fecha o app**; passa a fechar a folha aberta → sair do player → voltar pra lista, saindo só
+  na raiz. Pilha de navegação no `history.state` + `popstate` como fonte única, aproveitando o funil
+  `openS`/`closeS`. Desenho **validado adversarialmente** contra o código (protótipo medido no
+  Playwright). **Casa com o PWA** (em standalone o voltar é a única saída).
 
 ### Tema A — Segurança dos dados
 - [ ] **PWA instalável de verdade** (100% offline inclusive fontes;

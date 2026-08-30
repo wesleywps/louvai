@@ -164,6 +164,10 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
 - `docs/planos/PLANO-quebra-de-linha.md` — quebra de linha automática ao ampliar (não esconder a cifra):
   parte o par acorde+letra em blocos que cabem, mantendo colunas — **implementado na v0.56.0**
   (`rewrapBody`/`wrapCols`, validado no Playwright).
+- `docs/planos/PLANO-botao-voltar.md` — o **botão voltar do celular** navega dentro do app (fecha folha →
+  sai do player → volta pra lista) em vez de fechar o navegador: pilha de navegação no `history.state`,
+  `popstate` como fonte única, funil `openS`/`closeS`. **Status: 📋 planejado**, desenho **validado
+  adversarialmente** com protótipo injetado no app (9 falhas achadas e corrigidas no plano).
 - `docs/planos/PLANO-ui.md` — polimento de UI/ícones em **ondas**, **concluído (v0.28.0→v0.36.1)**: Onda 1
   (ganhos rápidos + ícone do Backup, v0.28.0); Onda 2 (ícones SVG inline via `ICONS`/`icon()`,
   v0.29.0); Onda 3 = M2 ⚙ seções (v0.30.0) · M4 linguagem de card (v0.31.0) · M5 `#reposheet`
