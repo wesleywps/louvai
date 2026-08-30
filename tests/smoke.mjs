@@ -2337,6 +2337,39 @@ await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout
 ok(await navVis("#view-player") && await pageNav.locator("#exitdlg").evaluate(d => d.classList.contains("hidden")),
   "Abrir uma cifra depois do diálogo não deixa resto de diálogo na tela");
 
+// (n) v0.58.3 — REGRESSÃO do reporte: abrir o app e voltar SEM TOCAR EM NADA tem de avisar.
+// No celular isso passa a valer pelo CloseWatcher ("watcher grátis" do documento, que intercepta o
+// voltar do Android sem exigir gesto). No Playwright o equivalente é o Esc — mesmo "close request".
+const ctxTouch = await browser.newContext({ viewport: { width: 412, height: 915 }, hasTouch: true, isMobile: true });
+const pageTouch = await ctxTouch.newPage();
+await pageTouch.addInitScript(() => {
+  localStorage.setItem("louvai.settings.v1", JSON.stringify({ theme: "dark", seeded: true, lastBackup: Date.now(), dirtySinceBackup: false }));
+  localStorage.setItem("louvai.songs.v1", JSON.stringify([
+    { id: "w1", title: "Watcher Um", artist: "A", key: "C", body: "[Intro]\nC G\nletra", tags: [] }]));
+});
+const dlgAberto = () => pageTouch.evaluate(() => !document.getElementById("exitdlg").classList.contains("hidden"));
+await pageTouch.goto(APP_URL); await pageTouch.waitForTimeout(400);
+const temWatcher = await pageTouch.evaluate(() => typeof CloseWatcher === "function");
+await pageTouch.keyboard.press("Escape"); await pageTouch.waitForTimeout(300);
+ok(temWatcher && await dlgAberto(),
+  "Recém-carregado e SEM interação nenhuma, o voltar já avisa antes de sair (CloseWatcher)");
+await pageTouch.locator("#exit-stay").click(); await pageTouch.waitForTimeout(250);
+await pageTouch.keyboard.press("Escape"); await pageTouch.waitForTimeout(300);
+ok(await dlgAberto(), "Depois de \"Continuar no app\", a proteção rearma (avisa de novo)");
+await pageTouch.locator("#exit-stay").click(); await pageTouch.waitForTimeout(250);
+
+// dentro do app o watcher tem de estar DESARMADO: o voltar pertence à navegação, não à saída
+await pageTouch.locator(".songcard").first().click(); await pageTouch.waitForTimeout(300);
+await pageTouch.keyboard.press("Escape"); await pageTouch.waitForTimeout(300);
+ok(await pageTouch.locator("#view-player").isVisible() && !(await dlgAberto()),
+  "Dentro da cifra o aviso de saída NÃO aparece (o voltar é da navegação)");
+await pageTouch.goBack(); await pageTouch.waitForTimeout(400);
+ok(await pageTouch.locator("#view-lib").isVisible() && !(await dlgAberto()),
+  "Voltar da cifra cai na lista sem aviso prematuro (mesmo no celular)");
+await pageTouch.keyboard.press("Escape"); await pageTouch.waitForTimeout(300);
+ok(await dlgAberto(), "De volta à lista, o watcher rearma e o próximo voltar avisa");
+await ctxTouch.close();
+
 ok(navErrors.length === 0, "Voltar: nenhum erro de JS no fluxo de navegação" + (navErrors.length ? ": " + navErrors.join(" | ") : ""));
 await ctxNav.close();
 

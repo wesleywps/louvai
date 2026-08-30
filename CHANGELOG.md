@@ -8,6 +8,25 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.58.3 — Correção: abrir o app e voltar na hora agora também avisa
+**Correção (reporte de campo, validada com Playwright).** Faltava o caso mais simples: **carregar o
+site e apertar voltar sem tocar em nada** fechava o app sem confirmação.
+- **Causa:** a proteção era uma entrada de histórico, e o Chrome **ignora entrada criada sem
+  interação do usuário** — por isso ela só era armada no primeiro toque. Sem toque, não havia proteção.
+  Não era um descuido: era o limite da técnica.
+- **Correção — `CloseWatcher`:** todo documento tem direito a **um "close watcher" grátis**, que
+  intercepta o voltar do Android **mesmo sem gesto nenhum** (é o mecanismo que faz o `<dialog>` fechar
+  com o voltar). Medido antes de adotar: o `close` dispara sem interação prévia e continua funcionando
+  depois de consumido/recriado. Agora, **onde há CloseWatcher (celular), ele é o caminho** e a proteção
+  vale **desde o carregamento**; onde não há (desktop/Safari), fica a entrada-guarda como antes.
+- **Sem atrapalhar a navegação:** o watcher é **desarmado ao sair da lista** — dentro de uma cifra ou
+  com uma folha aberta, o voltar continua pertencendo à navegação (fecha a camada), não à saída. Ao
+  voltar para a lista ele rearma sozinho.
+- **407 verificações** (5 novas, incluindo a regressão exata: app recém-carregado, **zero interação**,
+  o voltar tem de avisar; e o contrário — dentro da cifra o aviso **não** pode aparecer).
+
+---
+
 ## v0.58.2 — O aviso de saída virou diálogo (sair do app merece destaque)
 **Ajuste de UI (pedido do dono).** O aviso da v0.58.0/0.58.1 era um **toast discreto** — pouco para
 uma ação que **fecha o aplicativo**. Agora o primeiro voltar na lista abre um **diálogo central**,

@@ -900,7 +900,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.58.2";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.58.3";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1635,6 +1635,7 @@ function navOpen(entry){
   // fechar+abrir no mesmo toque (o ⚙ recolhe antes de Editar/Enviar, v0.51.2): reaproveita a
   // entrada em vez de back+push — o back é assíncrono e chegaria depois, fechando a camada errada
   if(navPendingBack>0){ navPendingBack--; navSync(navStack.concat([entry]),"replace"); return; }
+  disarmExitWatcher();   // fora da raiz quem manda é a pilha (o voltar fecha a camada, não sai)
   navSync(navStack.concat([entry]),"push");
 }
 function navCloseTop(pred){
@@ -1674,9 +1675,26 @@ function navRender(stack){
    então quem sai é o próprio gesto: a proteção é uma entrada-guarda que o 1º voltar consome.
    Ela é armada só DEPOIS de um gesto do usuário — o Chrome ignora entradas criadas sem
    interação (history manipulation intervention) e, sem toque nenhum, sair não atrapalha. */
+/* Duas formas de segurar a saída, porque a entrada-guarda tem um furo: ela só vale se nascer de um
+   TOQUE (o Chrome ignora entrada de histórico criada sem interação) — quem abria o app e apertava
+   voltar na hora saía sem aviso (reporte de campo, v0.58.3). O CloseWatcher resolve esse caso: todo
+   documento tem direito a UM watcher "grátis", que intercepta o voltar do Android mesmo sem gesto
+   nenhum. Onde ele existe (celular), é o caminho; onde não (desktop/Safari), fica a guarda. */
+const navUsaWatcher=()=> typeof CloseWatcher==="function" &&
+  (navigator.maxTouchPoints>0 || (window.matchMedia&&matchMedia("(pointer: coarse)").matches));
+let exitWatcher=null;
+function armExitWatcher(){
+  if(exitWatcher) return;
+  try{
+    exitWatcher=new CloseWatcher();
+    exitWatcher.addEventListener("close",()=>{ exitWatcher=null; showExitDialog(); });
+  }catch(e){ exitWatcher=null; }   // sem "vaga" de watcher: cai no fluxo normal (sai do app)
+}
+function disarmExitWatcher(){ if(exitWatcher){ try{ exitWatcher.destroy(); }catch(e){} exitWatcher=null; } }
 function navArmExit(){
   if(navOff||navApplying||navQuiet) return;
   if(navStack.length!==1||navStack[0].t!=="view") return;   // só com a raiz no topo (não duplica)
+  if(navUsaWatcher()){ armExitWatcher(); return; }
   navSync(navStack.concat([{t:"guard"}]),"push");
 }
 /* O diálogo NÃO empilha histórico (nem passa por openS): se empilhasse, o "voltar de novo" fecharia
@@ -1709,8 +1727,9 @@ function navInit(){
   // o gesto do usuário rearma a guarda depois que ela foi consumida (e a arma na 1ª interação)
   addEventListener("pointerdown",navArmExit,{passive:true});
   addEventListener("keydown",navArmExit);
-  $("#exit-stay").onclick=hideExitDialog;
-  $("#exitbg").onclick=hideExitDialog;
+  $("#exit-stay").onclick=()=>{ hideExitDialog(); navArmExit(); };
+  $("#exitbg").onclick=()=>{ hideExitDialog(); navArmExit(); };
+  navArmExit();   // protege desde o carregamento (com watcher; sem ele, espera o 1º toque)
 }
 
 function show(v){
