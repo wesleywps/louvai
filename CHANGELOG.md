@@ -8,6 +8,26 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.58.2 — O aviso de saída virou diálogo (sair do app merece destaque)
+**Ajuste de UI (pedido do dono).** O aviso da v0.58.0/0.58.1 era um **toast discreto** — pouco para
+uma ação que **fecha o aplicativo**. Agora o primeiro voltar na lista abre um **diálogo central**,
+com o fundo escurecido: ícone, **"Sair do Louvai?"**, a instrução *"Toque **voltar** de novo para sair
+do aplicativo"* e o botão **"Continuar no app"**.
+- **Uma saída clara para quem apertou sem querer:** "Continuar no app" fecha o diálogo — e o toque no
+  botão **rearma a proteção com gesto real**, que é justamente o que o Chrome exige para respeitar a
+  entrada de histórico (mais robusto que o rearme silencioso).
+- **Não atrapalha quem quer sair mesmo:** o diálogo **não empilha histórico** (se empilhasse, o
+  "voltar de novo" fecharia o diálogo em vez de sair). O segundo voltar sai normalmente.
+- **Some sozinho** depois de ~7s se a pessoa não decidir nada, e **não sobrevive a uma navegação**
+  (`navRender` o fecha) — nada de resto de diálogo na tela.
+- **Acessível e no tema:** `role="dialog"`, `aria-modal`, foco no botão ao abrir; cores por token
+  (funciona nos 3 temas — conferido por captura no escuro, claro e laranja) e o ícone `power` entra
+  pela fonte única `ICONS`.
+- **402 verificações** (5 novas: abertura pelo caminho real, semântica/foco, "Continuar no app"
+  rearmando a guarda, proteção viva depois disso e o diálogo não vazando para outra tela).
+
+---
+
 ## v0.58.1 — Correção: o aviso de saída sumia depois de abrir uma cifra
 **Correção (reporte de campo, validada com Playwright).** Testando no celular: ao **voltar de uma
 cifra para a lista**, o voltar seguinte **fechava o app sem avisar** — a confirmação da v0.58.0 só

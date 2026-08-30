@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.58.1**.
+seguir. Atualizado até a **v0.58.2**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -134,6 +134,8 @@ instalação complexa.
 | **v0.58.0** | recurso | **Confirmação antes de sair do app:** na lista, o primeiro voltar não fecha mais o Louvai — avisa **"Toque voltar de novo para sair"** (padrão Android); o segundo sai de verdade. Entrada-guarda (`navArmExit`) armada só na raiz e **só depois de um gesto** (o Chrome ignora entradas criadas sem interação); ela **cede o lugar** ao abrir uma cifra, então não gasta um voltar a mais, e rearma ao voltar pra lista. |
 
 | **v0.58.1** | correção | **O aviso de saída sumia depois de abrir uma cifra:** ao voltar da cifra pra lista, o voltar seguinte fechava o app sem avisar. A guarda nascia com o toque do usuário, mas era **substituída** ao abrir a cifra e **recriada dentro do `popstate`** — sem gesto, e o Chrome ignora entrada criada sem interação (headless não reproduz, por isso o teste da v0.58.0 passava). Agora as camadas empilham **por cima** da guarda e o voltar pela seta do app **para nela** em vez de consumi-la em silêncio. |
+
+| **v0.58.2** | recurso | **Aviso de saída com destaque:** fechar o app é ação forte demais para um toast — o primeiro voltar na lista passa a abrir um **diálogo central** (fundo escurecido, "Sair do Louvai?", botão **"Continuar no app"**). O botão rearma a proteção **com gesto real**; o diálogo **não empilha histórico**, então o segundo voltar sai normalmente. `role="dialog"`/foco no botão, cores por token nos 3 temas. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -350,4 +352,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.58.1.*
+*Última atualização deste roteiro: v0.58.2.*

@@ -416,6 +416,11 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   sem avisar; **headless não reproduz** essa intervenção). O "voltar até a tela" **para na guarda**
   quando ela está logo acima do destino, senão a seta ← do app a consumiria em silêncio. Ainda assim
   não custa um voltar a mais: a entrada da guarda **renderiza a lista**.
+  **Diálogo de saída (v0.58.2):** `showExitDialog`/`hideExitDialog` + `#exitbg`/`#exitdlg` (markup fixo,
+  fora do funil de folhas — **não empilha**, senão o "voltar de novo" fecharia o diálogo em vez de sair).
+  Aberto quando a guarda é consumida; `#exit-stay` ("Continuar no app") fecha e **rearma com gesto real**;
+  o fundo também fecha; some sozinho em 7s; `navRender` o fecha em qualquer navegação. Ícone `power`
+  pelo `ICONS`; cores por token (3 temas).
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).

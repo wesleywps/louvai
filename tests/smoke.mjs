@@ -2256,10 +2256,11 @@ await pageExit.goto(APP_URL); await pageExit.waitForTimeout(400);
 await pageExit.locator("#search").click();              // gesto real: é ele que arma a guarda
 await pageExit.waitForTimeout(200);
 await pageExit.goBack(); await pageExit.waitForTimeout(400);
-const avisoSaida = await pageExit.evaluate(() => { const t = document.getElementById("toast");
-  return { visivel: t.classList.contains("show"), texto: t.textContent }; });
-ok(await pageExit.locator("#view-lib").isVisible() && avisoSaida.visivel && /voltar de novo/i.test(avisoSaida.texto),
-  "Na lista, o primeiro voltar NÃO sai: avisa \"" + avisoSaida.texto + "\"");
+const avisoSaida = await pageExit.evaluate(() => { const d = document.getElementById("exitdlg");
+  return { visivel: !d.classList.contains("hidden"), texto: d.textContent.replace(/\s+/g, " ").trim(),
+           fundo: !document.getElementById("exitbg").classList.contains("hidden") }; });
+ok(await pageExit.locator("#view-lib").isVisible() && avisoSaida.visivel && avisoSaida.fundo && /Sair do Louvai/i.test(avisoSaida.texto),
+  "Na lista, o primeiro voltar abre o DIÁLOGO de saída (fundo escurecido): \"" + avisoSaida.texto + "\"");
 const urlAntesDeSair = pageExit.url();
 await pageExit.goBack().catch(() => {}); await pageExit.waitForTimeout(400);
 ok(pageExit.url() !== urlAntesDeSair,
@@ -2274,7 +2275,7 @@ ok(await navVis("#view-player") && (await navDepth()) === 2,
 await pageNav.goBack(); await pageNav.waitForTimeout(400);
 ok(await navVis("#view-lib"), "Um voltar sai da cifra direto para a lista (a guarda não atrapalha)");
 await pageNav.goBack(); await pageNav.waitForTimeout(400);
-const rearmou = await pageNav.evaluate(() => document.getElementById("toast").classList.contains("show"));
+const rearmou = await pageNav.evaluate(() => !document.getElementById("exitdlg").classList.contains("hidden"));
 ok(await navVis("#view-lib") && rearmou,
   "Ao voltar pra lista a guarda REARMA: o próximo voltar avisa em vez de sair");
 
@@ -2289,12 +2290,12 @@ ok(pilhaComCifra === "view:lib>guard>view:player",
 await pageNav.goBack(); await pageNav.waitForTimeout(400);   // sai da cifra — SEM tocar na tela
 const naListaComGuarda = await pageNav.evaluate(() => ({
   guarda: history.state.louvai.stack.some(e => e.t === "guard"),
-  toast: document.getElementById("toast").classList.contains("show") }));
-ok(await navVis("#view-lib") && naListaComGuarda.guarda && !naListaComGuarda.toast,
+  dialogo: !document.getElementById("exitdlg").classList.contains("hidden") }));
+ok(await navVis("#view-lib") && naListaComGuarda.guarda && !naListaComGuarda.dialogo,
   "Voltar da cifra cai na lista COM a guarda intacta (e sem aviso prematuro)");
 await pageNav.goBack(); await pageNav.waitForTimeout(400);   // de novo, ainda sem tocar na tela
-const avisoAposCifra = await pageNav.evaluate(() => document.getElementById("toast").textContent);
-ok(await navVis("#view-lib") && /voltar de novo/i.test(avisoAposCifra),
+const avisoAposCifra = await pageNav.evaluate(() => !document.getElementById("exitdlg").classList.contains("hidden"));
+ok(await navVis("#view-lib") && avisoAposCifra,
   "Depois de sair da cifra, o voltar seguinte AVISA em vez de fechar o app (o bug de campo)");
 
 // (k) o ← do próprio app também não pode consumir a guarda em silêncio
@@ -2305,6 +2306,36 @@ await pageNav.locator("#es-back").click(); await pageNav.waitForTimeout(450);
 const guardaAposSeta = await pageNav.evaluate(() => history.state.louvai.stack.some(e => e.t === "guard"));
 ok(await navVis("#view-lib") && guardaAposSeta,
   "Voltar pela seta do app (escala →  lista) preserva a guarda");
+
+// (l) v0.58.2 — "Continuar no app" desfaz a saída e REARMA a proteção com toque real
+await navFresh();
+await pageNav.locator("#search").click(); await pageNav.waitForTimeout(200);
+await pageNav.goBack(); await pageNav.waitForTimeout(400);
+ok(!(await pageNav.locator("#exitdlg").evaluate(d => d.classList.contains("hidden"))),
+  "Diálogo de saída aberto (pelo caminho real do usuário)");
+const dlgAcess = await pageNav.evaluate(() => { const d = document.getElementById("exitdlg");
+  return { papel: d.getAttribute("role"), modal: d.getAttribute("aria-modal"), icone: !!document.querySelector("#exit-ic .ic-svg"),
+           foco: document.activeElement && document.activeElement.id }; });
+ok(dlgAcess.papel === "dialog" && dlgAcess.modal === "true" && dlgAcess.icone && dlgAcess.foco === "exit-stay",
+  "Diálogo: role/aria-modal, ícone pintado pelo ICONS e foco no botão (" + JSON.stringify(dlgAcess) + ")");
+await pageNav.locator("#exit-stay").click(); await pageNav.waitForTimeout(300);
+const aposFicar = await pageNav.evaluate(() => ({
+  fechado: document.getElementById("exitdlg").classList.contains("hidden"),
+  guarda: history.state.louvai.stack.some(e => e.t === "guard") }));
+ok(aposFicar.fechado && aposFicar.guarda && await navVis("#view-lib"),
+  "\"Continuar no app\" fecha o diálogo e REARMA a guarda (o toque no botão é o gesto que o Chrome exige)");
+await pageNav.goBack(); await pageNav.waitForTimeout(400);
+ok(!(await pageNav.locator("#exitdlg").evaluate(d => d.classList.contains("hidden"))),
+  "Depois de continuar no app, o voltar volta a avisar (proteção viva)");
+
+// (m) o diálogo não pode sobreviver a uma navegação
+await navFresh();
+await pageNav.locator("#search").click(); await pageNav.waitForTimeout(200);
+await pageNav.goBack(); await pageNav.waitForTimeout(400);
+await pageNav.locator("#exit-stay").click(); await pageNav.waitForTimeout(250);
+await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout(300);
+ok(await navVis("#view-player") && await pageNav.locator("#exitdlg").evaluate(d => d.classList.contains("hidden")),
+  "Abrir uma cifra depois do diálogo não deixa resto de diálogo na tela");
 
 ok(navErrors.length === 0, "Voltar: nenhum erro de JS no fluxo de navegação" + (navErrors.length ? ": " + navErrors.join(" | ") : ""));
 await ctxNav.close();

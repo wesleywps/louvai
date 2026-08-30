@@ -533,6 +533,24 @@ body.light .keyhint{color:#b45309}
 .chorddiag svg .lbl{fill:var(--muted);font:600 10px system-ui,sans-serif}
 /* respeita o "Reduzir movimento" do sistema: sem fade entre telas, sem slide do
    sheet, sem bounce no toque — útil no palco e p/ sensibilidade vestibular */
+/* Confirmação de saída (v0.58.2): fechar o app é ação forte demais p/ um toast discreto —
+   diálogo central com fundo escurecido. Fica FORA do funil de folhas: não empilha histórico,
+   senão o "voltar de novo" fecharia o diálogo em vez de sair. */
+#exitbg{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:70;animation:exitFade .16s ease-out}
+.exitdlg{position:fixed;z-index:71;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(330px,86vw);background:var(--panel);border:1px solid var(--line);border-radius:22px;
+  padding:26px 22px 20px;text-align:center;color:var(--text);
+  box-shadow:0 26px 64px -14px rgba(0,0,0,.62);animation:exitPop .2s cubic-bezier(.2,.9,.3,1)}
+.exitdlg .ex-ic{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--panel2);border:1px solid var(--line);color:var(--accent)}
+.exitdlg .ex-ic .ic-svg{width:28px;height:28px}
+.exitdlg .ex-ttl{font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:8px}
+.exitdlg .ex-sub{font-size:14.5px;line-height:1.5;color:var(--muted);margin-bottom:20px}
+.exitdlg .ex-sub b{color:var(--text)}
+.exitdlg .btn{width:100%}
+@keyframes exitFade{from{opacity:0}to{opacity:1}}
+@keyframes exitPop{from{opacity:0;transform:translate(-50%,-46%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 @media (prefers-reduced-motion: reduce){
   *{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
@@ -733,6 +751,15 @@ body.light .keyhint{color:#b45309}
 <!-- Diagrama de acorde (pegada) — abre ao tocar num acorde no player -->
 <div id="chorddiagbg" class="hidden"></div>
 <div id="chorddiag" class="chorddiag hidden" aria-live="polite"></div>
+
+<!-- Confirmação de saída do app (v0.58.2) -->
+<div id="exitbg" class="hidden"></div>
+<div id="exitdlg" class="exitdlg hidden" role="dialog" aria-modal="true" aria-labelledby="exit-title">
+  <div class="ex-ic" id="exit-ic"></div>
+  <div class="ex-ttl" id="exit-title">Sair do Louvai?</div>
+  <div class="ex-sub">Toque <b>voltar</b> de novo para sair do aplicativo.</div>
+  <button class="btn primary" id="exit-stay">Continuar no app</button>
+</div>
 <!-- Seletor de música (para montar a escala) -->
 <div class="sheetbg" id="pickbg"></div>
 <div class="sheet" id="picksheet">
@@ -873,7 +900,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.58.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.58.2";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1517,6 +1544,7 @@ const $=s=>document.querySelector(s);
    estáticos no boot. Exceções deliberadas que ficam TEXTO (língua do músico): ♯ ♭ (tom),
    A−/A＋ (fonte), −/＋ (capo) e o ＋ de "Novo". */
 const ICONS={
+  power:'<path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>',
   archive:'<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
   download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
@@ -1628,6 +1656,7 @@ function navViewBack(){
 function navRender(stack){
   navApplying=true;
   try{
+    hideExitDialog();
     const abertas=new Set(stack.filter(e=>e.t==="sheet").map(e=>e.id));
     for(const id in NAV_SHEETS) if(!abertas.has(id)&&$(id).classList.contains("show")) closeS(NAV_SHEETS[id],id);
     if(!stack.some(e=>e.t==="diag")) hideChordDiagram();
@@ -1650,6 +1679,21 @@ function navArmExit(){
   if(navStack.length!==1||navStack[0].t!=="view") return;   // só com a raiz no topo (não duplica)
   navSync(navStack.concat([{t:"guard"}]),"push");
 }
+/* O diálogo NÃO empilha histórico (nem passa por openS): se empilhasse, o "voltar de novo" fecharia
+   o diálogo em vez de sair. Fica só na tela até o usuário decidir — e "Continuar no app" rearma a
+   guarda com um TOQUE REAL, que é o que o Chrome exige para respeitar a entrada. */
+let exitDlgT=null;
+function showExitDialog(){
+  const ic=$("#exit-ic"); if(ic&&!ic.innerHTML) ic.innerHTML=icon("power");
+  $("#exitbg").classList.remove("hidden"); $("#exitdlg").classList.remove("hidden");
+  clearTimeout(exitDlgT);
+  exitDlgT=setTimeout(hideExitDialog,7000);   // desistiu no meio: some sozinho (o toque seguinte rearma)
+  setTimeout(()=>{ try{ $("#exit-stay").focus(); }catch(e){} },60);
+}
+function hideExitDialog(){
+  clearTimeout(exitDlgT);
+  $("#exitbg").classList.add("hidden"); $("#exitdlg").classList.add("hidden");
+}
 function navInit(){
   navStack=[{t:"view",id:"lib"}];
   navSync(navStack,"replace");   // carimba a raiz: sem isso o 1º push vira replace e o back sai do app
@@ -1659,12 +1703,14 @@ function navInit(){
     const guardaConsumida=navStack.some(e=>e.t==="guard")&&!stack.some(e=>e.t==="guard");
     navPendingBack=0;
     navRender(stack);
-    if(guardaConsumida&&navStack.length===1){ toast("Toque voltar de novo para sair"); return; }
+    if(guardaConsumida&&navStack.length===1){ showExitDialog(); return; }
     navArmExit();                // voltou pra lista: rearma (o próximo voltar avisa antes de sair)
   });
   // o gesto do usuário rearma a guarda depois que ela foi consumida (e a arma na 1ª interação)
   addEventListener("pointerdown",navArmExit,{passive:true});
   addEventListener("keydown",navArmExit);
+  $("#exit-stay").onclick=hideExitDialog;
+  $("#exitbg").onclick=hideExitDialog;
 }
 
 function show(v){
