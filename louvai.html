@@ -873,7 +873,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.56.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.57.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1037,7 +1037,11 @@ function chordSvg(fg){
     if(v>0 && v>=start && v<start+ROWS) p+=`<circle class="dot" cx="${X(i)}" cy="${Y(v-start)+gh/2}" r="5.5"/>`; }
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${p}</svg>`;
 }
-function hideChordDiagram(){ $("#chorddiag").classList.add("hidden"); $("#chorddiagbg").classList.add("hidden"); }
+function hideChordDiagram(){
+  const estavaAberto=!$("#chorddiag").classList.contains("hidden");
+  $("#chorddiag").classList.add("hidden"); $("#chorddiagbg").classList.add("hidden");
+  if(estavaAberto) navCloseTop(top=>top.t==="diag");
+}
 function showChordDiagram(name, anchor){
   const fg=fingering(name), box=$("#chorddiag");
   box.innerHTML='<div class="cd-name">'+esc(name)+'</div>'+(fg?chordSvg(fg):'<div class="cd-none">sem diagrama 🙂</div>');
@@ -1048,6 +1052,7 @@ function showChordDiagram(name, anchor){
   let left=r.left+r.width/2-bw/2; left=Math.max(8,Math.min(window.innerWidth-bw-8,left));
   let top=r.bottom+8; if(top+bh>window.innerHeight-8) top=r.top-bh-8;
   box.style.left=left+"px"; box.style.top=Math.max(8,top)+"px";
+  navOpen({t:"diag"});
 }
 
 /* Transpõe uma nota preservando o intervalo. `ctx` = {letterStep, destFlat}.
@@ -1570,6 +1575,78 @@ function paintIcons(){
   if(ns) ns.innerHTML=icon("music"); if(ne) ne.innerHTML=icon("calendar-days");
 }
 
+/* ---------- Navegação: o voltar do celular anda DENTRO do app (v0.57.0) ----------
+   O botão voltar do Android só sabe "voltar no histórico"; como o app nunca criava entradas,
+   ele fechava o navegador no meio do culto. Agora cada camada aberta (tela, folha, diagrama,
+   tela cheia) vira uma entrada e o popstate é a ÚNICA fonte da verdade do "voltar" — ele
+   RENDERIZA a pilha de destino, que viaja inteira no history.state (sobrevive ao reload e
+   dispensa adivinhar o delta). Detalhe e armadilhas em docs/planos/PLANO-botao-voltar.md. */
+const NAV_SHEETS={"#sheet":"#sheetbg","#playersheet":"#playerbg","#reposheet":"#repobg","#picksheet":"#pickbg","#pastesheet":"#pastebg"};
+let navStack=[{t:"view",id:"lib"}], navApplying=false, navPendingBack=0, navQuiet=0, navOff=false;
+// abertura SEM gesto do usuário (folha do #imp= no boot): o Chrome pula entradas criadas sem
+// interação (history manipulation intervention) e o popstate nem dispara — então não empilha.
+function navSuppress(fn){ navQuiet++; try{ return fn(); } finally{ navQuiet--; } }
+function navSync(stack,mode){
+  navStack=stack;
+  try{ history[mode==="push"?"pushState":"replaceState"]({louvai:{stack}},"",location.href); }
+  catch(e){ navOff=true; }   // navegador sem History utilizável: app volta a se comportar como antes
+}
+function navOpen(entry){
+  if(navOff||navApplying||navQuiet) return;
+  const top=navStack[navStack.length-1];
+  if(top&&top.t===entry.t&&top.id===entry.id){ navSync(navStack.slice(0,-1).concat([entry]),"replace"); return; }
+  if(entry.t==="view"){
+    // "voltar" escrito como abertura (exitPlayer→openEscala, #e-cancel→openPlayer): se a tela já
+    // está na pilha, isso é voltar até ela — nunca empilhar de novo (senão o back não sai nunca)
+    let at=-1; navStack.forEach((e,i)=>{ if(e.t==="view"&&e.id===entry.id) at=i; });
+    if(at>=0){ const back=(navStack.length-1-at)+navPendingBack; navPendingBack=0; if(back>0) history.go(-back); return; }
+  }
+  // fechar+abrir no mesmo toque (o ⚙ recolhe antes de Editar/Enviar, v0.51.2): reaproveita a
+  // entrada em vez de back+push — o back é assíncrono e chegaria depois, fechando a camada errada
+  if(navPendingBack>0){ navPendingBack--; navSync(navStack.concat([entry]),"replace"); return; }
+  navSync(navStack.concat([entry]),"push");
+}
+function navCloseTop(pred){
+  if(navOff||navApplying||navQuiet) return;
+  const top=navStack[navStack.length-1];
+  if(!top||!pred(top)) return;
+  navStack=navStack.slice(0,-1);   // some da pilha lógica já; o histórico sincroniza no fim do tick
+  navPendingBack++;
+  Promise.resolve().then(()=>{ const n=navPendingBack; if(n>0){ navPendingBack=0; history.go(-n); } });
+}
+// um passo de "voltar" de tela pelos caminhos do PRÓPRIO app (limpam auto-scroll, DOM paginado,
+// escalaCtx…) — reusar em vez de duplicar a lógica de saída de cada tela
+function navViewBack(){
+  if(view==="player") exitPlayer();
+  else if(view==="editor") $("#e-cancel").click();
+  else if(view==="escala") $("#es-back").click();
+  else if(view==="escala-edit") $("#ee-cancel").click();
+}
+function navRender(stack){
+  navApplying=true;
+  try{
+    const abertas=new Set(stack.filter(e=>e.t==="sheet").map(e=>e.id));
+    for(const id in NAV_SHEETS) if(!abertas.has(id)&&$(id).classList.contains("show")) closeS(NAV_SHEETS[id],id);
+    if(!stack.some(e=>e.t==="diag")) hideChordDiagram();
+    if(!stack.some(e=>e.t==="full")&&$("#view-player").classList.contains("immersive")) setImmersive(false);
+    let dest=null; stack.forEach(e=>{ if(e.t==="view") dest=e.id; });
+    for(let i=0;i<5&&dest&&view!==dest;i++) navViewBack();
+    // "avançar" (só existe no desktop) não reabre camadas: normaliza o histórico com a tela real
+    if(dest&&view!==dest){ let at=-1; stack.forEach((e,i)=>{ if(e.t==="view"&&e.id===view) at=i; });
+      navSync(at>=0?stack.slice(0,at+1):[{t:"view",id:view}],"replace"); return; }
+    navStack=stack;
+  } finally { navApplying=false; }
+}
+function navInit(){
+  navStack=[{t:"view",id:"lib"}];
+  navSync(navStack,"replace");   // carimba a raiz: sem isso o 1º push vira replace e o back sai do app
+  addEventListener("popstate",ev=>{
+    if(navOff) return;
+    navPendingBack=0;
+    navRender((ev.state&&ev.state.louvai&&ev.state.louvai.stack)||[{t:"view",id:"lib"}]);
+  });
+}
+
 function show(v){
   view=v;
   $("#view-lib").classList.toggle("hidden",v!=="lib");
@@ -1579,6 +1656,7 @@ function show(v){
   $("#view-escala-edit").classList.toggle("hidden",v!=="escala-edit");
   v==="player"?lockScreen():unlockScreen();
   window.scrollTo(0,0);
+  navOpen({t:"view",id:v});
 }
 
 /* ---------- Wake Lock: tela acesa enquanto o player está aberto ---------- */
@@ -1851,7 +1929,10 @@ function applyFullBtn(){
   if(b){ b.innerHTML=icon(on?"minimize":"maximize"); b.setAttribute("aria-label",on?"Sair da tela cheia":"Tela cheia"); b.setAttribute("aria-pressed",String(on)); }
 }
 function setImmersive(on){
+  const estava=$("#view-player").classList.contains("immersive");
   $("#view-player").classList.toggle("immersive",on); applyFullBtn(); refreshPresentPos();
+  if(on&&!estava) navOpen({t:"full"});
+  else if(!on&&estava) navCloseTop(top=>top.t==="full");
   if(on){
     const el=document.documentElement, rq=el.requestFullscreen||el.webkitRequestFullscreen;
     if(rq){ try{ const p=rq.call(el); if(p&&p.catch)p.catch(()=>{}); immersiveFs=true; }catch(e){ immersiveFs=false; } }
@@ -2801,7 +2882,8 @@ function describeImport(data){
 }
 function clearImpHash(){
   // replaceState NÃO dispara hashchange (sem reentrada); fallback p/ file:// onde pode lançar
-  try{ history.replaceState(null,"",location.pathname+location.search); }
+  // preserva o history.state: ele carrega a pilha de navegação (v0.57.0)
+  try{ history.replaceState(history.state,"",location.pathname+location.search); }
   catch(e){ try{ location.hash=""; }catch(_){} }
 }
 async function handleImportLink(){
@@ -2818,10 +2900,10 @@ async function handleImportLink(){
   if(!label){ toast("Link inválido 😕"); return; }
   // "nada salvo no escuro": dado vindo de link é não-confiável — confirma antes de mesclar
   // (o esc() da v0.13.2 ainda blinda XSS na exibição depois de importado).
-  openSheet("Importar deste link?",[
+  navSuppress(()=>openSheet("Importar deste link?",[
     {ic:icon("download"),label:"Importar "+label,fn:()=>{ closeSheet(); importJSON(jsonText); }},
     {ic:icon("x"),label:"Cancelar",fn:closeSheet},
-  ]);
+  ]));
 }
 
 /* ========================================================================
@@ -3221,8 +3303,13 @@ function openS(bgSel,sheetSel,focusSel){
   $(bgSel).classList.add("show");
   requestAnimationFrame(()=>$(sheetSel).classList.add("show"));
   if(focusSel) setTimeout(()=>$(focusSel).focus(),200);
+  navOpen({t:"sheet",id:sheetSel});   // síncrono na chamada (o rAF acima atrasaria a pilha)
 }
-function closeS(bgSel,sheetSel){ $(sheetSel).classList.remove("show"); $(bgSel).classList.remove("show"); }
+function closeS(bgSel,sheetSel){
+  const estavaAberta=$(sheetSel).classList.contains("show");
+  $(sheetSel).classList.remove("show"); $(bgSel).classList.remove("show");
+  if(estavaAberta) navCloseTop(top=>top.t==="sheet"&&top.id===sheetSel);
+}
 
 /* arrastar para fechar (M3): pega no grip OU no cabeçalho (h3) — nunca no corpo rolável.
    Segue o dedo 1:1 (sem transição); ao soltar, fecha se passou do limiar ou volta com mola.
@@ -3306,6 +3393,7 @@ $("#appVer").textContent="v"+APP_VERSION;
 paintIcons();   // pinta os ícones SVG dos botões estáticos (fonte única: ICONS/icon())
 document.querySelectorAll(".sheet").forEach(enableSheetDrag);   // arrastar para fechar (M3)
 load(); applyTheme(); renderLibrary(); show("lib");
+navInit();   // carimba a raiz da navegação (o voltar do celular anda dentro do app, v0.57.0)
 // link auto-importável: após carregar/render, trata #imp= do boot e de links tocados depois
 handleImportLink();
 window.addEventListener("hashchange",handleImportLink);

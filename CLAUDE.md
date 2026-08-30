@@ -166,8 +166,9 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   (`rewrapBody`/`wrapCols`, validado no Playwright).
 - `docs/planos/PLANO-botao-voltar.md` — o **botão voltar do celular** navega dentro do app (fecha folha →
   sai do player → volta pra lista) em vez de fechar o navegador: pilha de navegação no `history.state`,
-  `popstate` como fonte única, funil `openS`/`closeS`. **Status: 📋 planejado**, desenho **validado
-  adversarialmente** com protótipo injetado no app (9 falhas achadas e corrigidas no plano).
+  `popstate` como fonte única, funil `openS`/`closeS`. **Implementado na v0.57.0**; o desenho foi
+  **validado adversarialmente antes de codar** (protótipo injetado no app: 9 falhas achadas e já
+  nascidas corrigidas).
 - `docs/planos/PLANO-ui.md` — polimento de UI/ícones em **ondas**, **concluído (v0.28.0→v0.36.1)**: Onda 1
   (ganhos rápidos + ícone do Backup, v0.28.0); Onda 2 (ícones SVG inline via `ICONS`/`icon()`,
   v0.29.0); Onda 3 = M2 ⚙ seções (v0.30.0) · M4 linguagem de card (v0.31.0) · M5 `#reposheet`
@@ -389,6 +390,22 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   **saída idêntica** quando nada é partido. Toggle **"Quebrar linhas"** (`#wrap-toggle`, padrão ligado);
   `resize` re-renderiza também em rolagem quando ligado (preserva a fração). Paginação segue de graça
   (`paginate` mede a altura real). Validado no Playwright (sem transbordo; Página 2→5).
+- **Voltar do celular (v0.57.0):** o botão voltar anda **dentro** do app (fecha folha → sai da cifra →
+  volta pra lista; só sai do app na raiz). O **`history.state` carrega a pilha inteira** (`navStack` de
+  `{t:"view"|"sheet"|"diag"|"full", id}`) e o **`popstate` é a ÚNICA fonte da verdade**: `navRender(stack)`
+  **renderiza a pilha de destino** (idempotente) usando os "voltares" do próprio app (`navViewBack` chama
+  `exitPlayer`/`#e-cancel`/`#es-back`/`#ee-cancel`, que já limpam auto-scroll, DOM paginado e `escalaCtx`).
+  `navOpen` decide **push × replace × voltar-até**: tela **já presente na pilha** = voltar até ela (cobre
+  `exitPlayer`→`openEscala` e `#e-cancel`→`openPlayer`, que são *voltares escritos como aberturas*);
+  mesma camada no topo = replace (trocar de música na Apresentação **não** empilha). `navCloseTop` tira a
+  camada da pilha na hora e agenda o `history.go(-n)` no fim do tick — se abrir algo no mesmo toque
+  (o ⚙ recolhe antes de *Editar*/*Enviar*, v0.51.2), **coalesce** em `replace` (back+push sobreporia as
+  duas folhas e deixaria o item **inclicável**). Enxertos: `show(v)`, o funil `openS`/`closeS` (as 38
+  chamadas de `closeSheet` não mudam), `showChordDiagram`/`hideChordDiagram`, `setImmersive` e
+  `navInit()` no boot (**carimba a raiz** — sem isso o 1º push degenera e o voltar sai do app).
+  `clearImpHash` passou a **preservar** o `history.state`. `navSuppress` para aberturas **sem gesto**
+  (folha do `#imp=` no boot — o Chrome ignora entradas criadas sem interação). **Não** empilham:
+  virar página, o "livro", `switchTab` e o auto-scroll. `navOff` desliga tudo se o History falhar.
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).
@@ -463,7 +480,9 @@ aparece na exibição, não só na edição (v0.51.3). Depois: **acordes ~20% ma
 visual, sem desalinhar, v0.52.0) e **salvar edição com escolha** — sobrescrever/salvar como nova no
 editor **e** salvar o tom transposto no player (`transposeBody`, v0.53.0), **tema Laranja** (palco/pouca
 luz) + **brilho dos acordes** reduzido/desligável (v0.54.0), correção da sobreposição do chip do acorde
-(v0.55.0) e **quebra de linha automática** ao ampliar — a cifra não some pro lado (v0.56.0). *Follow-up
+(v0.55.0), **quebra de linha automática** ao ampliar — a cifra não some pro lado (v0.56.0) — e o
+**botão voltar do celular navegando dentro do app** (fecha folha/diagrama/tela cheia → sai da cifra →
+volta pra lista; v0.57.0, desenho validado adversarialmente antes de codar). *Follow-up
 de campo aberto:* salvar o tom **na escala** (`it.key`), o gesto do ensaio.
 Ver os `PLANO-*.md`.
 Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**

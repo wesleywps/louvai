@@ -2128,6 +2128,122 @@ const wrapPages = await page.evaluate(() => {
 });
 ok(wrapPages.big > wrapPages.small, "Quebra + Modo Página: ampliar a fonte aumenta as páginas (" + wrapPages.small + "→" + wrapPages.big + ")");
 
+// ===== v0.57.0 — o voltar do celular anda DENTRO do app =====
+// Contexto próprio: o histórico precisa começar limpo p/ o goBack ser determinístico.
+// Tudo aqui exercita o CAMINHO REAL (clique no controle) e mede o RENDER, não o estado lógico.
+const ctxNav = await browser.newContext({ viewport: { width: 412, height: 915 } });
+const pageNav = await ctxNav.newPage();
+const navErrors = [];
+pageNav.on("pageerror", e => navErrors.push(e.message));
+await pageNav.addInitScript(() => {
+  localStorage.setItem("louvai.settings.v1", JSON.stringify({ theme: "dark", seeded: true }));
+  localStorage.setItem("louvai.songs.v1", JSON.stringify([
+    { id: "n1", title: "Voltar Um", artist: "A", key: "C", body: "[Intro]\nC G\nprimeira letra", tags: [] },
+    { id: "n2", title: "Voltar Dois", artist: "B", key: "D", body: "[Intro]\nD A\nsegunda letra", tags: [] }]));
+  localStorage.setItem("louvai.escalas.v1", JSON.stringify([
+    { id: "ne1", title: "Culto de teste", date: "2026-09-06", team: [],
+      items: [{ kind: "song", songId: "n1" }, { kind: "song", songId: "n2" }] }]));
+});
+const navDepth = () => pageNav.evaluate(() => (history.state && history.state.louvai ? history.state.louvai.stack.length : -1));
+const navVis = id => pageNav.locator(id).isVisible();
+const navShown = async id => (await pageNav.locator(id + ".show").count()) === 1;
+const navFresh = async () => { await pageNav.goto(APP_URL); await pageNav.waitForTimeout(300); };
+
+// (a) o gesto mais comum no palco: ⚙ aberto no player, voltar fecha SÓ o painel
+await navFresh();
+ok((await navDepth()) === 1, "Voltar: a raiz é carimbada no boot (pilha = 1; na lista o voltar sai do app)");
+await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout(250);
+await pageNav.locator("#p-settings").click(); await pageNav.waitForTimeout(300);
+await pageNav.goBack(); await pageNav.waitForTimeout(350);
+ok(!(await navShown("#playersheet")) && await navVis("#view-player"),
+  "Voltar fecha o ⚙ Ajustes e MANTÉM a cifra aberta");
+await pageNav.goBack(); await pageNav.waitForTimeout(350);
+ok(await navVis("#view-lib") && !(await navVis("#view-player")) && (await navDepth()) === 1,
+  "Voltar de novo sai da cifra para a lista (e a pilha volta à raiz)");
+
+// (b) regressão: recolher o ⚙ e abrir outra folha no MESMO toque não pode sobrepor as duas
+// (o back é assíncrono; sem coalescência o ⚙ ficava POR CIMA e o item virava inclicável)
+await navFresh();
+await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout(220);
+await pageNav.locator("#p-settings").click(); await pageNav.waitForTimeout(280);
+await pageNav.locator("#p-share").click(); await pageNav.waitForTimeout(400);
+const alvo = pageNav.locator("#sheet .sheetitem", { hasText: "Editar cifra" });
+const noTopo = await alvo.evaluate(el => { const r = el.getBoundingClientRect();
+  const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+  return !!t && (t === el || el.contains(t)); });
+ok(await navShown("#sheet") && !(await navShown("#playersheet")) && noTopo,
+  "Compartilhar recolhe o ⚙ sem sobrepor: o item da folha está clicável de fato (elementFromPoint)");
+ok((await navDepth()) === 3, "Fechar-e-abrir no mesmo toque reaproveita a entrada (pilha lista>cifra>folha = 3)");
+await alvo.click(); await pageNav.waitForTimeout(450);
+ok(await navVis("#view-editor") && (await navDepth()) === 3,
+  "Folha → editor: troca de tela fechando a folha mantém a pilha coerente");
+await pageNav.goBack(); await pageNav.waitForTimeout(400);
+ok(await navVis("#view-player") && !(await navVis("#view-editor")), "Voltar do editor retorna para a cifra");
+
+// (b2) fechar a folha pelo fundo (ou arrastando) não pode deixar entrada órfã no histórico
+await navFresh();
+await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout(220);
+await pageNav.locator("#p-settings").click(); await pageNav.waitForTimeout(300);
+await pageNav.locator("#playerbg").click({ position: { x: 10, y: 10 } }); await pageNav.waitForTimeout(400);
+ok(!(await navShown("#playersheet")) && (await navDepth()) === 2,
+  "Fechar o ⚙ pelo fundo desempilha junto (sem entrada órfã)");
+await pageNav.goBack(); await pageNav.waitForTimeout(400);
+ok(await navVis("#view-lib"), "Depois de fechar pelo fundo, UM voltar já sai da cifra");
+
+// (c) editar e cancelar pelo caminho do app não pode empilhar (voltar escrito como abertura)
+await navFresh();
+await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout(220);
+await pageNav.locator("#p-settings").click(); await pageNav.waitForTimeout(280);
+await pageNav.locator("#p-edit").click(); await pageNav.waitForTimeout(450);
+const navDepEd = await navDepth();
+await pageNav.locator("#e-cancel").click(); await pageNav.waitForTimeout(400);
+ok(navDepEd === 3 && (await navDepth()) === 2 && await navVis("#view-player"),
+  "Cancelar a edição volta pra cifra DESEMPILHANDO (não empilha o player de novo)");
+
+// (d) Apresentação: sair volta pra escala desempilhando; trocar de música não vira histórico
+await navFresh();
+await pageNav.locator("#tab-escalas").click(); await pageNav.waitForTimeout(250);
+await pageNav.locator(".escard").first().click(); await pageNav.waitForTimeout(280);
+await pageNav.locator("#es-present").click(); await pageNav.waitForTimeout(400);
+const navDepPres = await navDepth();
+await pageNav.locator("#pv-next").click(); await pageNav.waitForTimeout(400);
+ok(navDepPres === 3 && (await navDepth()) === 3, "Apresentação: trocar de música NÃO empilha histórico");
+await pageNav.locator("#pv-back").click(); await pageNav.waitForTimeout(450);
+ok((await navDepth()) === 2 && await navVis("#view-escala"),
+  "Sair da Apresentação volta pra escala DESEMPILHANDO (o voltar continua saindo)");
+await pageNav.goBack(); await pageNav.waitForTimeout(400);
+ok(await navVis("#view-lib") && (await navDepth()) === 1, "Voltar na escala retorna à lista");
+
+// (e) tela cheia é uma camada: o voltar sai dela sem sair da Apresentação
+await navFresh();
+await pageNav.locator("#tab-escalas").click(); await pageNav.waitForTimeout(250);
+await pageNav.locator(".escard").first().click(); await pageNav.waitForTimeout(280);
+await pageNav.locator("#es-present").click(); await pageNav.waitForTimeout(400);
+await pageNav.locator("#pv-full").click(); await pageNav.waitForTimeout(400);
+const navFullOn = await pageNav.evaluate(() => document.getElementById("view-player").classList.contains("immersive"));
+await pageNav.goBack(); await pageNav.waitForTimeout(450);
+const navFullOff = await pageNav.evaluate(() => document.getElementById("view-player").classList.contains("immersive"));
+ok(navFullOn && !navFullOff && await navVis("#view-player"),
+  "Tela cheia: o voltar sai da tela cheia e MANTÉM a Apresentação aberta");
+
+// (f) diagrama de acorde (fora do funil das folhas) também é uma camada
+await navFresh();
+await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout(280);
+await pageNav.locator("#p-body .chord").first().click(); await pageNav.waitForTimeout(350);
+const navDiagOn = await navVis("#chorddiag");
+await pageNav.goBack(); await pageNav.waitForTimeout(400);
+ok(navDiagOn && !(await navVis("#chorddiag")) && await navVis("#view-player"),
+  "Diagrama de acorde: o voltar fecha o diagrama e MANTÉM a cifra (tocando no acorde de verdade)");
+
+// (g) o link auto-importável limpa o hash SEM apagar a pilha de navegação
+await navFresh();
+await pageNav.locator(".songcard").first().click(); await pageNav.waitForTimeout(250);
+const navHash = await pageNav.evaluate(() => { clearImpHash();
+  return { stack: history.state && history.state.louvai ? history.state.louvai.stack.length : -1, hash: location.hash }; });
+ok(navHash.stack === 2 && navHash.hash === "", "clearImpHash() limpa o #imp= preservando a pilha de navegação");
+ok(navErrors.length === 0, "Voltar: nenhum erro de JS no fluxo de navegação" + (navErrors.length ? ": " + navErrors.join(" | ") : ""));
+await ctxNav.close();
+
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));
 

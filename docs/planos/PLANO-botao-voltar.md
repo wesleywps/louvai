@@ -3,10 +3,12 @@
 > **Como retomar:** abra o Claude Code nesta pasta e peça
 > *"vamos executar o PLANO-botao-voltar.md"* (ou *"vamos pro Incremento 1 do botão voltar"*).
 >
-> **Status: 📋 PLANEJADO — não implementado.** _(Planejado com o app na v0.56.0.)_
-> **Desenho validado adversarialmente contra o código real** (protótipo injetado no `louvai.html`
-> e medido no Playwright: 18 verificações verdes depois das correções — ver a seção
-> "Validação adversarial", que lista as **9 falhas encontradas** e o que cada uma exigiu.)
+> **Status: ✅ CONCLUÍDO na v0.57.0** (Inc. 1 e Inc. 2 juntos). _(Planejado com o app na v0.56.0.)_
+> **Desenho validado adversarialmente ANTES de codar** (protótipo injetado no `louvai.html` e medido
+> no Playwright: as **9 falhas** da seção "Validação adversarial" apareceram no protótipo e já
+> nasceram corrigidas no código). Na entrega: **17 casos novos** na suíte (388 verificações no total),
+> com clique real do controle e medição do render — inclusive `elementFromPoint` provando que o item
+> da folha ficou clicável (a falha #2).
 
 Pedido de campo: **no celular, o botão voltar sai do app.** Se a pessoa está com o ⚙ Ajustes aberto
 no meio da Apresentação e toca em voltar (gesto reflexo no Android), o navegador **fecha o Louvai**

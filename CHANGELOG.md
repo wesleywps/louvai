@@ -8,6 +8,39 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.57.0 — O botão voltar do celular anda dentro do app
+**Recurso (uso ao vivo, validado com Playwright).** Reporte de campo: apertar **voltar** no celular
+**fechava o app**. Se a pessoa estava com o ⚙ Ajustes aberto no meio da Apresentação, o gesto reflexo
+do Android tirava o Louvai da tela — e era preciso reabrir e reencontrar a música. Agora o voltar
+significa **"voltar uma camada"**: fecha a folha aberta → sai da cifra → volta pra lista, e **só sai do
+app quando já está na lista** (como qualquer app nativo).
+- **Vale para todas as camadas:** as 5 folhas (⚙ Ajustes, Compartilhar, Repertório na nuvem, seletor de
+  música, colar cifra), o **diagrama de acorde** e o **modo tela cheia** — sair da tela cheia com o
+  voltar **não** encerra a Apresentação.
+- **Sem efeito colateral na navegação do app:** virar página, trocar de música no "livro" e trocar de
+  aba **não** viram histórico (o voltar não vira "desfazer página"). Sair da Apresentação volta pra
+  escala **desempilhando**, então o voltar seguinte continua saindo.
+- **iPhone ganha junto:** o swipe da borda usa o mesmo histórico.
+- **Por dentro:** o `history.state` carrega a **pilha inteira** (`navStack`) e o `popstate` é a **única
+  fonte da verdade** do voltar — ele **renderiza a pilha de destino** (idempotente), em vez de adivinhar
+  o delta. `navOpen`/`navCloseTop`/`navRender`/`navSync` + `navInit` no boot; o enxerto acontece no funil
+  único `openS`/`closeS` (as 38 chamadas de `closeSheet` não precisaram mudar) e no `show(v)`.
+- **Armadilhas resolvidas (achadas medindo, não teorizando — ver `PLANO-botao-voltar.md`):**
+  **(1)** sem carimbar a raiz no boot, o 1º empilhamento degenera e o voltar sai do app; **(2)** fechar e
+  abrir no mesmo toque (o ⚙ recolhe antes de *Editar*/*Enviar*, v0.51.2) sobrepunha as duas folhas e
+  deixava o item **inclicável** — resolvido reaproveitando a entrada em vez de `back`+`push`;
+  **(3)** `exitPlayer`→`openEscala` e `#e-cancel`→`openPlayer` são *voltares escritos como aberturas*
+  (empilhariam ao voltar) — resolvido com "tela que já está na pilha = voltar até ela"; **(4)** o
+  `clearImpHash()` do link `#imp=` apagava o `history.state` inteiro (agora preserva).
+- **Limitação conhecida:** a folha de confirmação do link `#imp=` abre **sem gesto** do usuário (no
+  boot) — o Chrome ignora entradas criadas sem interação, então essa folha não entra na pilha e com ela
+  aberta o voltar ainda sai do app. Também: depois de **recarregar** a página no meio da navegação, as
+  entradas antigas viram "fantasmas" (um voltar sem efeito visível) antes de sair.
+- **388 verificações** (17 novas: clique real do controle + medição do render — inclusive
+  `elementFromPoint` provando que o item da folha ficou clicável), zero erro de JS.
+
+---
+
 ## v0.56.0 — Quebra de linha automática: a cifra não some pro lado ao ampliar
 **Recurso (uso ao vivo, validado com Playwright).** Ao ampliar a cifra com a pinça, quando a linha
 passava da largura da tela, **letra e acordes sumiam pro lado** (só dava pra ver rolando na horizontal).

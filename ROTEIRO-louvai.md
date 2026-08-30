@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.56.0**.
+seguir. Atualizado até a **v0.57.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -129,6 +129,8 @@ instalação complexa.
 | **v0.55.0** | correção | **Acordes empilhados não se sobrepõem + interruptor tira o chip:** medindo com Playwright, a "sobreposição do sombreamento" era o **chip de fundo** — o `inline-block` da v0.52.0 fez o chip herdar o line-height 1.85 (~33px), então acordes um embaixo do outro se encostavam (gap −5,5px). `line-height:1.1` no `.chord` encolhe o chip (gap +11,7px) e o interruptor "Brilho dos acordes" passa a remover **halo E chip** (`text-shadow/background:none`). O teste agora clica o botão real e mede a geometria. |
 | **v0.56.0** | recurso | **Quebra de linha automática:** ao ampliar a cifra, linha longa não some mais pro lado — quebra em **blocos** que cabem, mantendo o visual de colunas (acorde por cima da letra); no Modo Página gera mais páginas, em rolagem mais linhas. Acorde nunca é cortado. Interruptor **"Quebrar linhas"** no ⚙ (padrão ligado). `rewrapBody` (pura, roda antes do `renderCifra` intacto) + `wrapCols` (mede colunas) + reusa `transposeBody`. Validado no Playwright (rolagem fonte 26 sem transbordo; Página 2→5). |
 
+| **v0.57.0** | recurso | **O botão voltar do celular anda dentro do app:** apertar voltar fechava o Louvai (inclusive com o ⚙ aberto no meio do culto). Agora fecha a camada aberta — folha, diagrama de acorde ou tela cheia —, depois sai da cifra, depois volta pra lista, e **só sai do app na raiz**. Virar página/trocar de música/trocar de aba não viram histórico. Pilha de navegação no `history.state` + `popstate` como fonte única (`navOpen`/`navCloseTop`/`navRender`), enxertada no funil `openS`/`closeS` e no `show`. Desenho **validado adversarialmente** antes de codar (9 falhas achadas com protótipo medido). |
+
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
 ---
@@ -186,11 +188,11 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
   (M2 seções do ⚙ Ajustes · M4 linguagem de card · M5 `#reposheet` em cartões · M3 arrastar p/
   fechar · M7 entrada da lista · M8 progresso na Apresentação · M6 skeleton de carregamento).
   **Validação visual no celular concluída (2026-06-26)** (palco, dark/light).
-- [ ] **Botão "voltar" do celular navega dentro do app** (`PLANO-botao-voltar.md`) — hoje o voltar do
-  Android **fecha o app**; passa a fechar a folha aberta → sair do player → voltar pra lista, saindo só
-  na raiz. Pilha de navegação no `history.state` + `popstate` como fonte única, aproveitando o funil
-  `openS`/`closeS`. Desenho **validado adversarialmente** contra o código (protótipo medido no
-  Playwright). **Casa com o PWA** (em standalone o voltar é a única saída).
+- [x] **Botão "voltar" do celular navega dentro do app** (`PLANO-botao-voltar.md`) — **entregue na
+  v0.57.0**: fecha a folha aberta → sai da cifra → volta pra lista, saindo do app só na raiz; cobre
+  também o diagrama de acorde e a tela cheia. Pilha no `history.state` + `popstate` como fonte única,
+  enxertada no funil `openS`/`closeS`. Desenho validado adversarialmente antes de codar (9 falhas).
+  **Casa com o PWA** (em standalone o voltar é a única saída).
 
 ### Tema A — Segurança dos dados
 - [ ] **PWA instalável de verdade** (100% offline inclusive fontes;
@@ -344,4 +346,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.56.0.*
+*Última atualização deste roteiro: v0.57.0.*
