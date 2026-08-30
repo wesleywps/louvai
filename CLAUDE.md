@@ -421,6 +421,13 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   Aberto quando a guarda é consumida; `#exit-stay` ("Continuar no app") fecha e **rearma com gesto real**;
   o fundo também fecha; some sozinho em 7s; `navRender` o fecha em qualquer navegação. Ícone `power`
   pelo `ICONS`; cores por token (3 temas).
+  **Duas proteções, uma por ambiente (v0.58.3):** `navUsaWatcher()` = `CloseWatcher` existe **e** o
+  ponteiro é grosso (celular) → `armExitWatcher()`/`disarmExitWatcher()`; senão, a entrada-guarda.
+  **Por quê:** a guarda só vale se nascer de um TOQUE (entrada criada sem interação é ignorada pelo
+  Chrome), então quem abria o app e voltava na hora saía sem aviso; o CloseWatcher tem **um watcher
+  "grátis" por documento**, que intercepta o voltar **sem gesto**. O watcher é **desarmado em
+  `navOpen`** ao sair da raiz (senão o voltar dentro do app abriria "Sair do Louvai?") e rearmado ao
+  voltar pra lista; `navInit` o arma no boot.
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).

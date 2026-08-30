@@ -21,6 +21,15 @@
 > o "voltar até a tela" **para nela**. **Headless não reproduz a intervenção** — o teste da v0.58.0
 > passava com o bug: quando o comportamento depender de *user activation*, o verde da suíte não
 > substitui o teste no aparelho.
+>
+> **v0.58.2:** o aviso virou **diálogo central** ("Sair do Louvai?" + *Continuar no app*), que **não
+> empilha** — se empilhasse, o "voltar de novo" fecharia o diálogo em vez de sair.
+> **v0.58.3 (2º reporte de campo):** abrir o app e voltar **sem tocar em nada** não avisava — o limite
+> da entrada-guarda. Resolvido com **`CloseWatcher`** (o "watcher grátis" do documento intercepta o
+> voltar **sem gesto**; medido antes de adotar), mantendo a guarda como fallback onde ele não existe.
+> Lição para o resto do plano: **a Navigation API e o CloseWatcher foram descartados no desenho por
+> não serem Baseline — mas como *progressive enhancement*, em cima do fallback, resolvem casos que a
+> History API sozinha não alcança.**
 
 Pedido de campo: **no celular, o botão voltar sai do app.** Se a pessoa está com o ⚙ Ajustes aberto
 no meio da Apresentação e toca em voltar (gesto reflexo no Android), o navegador **fecha o Louvai**
