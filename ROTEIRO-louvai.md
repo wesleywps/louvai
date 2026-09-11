@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.58.3**.
+seguir. Atualizado até a **v0.59.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -139,13 +139,15 @@ instalação complexa.
 
 | **v0.58.3** | correção | **Abrir o app e voltar na hora agora também avisa:** sem nenhum toque não havia proteção (o Chrome ignora entrada de histórico criada sem interação). Passa a usar o **`CloseWatcher`** — o "watcher grátis" do documento intercepta o voltar do Android **sem exigir gesto** —, com a entrada-guarda como fallback onde ele não existe. Desarmado fora da lista, para o voltar seguir sendo navegação dentro do app. |
 
+| **v0.59.0** | recurso | **Excluir cifra e escala pela lista:** antes só dava pra excluir entrando no **editor** (ou pela folha Compartilhar, que abria o editor por baixo dos panos). Agora **deslizar o card** revela **Duplicar · Excluir**, com **confirmação em diálogo do app** (diz em quais escalas a cifra está; na escala, que as cifras não vão junto) e **DESFAZER** no toast. O **voltar do celular cancela** (a confirmação é camada da pilha, ao contrário do diálogo de saída). `touch-action:pan-y` preserva a rolagem; **toque e segure** é o caminho sem gesto. Corrige de quebra o cancelar que largava a pessoa dentro do editor. |
+
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
 ---
 
 ## 3. Onde o app está hoje (resumo de capacidades)
 
-- **Repertório:** criar/editar/excluir cifras, busca, tags; importar colando do
+- **Repertório:** criar/editar cifras e **excluir deslizando o card** (confirmação + desfazer), busca, tags; importar colando do
   Cifra Club; importar/exportar arquivos; backup do repertório inteiro. Importação
   deduplica por `id` e **avisa antes de mesclar** quando o título repete com `id`
   diferente (manter as minhas / cópias / cancelar).
@@ -254,6 +256,11 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 - [x] **Dar o tom** (referência sonora da tônica do tom atual, Web Audio) *(entregue na v0.49.0)*.
 - [x] **Link da versão guia (YouTube)** por música — sincronizado (`song.ref`). *(entregue na v0.47.0)*
 - [x] **Observações da música** (compartilhadas, `song.notes`) — sincroniza; no player e na Apresentação. *(entregue na v0.48.0)*
+- [x] **Excluir cifra e escala pela lista** (`PLANO-excluir.md`) — **Inc. 1 entregue na v0.59.0**:
+  deslizar o card revela **Duplicar · Excluir**, confirmação em **diálogo do app** (diz em quantas
+  escalas a cifra está), **Desfazer** no toast e o voltar do celular cancelando. **Inc. 2 (obrigatório,
+  em andamento):** **lápides** no snapshot — sem elas o sincronizar **traz de volta** o que foi
+  excluído, porque o merge é união pura.
 - [ ] **Campos extras na música:** BPM, tema/categoria, andamento.
 - [ ] **Itens não-musicais no modo Apresentar** (mostrar o card de aviso/oração na sequência).
 
@@ -354,4 +361,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.58.3.*
+*Última atualização deste roteiro: v0.59.0.*

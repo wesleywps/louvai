@@ -8,6 +8,39 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.59.0 — Excluir cifra e escala pela lista (deslizar → confirmar → desfazer)
+**Recurso (pedido do dono).** Tirar uma música ou uma escala do app exigia entrar no **editor** —
+ou passar pela folha Compartilhar, que abria o editor por baixo dos panos só para clicar no botão
+de excluir. Agora a ação está onde a pessoa já está: **na lista**.
+- **Deslize revela as ações:** arrastar o card para a esquerda mostra **⧉ Duplicar · 🗑 Excluir**
+  (alvos de 72px). Um card aberto por vez; rolar, tocar fora ou trocar de tela recolhe. **Toque e
+  segure** abre a mesma faixa — caminho sem gesto, para o desktop e para quem não descobre o
+  deslize. Na primeira vez, o primeiro card **espia** a faixa e volta, senão ninguém descobriria.
+- **A rolagem continua intocada:** `touch-action:pan-y` no wrapper entrega só o eixo horizontal ao
+  JS; um arrasto vertical é rolagem, como sempre foi.
+- **Confirmação com cara de Louvai:** saiu o `confirm()` cinza do navegador, entrou o mesmo cartão
+  central do *"Sair do Louvai?"* — com **o contexto que importa**: *"Está em 2 escalas: Culto 12/07
+  · Ensaio. O item sai da ordem do culto."* Na escala, a linha que tira o medo: *"Excluir a escala
+  não apaga as cifras."* Foco inicial no **Cancelar** — ação destrutiva não recebe foco.
+- **O voltar do celular CANCELA.** Ao contrário do diálogo de saída (que de propósito não empilha),
+  este entra na pilha de navegação. Se não entrasse, na lista o voltar consumiria a guarda de saída
+  e abriria *"Sair do Louvai?"* **por cima** da confirmação.
+- **DESFAZER:** o toast que segue a exclusão traz a cifra (ou a escala) de volta inteira por ~6s.
+  Confirmação evita o engano; o desfazer conserta o engano que passou.
+- **Um caminho só:** `deleteSong`/`deleteEscala` viraram a fonte única por trás do deslize, da folha
+  Compartilhar e do editor. **Regressão corrigida de quebra:** cancelar pela folha Compartilhar
+  largava a pessoa **dentro do editor** da música que ela decidiu não excluir.
+- **Armadilha do wrapper:** o `.swipewrap` entrou entre a lista e o card e **matou a animação de
+  entrada** (o `staggerIn` procurava `.songcard` entre os filhos diretos) — o teste da v0.34.0 pegou
+  e a classe passou a ir no wrapper. E o clique que **nasce do gesto** (soltar o deslize dispara
+  `click`) recolhia na hora o card que o próprio gesto acabara de abrir: agora ele é só suprimido,
+  e a supressão morre no toque seguinte, não por relógio.
+- **432 verificações** (26 novas): deslize medido pela **geometria** do card, arraste curto, arrasto
+  vertical, toque e segure, um-aberto-por-vez, texto da confirmação, voltar cancelando, exclusão em
+  memória/armazenamento/tela, desfazer, a regressão do editor e o fluxo da escala.
+
+---
+
 ## v0.58.3 — Correção: abrir o app e voltar na hora agora também avisa
 **Correção (reporte de campo, validada com Playwright).** Faltava o caso mais simples: **carregar o
 site e apertar voltar sem tocar em nada** fechava o app sem confirmação.

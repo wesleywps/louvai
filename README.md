@@ -23,7 +23,8 @@ e sem backend: abre no navegador do celular/tablet e compartilha por arquivo ou 
 - **📚 Repertório** — busca e tags, criar/editar/excluir com **escolha ao salvar** (sobrescrever ou
   **salvar como nova** — ex.: a mesma música em outro tom), **importar colando do Cifra Club**,
   **"última vez que tocamos"** e **ordenar** por alfabética / recentes / **menos tocadas**
-  (dá vez ao que está esquecido). Importar **avisa antes de duplicar** título repetido.
+  (dá vez ao que está esquecido) e **excluir deslizando o card** na lista (com confirmação que diz
+  em quais escalas a cifra está — e **Desfazer** logo depois). Importar **avisa antes de duplicar** título repetido.
   **Link da versão guia** (YouTube) por música, que **sincroniza** com a equipe.
   E **observações da música** (cues de arranjo: "começa só voz", "tom da guia ≠ o que tocamos") que também sincronizam.
 - **📅 Escalas / setlists** — ordem do culto, tom por escala, equipe e tempo total;
@@ -38,7 +39,7 @@ e sem backend: abre no navegador do celular/tablet e compartilha por arquivo ou 
   conferência opcional do **tom pelos acordes**, importação à prova de arquivo malformado
   (sem XSS) e **acessível** (foco por teclado, contraste no escuro, alvos de toque grandes).
 
-*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.58.3**.*
+*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.59.0**.*
 
 ## Usar
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"** — desde a

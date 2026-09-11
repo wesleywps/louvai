@@ -154,6 +154,23 @@ input,textarea,select{font-family:inherit}
 .songcard{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-4);min-height:56px}
 .escard{padding:var(--sp-3) var(--sp-4)}
 .songcard:active,.escard:active{transform:scale(.985);background:var(--panel2)}
+/* faixa de ações por deslize (v0.59.0): o card corre p/ a esquerda e revela Duplicar · Excluir.
+   touch-action:pan-y entrega o eixo X ao JS e MANTÉM a rolagem vertical nativa da lista (mesmo
+   remédio da .cifra na pinça). A margem do card migrou p/ o wrapper: senão a faixa vaza no vão. */
+.swipewrap{position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:var(--sp-2);touch-action:pan-y}
+.swipewrap .songcard,.swipewrap .escard{margin-bottom:0;position:relative;z-index:1;
+  transition:transform .22s cubic-bezier(.2,.9,.3,1)}
+.swipeacts{position:absolute;top:0;right:0;bottom:0;display:flex;z-index:0;visibility:hidden}
+.swipewrap.open .swipeacts,.swipewrap.sliding .swipeacts{visibility:visible}
+.swipeacts .sa{width:72px;border:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:5px;font-size:var(--fs-xs);font-weight:700;
+  background:var(--panel2);color:var(--text)}
+.swipeacts .sa .ic-svg{width:20px;height:20px}
+.swipeacts .sa-del{background:var(--danger);color:#fff}
+.swipeacts .sa:active{filter:brightness(.92)}
+/* o gesto não se descobre sozinho: na 1ª pintura o primeiro card espia a faixa e volta */
+@keyframes swipePeek{0%,100%{transform:none}42%{transform:translateX(-28px)}}
+.swipewrap .peek{animation:swipePeek 1.1s ease-in-out .5s}
 .songcard .meta{flex:1;min-width:0}
 /* TOM à ESQUERDA do nome, no tile como era — só MENOR (v0.43.1): 38px (era 46). Mono, gradiente, acento. */
 .keytag{flex:0 0 auto;width:38px;height:38px;border-radius:var(--r-sm);display:grid;place-items:center;
@@ -472,6 +489,9 @@ body.light .keyhint{color:#b45309}
   border-left:3px solid transparent;   /* faixa de cor por tipo (sucesso/erro/aviso) */
   box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:90%}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* o toast é pointer-events:none; o botão DESFAZER reativa o toque só nele (v0.59.0) */
+.toastact{margin-left:15px;background:transparent;border:0;color:var(--accent);
+  font-weight:800;font-size:var(--fs-sm);letter-spacing:.5px;padding:4px 2px;pointer-events:auto}
 .toast.ok{border-left-color:var(--ok)}
 .toast.err{border-left-color:var(--danger)}
 .toast.warn{border-left-color:var(--warn)}
@@ -549,6 +569,21 @@ body.light .keyhint{color:#b45309}
 .exitdlg .ex-sub{font-size:14.5px;line-height:1.5;color:var(--muted);margin-bottom:20px}
 .exitdlg .ex-sub b{color:var(--text)}
 .exitdlg .btn{width:100%}
+/* Confirmação de ação destrutiva (v0.59.0): mesmo cartão do "Sair do Louvai?", com UMA diferença
+   deliberada — este EMPILHA no histórico (entra no funil openS/closeS), porque aqui o voltar do
+   celular significa CANCELAR. Se não empilhasse, na lista o voltar consumiria a guarda de saída e
+   abriria "Sair do Louvai?" por cima da confirmação. */
+#confirmbg{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:72;
+  opacity:0;transition:.18s;pointer-events:none}
+#confirmbg.show{opacity:1;pointer-events:auto}
+#confirmdlg{z-index:73;animation:none;visibility:hidden;opacity:0;pointer-events:none;
+  transform:translate(-50%,-46%) scale(.94);
+  transition:transform .18s cubic-bezier(.2,.9,.3,1),opacity .18s}
+#confirmdlg.show{visibility:visible;opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+#confirmdlg .ex-ic{color:var(--danger)}
+#confirmdlg .ex-sub div+div{margin-top:7px}
+#confirmdlg .btn+.btn{margin-top:9px}
+.btn.danger{background:var(--danger);color:#fff;border-color:transparent}
 @keyframes exitFade{from{opacity:0}to{opacity:1}}
 @keyframes exitPop{from{opacity:0;transform:translate(-50%,-46%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 @media (prefers-reduced-motion: reduce){
@@ -760,6 +795,15 @@ body.light .keyhint{color:#b45309}
   <div class="ex-sub">Toque <b>voltar</b> de novo para sair do aplicativo.</div>
   <button class="btn primary" id="exit-stay">Continuar no app</button>
 </div>
+<!-- Confirmação de ação destrutiva (v0.59.0) — ao contrário do #exitdlg, ESTA empilha: o voltar cancela -->
+<div id="confirmbg"></div>
+<div id="confirmdlg" class="exitdlg" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="ex-ic" id="confirm-ic"></div>
+  <div class="ex-ttl" id="confirm-title"></div>
+  <div class="ex-sub" id="confirm-sub"></div>
+  <button class="btn danger" id="confirm-ok">Excluir</button>
+  <button class="btn" id="confirm-cancel">Cancelar</button>
+</div>
 <!-- Seletor de música (para montar a escala) -->
 <div class="sheetbg" id="pickbg"></div>
 <div class="sheet" id="picksheet">
@@ -900,7 +944,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.58.3";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.59.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1504,6 +1548,55 @@ function dupEscala(id){ const e=escalas.find(x=>x.id===id); if(!e) return;
   const c=JSON.parse(JSON.stringify(e)); c.id=uid(); c.title=(e.title||"Escala")+" (cópia)"; c.done=false; c.updatedAt=Date.now();
   escalas.push(c); saveEscalas(); if(typeof renderEscalas==="function") renderEscalas(); toast("Escala duplicada","ok"); }
 
+/* ---------- Excluir cifra / escala (v0.59.0) ----------
+   FONTE ÚNICA por trás de todos os caminhos (faixa de deslize, folha Compartilhar, editor):
+   confirmação com o contexto real → exclusão → DESFAZER. Antes, cada caminho chamava confirm()
+   nativo — e o da folha ainda abria o editor pra clicar no botão, largando a pessoa lá se
+   cancelasse. */
+const DELETE_SYNC_NOTE="Some deste aparelho. Para valer para a equipe, publique na nuvem.";
+function escalasComSong(id){ return escalas.filter(e=>(e.items||[]).some(it=>it.kind==="song"&&it.songId===id)); }
+function escalaLabel(e){ return e.title||fmtDate(e.date)||"(sem título)"; }
+function escalasNote(id){
+  const usadas=escalasComSong(id); if(!usadas.length) return "";
+  const nomes=usadas.slice(0,3).map(escalaLabel).join(" · ")+(usadas.length>3?"…":"");
+  return "Está em "+usadas.length+(usadas.length===1?" escala: ":" escalas: ")+nomes+". O item sai da ordem do culto.";
+}
+function deleteSong(id){
+  const s=songs.find(x=>x.id===id); if(!s) return;
+  confirmDialog({ title:"Excluir “"+(s.title||"cifra")+"”?",
+    lines:[escalasNote(id), DELETE_SYNC_NOTE], onOk:()=>doDeleteSong(id) });
+}
+function doDeleteSong(id){
+  const ix=songs.findIndex(s=>s.id===id); if(ix<0) return;
+  const naTela=(view==="player"&&current&&current.id===id)||(view==="editor"&&editingId===id);
+  const removida=songs.splice(ix,1)[0];
+  saveSongs();
+  if(editingId===id) editingId=null;
+  if(naTela){ if(view==="player") exitPlayer(); else { current=null; show("lib"); } }
+  renderLibrary();
+  toastAction("Cifra excluída","DESFAZER",()=>{
+    songs.push(removida); saveSongs(); renderLibrary(); toast("Cifra restaurada","ok");
+  });
+}
+function deleteEscala(id){
+  const e=escalas.find(x=>x.id===id); if(!e) return;
+  confirmDialog({ title:"Excluir “"+(escalaLabel(e))+"”?",
+    lines:["Excluir a escala não apaga as cifras.", DELETE_SYNC_NOTE], onOk:()=>doDeleteEscala(id) });
+}
+function doDeleteEscala(id){
+  const ix=escalas.findIndex(e=>e.id===id); if(ix<0) return;
+  const removida=escalas.splice(ix,1)[0];
+  saveEscalas();
+  if(editEscala&&editEscala.id===id) editEscala=null;
+  if(escalaCtx&&escalaCtx.id===id) escalaCtx=null;
+  if(currentEscalaId===id) currentEscalaId=null;
+  if(view!=="lib"){ switchTab("escalas"); show("lib"); }
+  renderEscalas(); renderLibrary();       // a recência vem das escalas confirmadas: pode mudar
+  toastAction("Escala excluída","DESFAZER",()=>{
+    escalas.push(removida); saveEscalas(); renderEscalas(); renderLibrary(); toast("Escala restaurada","ok");
+  });
+}
+
 function demoSong(){
   return {
     id:uid(), title:"Cifra de Exemplo", artist:"Toque pra abrir · edite no lápis",
@@ -1609,7 +1702,8 @@ function paintIcons(){
    tela cheia) vira uma entrada e o popstate é a ÚNICA fonte da verdade do "voltar" — ele
    RENDERIZA a pilha de destino, que viaja inteira no history.state (sobrevive ao reload e
    dispensa adivinhar o delta). Detalhe e armadilhas em docs/planos/PLANO-botao-voltar.md. */
-const NAV_SHEETS={"#sheet":"#sheetbg","#playersheet":"#playerbg","#reposheet":"#repobg","#picksheet":"#pickbg","#pastesheet":"#pastebg"};
+const NAV_SHEETS={"#sheet":"#sheetbg","#playersheet":"#playerbg","#reposheet":"#repobg","#picksheet":"#pickbg","#pastesheet":"#pastebg",
+  "#confirmdlg":"#confirmbg"};   // a confirmação destrutiva é camada: o voltar cancela (v0.59.0)
 let navStack=[{t:"view",id:"lib"}], navApplying=false, navPendingBack=0, navQuiet=0, navOff=false;
 // abertura SEM gesto do usuário (folha do #imp= no boot): o Chrome pula entradas criadas sem
 // interação (history manipulation intervention) e o popstate nem dispara — então não empilha.
@@ -1782,6 +1876,104 @@ function openSortSheet(){
     opt("played","Menos tocadas (dar vez)"),
   ]);
 }
+/* ---------- Faixa de ações por deslize (v0.59.0) ----------
+   O card mora dentro de um .swipewrap com as ações ATRÁS; arrastar p/ a esquerda revela
+   Duplicar · Excluir. Só um card aberto por vez; rolar, tocar fora ou trocar de tela fecha.
+   "Toque e segure" abre a mesma faixa — caminho sem gesto (desktop e quem não descobre o deslize). */
+const SWIPE_W=144, SWIPE_OPEN=SWIPE_W*.4, SWIPE_AXIS=7, SWIPE_HOLD=500;
+let swipeOpen=null, swipeWasActive=false, swipeWasT=null;
+function closeSwipe(){
+  if(!swipeOpen) return;
+  const o=swipeOpen; swipeOpen=null;
+  o.wrap.classList.remove("open"); o.card.style.transform="";
+}
+function openSwipe(wrap,card){
+  if(swipeOpen&&swipeOpen.card!==card) closeSwipe();
+  swipeOpen={wrap,card};
+  wrap.classList.add("open"); wrap.classList.remove("sliding");
+  card.style.transition=""; card.style.transform="translateX(-"+SWIPE_W+"px)";
+}
+// suprime o clique que NASCE do gesto (senão soltar o deslize abriria a cifra) — mesmo
+// papel do pinchWasActive na pinça da fonte (v0.50.0)
+function markSwipe(){ swipeWasActive=true; clearTimeout(swipeWasT); swipeWasT=setTimeout(()=>swipeWasActive=false,400); }
+function swipeWrap(card,acts){
+  const wrap=document.createElement("div"); wrap.className="swipewrap";
+  const bar=document.createElement("div"); bar.className="swipeacts";
+  acts.forEach(a=>{
+    const b=document.createElement("button"); b.type="button"; b.className="sa "+(a.cls||"");
+    b.setAttribute("aria-label",a.label);
+    b.innerHTML=icon(a.ic);
+    const t=document.createElement("span"); t.textContent=a.label; b.appendChild(t);
+    b.onclick=ev=>{ ev.stopPropagation(); closeSwipe(); a.fn(); };
+    bar.appendChild(b);
+  });
+  wrap.appendChild(bar); wrap.appendChild(card);
+  // intercepta o clique no WRAPPER, em captura: no próprio card ele perderia a corrida com o
+  // onclick já registrado (no alvo vale a ordem de registro, não a fase de captura).
+  wrap.addEventListener("click",e=>{
+    if(e.target.closest(".swipeacts")) return;
+    // clique que NASCEU do gesto (soltar o deslize dispara click): só suprime — fechar aqui
+    // recolheria na hora o card que o próprio gesto acabou de abrir
+    if(swipeWasActive){ e.preventDefault(); e.stopPropagation(); return; }
+    if(swipeOpen){ e.preventDefault(); e.stopPropagation(); closeSwipe(); }
+  },true);
+  enableSwipe(wrap,card);
+  return wrap;
+}
+function enableSwipe(wrap,card){
+  let x0=0,y0=0,dx=0,base=0,axis="",holdT=null,dragging=false;
+  const finish=()=>{ dragging=false; clearTimeout(holdT);
+    removeEventListener("pointermove",onMove); removeEventListener("pointerup",onUp); removeEventListener("pointercancel",onUp); };
+  const onMove=e=>{
+    if(!dragging) return;
+    const ddx=e.clientX-x0, ddy=e.clientY-y0;
+    if(!axis){
+      if(Math.abs(ddx)<SWIPE_AXIS&&Math.abs(ddy)<SWIPE_AXIS) return;
+      clearTimeout(holdT);
+      axis=Math.abs(ddx)>Math.abs(ddy)?"x":"y";
+      if(axis==="y"){ finish(); return; }              // rolagem vertical: o gesto é do navegador
+      wrap.classList.add("sliding"); card.style.transition="none";
+    }
+    dx=Math.max(-SWIPE_W,Math.min(0,base+ddx));
+    card.style.transform="translateX("+dx+"px)";
+  };
+  const onUp=()=>{
+    if(!dragging) return;
+    const deslizou=axis==="x";
+    finish();
+    card.style.transition=""; wrap.classList.remove("sliding");
+    if(!deslizou) return;
+    markSwipe();
+    // não passou do limiar: volta com mola. Limpa o transform AQUI — o closeSwipe só sabe
+    // desfazer o card que estava aberto, e num arraste curto não havia nenhum.
+    if(dx<=-SWIPE_OPEN) openSwipe(wrap,card); else { closeSwipe(); card.style.transform=""; }
+  };
+  card.addEventListener("pointerdown",e=>{
+    if(e.pointerType==="mouse"&&e.button!==0) return;
+    if(e.target.closest(".swipeacts")) return;
+    x0=e.clientX; y0=e.clientY; axis=""; dragging=true;
+    base=(swipeOpen&&swipeOpen.card===card)?-SWIPE_W:0; dx=base;
+    addEventListener("pointermove",onMove); addEventListener("pointerup",onUp); addEventListener("pointercancel",onUp);
+    clearTimeout(holdT);
+    holdT=setTimeout(()=>{ if(dragging&&!axis){ finish(); markSwipe(); openSwipe(wrap,card); } },SWIPE_HOLD);
+  });
+}
+// o contexto mudou (rolou a lista, tocou fora, trocou de tela): o card aberto se recolhe.
+// Fechar por toque fora também marca o gesto — o toque que fecha não abre a cifra de baixo.
+addEventListener("scroll",closeSwipe,{passive:true});
+addEventListener("pointerdown",e=>{
+  // um toque NOVO encerra a supressão do gesto anterior: o clique-fantasma nasce do mesmo
+  // toque (sem pointerdown no meio), então esperar por relógio engoliria o toque seguinte
+  swipeWasActive=false; clearTimeout(swipeWasT);
+  if(swipeOpen&&!swipeOpen.wrap.contains(e.target)){ closeSwipe(); markSwipe(); }
+},{passive:true,capture:true});
+function maybePeek(box){   // gesto escondido não se descobre: na 1ª pintura o 1º card espia a faixa
+  if(settings.swipeHintSeen) return;
+  const first=box.firstChild&&box.firstChild.querySelector&&box.firstChild.querySelector(".songcard,.escard");
+  if(!first) return;
+  first.classList.add("peek"); settings.swipeHintSeen=true; saveSettings();
+}
+
 function renderLibrary(){
   // tags
   const tags=allTags();
@@ -1833,9 +2025,13 @@ function renderLibrary(){
     card.className="songcard";
     card.innerHTML=songCardInner(s,played,anyDone);
     card.onclick=()=>openPlayer(s.id);
-    clickable(card); box.appendChild(card);
+    clickable(card);
+    box.appendChild(swipeWrap(card,[
+      {ic:"copy",label:"Duplicar",cls:"sa-dup",fn:()=>dupSong(s.id)},
+      {ic:"trash-2",label:"Excluir",cls:"sa-del",fn:()=>deleteSong(s.id)}
+    ]));
   });
-  staggerIn(box,"lib");
+  staggerIn(box,"lib"); maybePeek(box);
 }
 
 /* ---------- Player ---------- */
@@ -2473,13 +2669,7 @@ $("#e-save").onclick=()=>{
   }
   saveNew(null);
 };
-$("#e-delete").onclick=()=>{
-  if(!editingId)return;
-  if(confirm("Excluir esta cifra? Não dá pra desfazer.")){
-    songs=songs.filter(s=>s.id!==editingId); saveSongs();
-    editingId=null; show("lib"); renderLibrary(); toast("Cifra excluída");
-  }
-};
+$("#e-delete").onclick=()=>{ if(editingId) deleteSong(editingId); };
 
 /* ---------- Compartilhamento por arquivo ---------- */
 function download(filename, text){
@@ -2601,7 +2791,7 @@ function shareSheet(song){
       catch(e){toast("Não consegui copiar");}
       closeSheet();
     }},
-    {ic:icon("trash-2"),label:"Excluir",danger:true,fn:()=>{closeSheet();openEditor(song.id);$("#e-delete").click();}},
+    {ic:icon("trash-2"),label:"Excluir",danger:true,fn:()=>{closeSheet();deleteSong(song.id);}},
   ]);
 }
 $("#backupBtn").onclick=()=>{
@@ -3043,7 +3233,8 @@ const staggered={};
 function staggerIn(box, key){
   if(staggered[key]) return; staggered[key]=true;
   [...box.children].forEach((el,i)=>{
-    if(el.classList.contains("songcard")||el.classList.contains("escard")){
+    // .swipewrap entrou entre a lista e o card (v0.59.0): sem ele aqui, o stagger morre em silêncio
+    if(el.classList.contains("songcard")||el.classList.contains("escard")||el.classList.contains("swipewrap")){
       el.classList.add("card-in"); el.style.animationDelay=Math.min(i,8)*28+"ms";
     }
   });
@@ -3095,9 +3286,13 @@ function renderEscalas(){
         ((e.team||[]).length?'<span class="pill">'+e.team.length+' na equipe</span>':'')+
       '</div>';
     card.onclick=()=>openEscala(e.id);
-    clickable(card); box.appendChild(card);
+    clickable(card);
+    box.appendChild(swipeWrap(card,[
+      {ic:"copy",label:"Duplicar",cls:"sa-dup",fn:()=>dupEscala(e.id)},
+      {ic:"trash-2",label:"Excluir",cls:"sa-del",fn:()=>deleteEscala(e.id)}
+    ]));
   });
-  staggerIn(box,"esc");
+  staggerIn(box,"esc"); maybePeek(box);
 }
 
 /* ---- detalhe da escala (ordem do culto) ---- */
@@ -3270,12 +3465,7 @@ $("#ee-save").onclick=()=>{
   currentEscalaId=editEscala.id; const saved=editEscala; editEscala=null;
   saveEscalas(); openEscala(saved.id); toast("Escala salva ✓");
 };
-$("#ee-delete").onclick=()=>{
-  if(confirm("Excluir esta escala? Não dá pra desfazer.")){
-    escalas=escalas.filter(e=>e.id!==editEscala.id); saveEscalas();
-    editEscala=null; currentEscalaId=null; switchTab("escalas"); show("lib"); renderEscalas(); toast("Escala excluída");
-  }
-};
+$("#ee-delete").onclick=()=>{ if(editEscala) deleteEscala(editEscala.id); };
 
 /* ---- seletor de música ---- */
 function openPicker(){ $("#picksearch").value=""; renderPicker(""); openS("#pickbg","#picksheet","#picksearch"); }
@@ -3316,7 +3506,7 @@ function shareEscalaSheet(id){
     {ic:icon("clipboard"),label:"Copiar como texto (WhatsApp)",fn:()=>{ closeSheet(); shareText(escalaToText(id),"Escala: "+(e.title||"escala")); }},
     {ic:icon("copy"),label:"Duplicar escala",fn:()=>{ closeSheet(); dupEscala(id); }},
     {ic:icon("pencil"),label:"Editar escala",fn:()=>{closeSheet();openEscalaEditor(id);}},
-    {ic:icon("trash-2"),label:"Excluir",danger:true,fn:()=>{closeSheet();openEscalaEditor(id);$("#ee-delete").click();}},
+    {ic:icon("trash-2"),label:"Excluir",danger:true,fn:()=>{closeSheet();deleteEscala(id);}},
   ]);
 }
 // escala como TEXTO (v0.49.0; equipe + cabeçalho + momento + obs na v0.51.0) p/ colar no grupo do WhatsApp.
@@ -3439,12 +3629,47 @@ function openSheet(title,items,note){
 function closeSheet(){ closeS("#sheetbg","#sheet"); }
 $("#sheetbg").onclick=closeSheet;
 
+/* ---------- Confirmação de ação destrutiva (v0.59.0) ----------
+   Mesmo cartão do "Sair do Louvai?" (v0.58.2), mas passa pelo funil openS/closeS: vira uma
+   CAMADA da pilha, então o voltar do celular cancela em vez de sair do app. O foco inicial vai
+   no Cancelar — ação destrutiva não recebe foco. As linhas do corpo entram por textContent
+   (título de música é texto do usuário). */
+let confirmFn=null;
+function confirmDialog(o){
+  $("#confirm-ic").innerHTML=icon(o.icon||"trash-2");
+  $("#confirm-title").textContent=o.title||"Tem certeza?";
+  const sub=$("#confirm-sub"); sub.innerHTML="";
+  (o.lines||[]).filter(Boolean).forEach(t=>{ const d=document.createElement("div"); d.textContent=t; sub.appendChild(d); });
+  $("#confirm-ok").textContent=o.okLabel||"Excluir";
+  confirmFn=o.onOk||null;
+  openS("#confirmbg","#confirmdlg","#confirm-cancel");
+}
+function closeConfirm(){ confirmFn=null; closeS("#confirmbg","#confirmdlg"); }
+$("#confirm-cancel").onclick=closeConfirm;
+$("#confirmbg").onclick=closeConfirm;
+$("#confirm-ok").onclick=()=>{
+  if(!$("#confirmdlg").classList.contains("show")) return;   // navRender pode ter fechado por baixo
+  const f=confirmFn; closeConfirm(); if(f) f();
+};
+
 let toastT=null;
 function toast(msg, type){   // type: "ok" | "err" | "warn" (faixa de cor + tempo). erro fica mais tempo.
   const t=$("#toast");
   t.classList.remove("ok","err","warn"); if(type) t.classList.add(type);
   t.textContent=msg; t.classList.add("show");
   clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"), type==="err"?3600:2200);
+}
+// toast com ação (v0.59.0): rede de segurança depois de excluir. O botão entra por DOM —
+// título de música é texto do usuário e não pode virar HTML.
+function toastAction(msg,label,fn,ms){
+  const t=$("#toast");
+  t.classList.remove("ok","err","warn");
+  t.textContent=msg;
+  const b=document.createElement("button");
+  b.className="toastact"; b.type="button"; b.textContent=label;
+  b.onclick=()=>{ clearTimeout(toastT); t.classList.remove("show"); fn(); };
+  t.appendChild(b); t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"), ms||6000);
 }
 
 /* ---------- Tema ---------- */

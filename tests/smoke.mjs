@@ -1036,14 +1036,16 @@ const m7 = await page.evaluate(() => {
   saveSongs();
   staggered.lib = false;                       // simula a primeira pintura da lista
   switchTab("songs"); $("#search").value = ""; activeTag = null; renderLibrary();
-  const cards = [...document.querySelectorAll("#songlist .songcard")];
+  // v0.59.0: quem entra na lista agora é o .swipewrap (o card mora dentro dele)
+  const cards = [...document.querySelectorAll("#songlist .swipewrap")];
   const firstAnimated = cards[0].classList.contains("card-in");
   const hasDelay = !!cards[1].style.animationDelay;
+  const temCard = cards.every(w => !!w.querySelector(".songcard"));
   renderLibrary();                              // 2ª pintura (ex.: busca) NÃO re-anima
-  const reanimated = [...document.querySelectorAll("#songlist .songcard")].some(c => c.classList.contains("card-in"));
-  return { firstAnimated, hasDelay, n: cards.length, reanimated };
+  const reanimated = [...document.querySelectorAll("#songlist .swipewrap")].some(c => c.classList.contains("card-in"));
+  return { firstAnimated, hasDelay, n: cards.length, reanimated, temCard };
 });
-ok(m7.firstAnimated && m7.hasDelay && m7.n === 2, "Lista anima na 1ª pintura (.card-in + animation-delay escalonado)");
+ok(m7.firstAnimated && m7.hasDelay && m7.n === 2 && m7.temCard, "Lista anima na 1ª pintura (.card-in + animation-delay escalonado, agora no .swipewrap)");
 ok(!m7.reanimated, "Re-render (busca/filtro) não re-anima a lista");
 
 // ===== v0.36.0 — Onda 3 / M6: skeleton de carregamento no "Atualizar do link" =====
@@ -2372,6 +2374,193 @@ await ctxTouch.close();
 
 ok(navErrors.length === 0, "Voltar: nenhum erro de JS no fluxo de navegação" + (navErrors.length ? ": " + navErrors.join(" | ") : ""));
 await ctxNav.close();
+
+// ===== v0.59.0 — excluir cifra/escala: deslize → ações → confirmação → desfazer =====
+// Gesto REAL (pointer events + medição do render), nunca `settings` ou chamada de função por dentro.
+const ctxDel = await browser.newContext({ viewport: { width: 412, height: 915 }, hasTouch: true });
+const pageDel = await ctxDel.newPage();
+const delErrors = [];
+pageDel.on("pageerror", e => delErrors.push(e.message));
+await pageDel.addInitScript(() => {
+  localStorage.setItem("louvai.settings.v1", JSON.stringify({ theme: "dark", seeded: true, swipeHintSeen: true }));
+  localStorage.setItem("louvai.songs.v1", JSON.stringify([
+    { id: "d1", title: "Alfa", artist: "A", key: "C", capo: 0, tags: [], updatedAt: 1, body: "[Intro]\nC G\nletra" },
+    { id: "d2", title: "Beta", artist: "B", key: "D", capo: 0, tags: [], updatedAt: 1, body: "[Intro]\nD A\nletra" }]));
+  localStorage.setItem("louvai.escalas.v1", JSON.stringify([
+    { id: "ed1", title: "Culto Domingo", date: "2026-07-12", items: [{ kind: "song", songId: "d1" }], updatedAt: 1 }]));
+});
+await pageDel.goto(APP_URL); await pageDel.waitForTimeout(400);
+
+const listaSelDel = "#songlist .swipewrap";
+// deslocamento REAL do card dentro do wrapper (não o estado lógico): é o que o usuário vê
+const deslocDel = (lista, i) => pageDel.evaluate(([lista, i]) => {
+  const w = document.querySelectorAll(lista)[i];
+  const c = w.querySelector(".songcard,.escard");
+  return Math.round(c.getBoundingClientRect().x - w.getBoundingClientRect().x);
+}, [lista, i]);
+async function arrastaDel(lista, i, dx, dy) {
+  const b = await pageDel.locator(lista).nth(i).boundingBox();
+  const x0 = b.x + b.width - 24, y0 = b.y + b.height / 2;
+  await pageDel.mouse.move(x0, y0);
+  await pageDel.mouse.down();
+  await pageDel.mouse.move(x0 + dx * .35, y0 + dy * .35, { steps: 3 });
+  await pageDel.mouse.move(x0 + dx, y0 + dy, { steps: 6 });
+  await pageDel.mouse.up();
+  await pageDel.waitForTimeout(330);
+}
+async function seguraDedoDel(lista, i, ms) {
+  const b = await pageDel.locator(lista).nth(i).boundingBox();
+  await pageDel.mouse.move(b.x + b.width - 24, b.y + b.height / 2);
+  await pageDel.mouse.down();
+  await pageDel.waitForTimeout(ms);
+  await pageDel.mouse.up();
+  await pageDel.waitForTimeout(330);
+}
+
+// (a) o deslize revela a faixa — medindo a geometria, não a classe
+await arrastaDel(listaSelDel, 0, -160, 0);
+const dAbertoDel = await deslocDel(listaSelDel, 0);
+ok(dAbertoDel <= -140 && dAbertoDel >= -150, `Deslizar o card revela a faixa de ações (deslocamento medido: ${dAbertoDel}px)`);
+const alvoDel = await pageDel.evaluate(() => {
+  const b = document.querySelector("#songlist .swipewrap .sa-del").getBoundingClientRect();
+  const dup = document.querySelector("#songlist .swipewrap .sa-dup").getBoundingClientRect();
+  return { w: Math.round(b.width), h: Math.round(b.height), visivel: b.width > 0 && b.right <= innerWidth + 1, dupW: Math.round(dup.width) };
+});
+ok(alvoDel.w >= 44 && alvoDel.h >= 44 && alvoDel.dupW >= 44 && alvoDel.visivel,
+  `Alvos de toque grandes e dentro da tela (Excluir ${alvoDel.w}×${alvoDel.h}, Duplicar ${alvoDel.dupW})`);
+
+// (b) tocar no card aberto FECHA e não abre a cifra
+await pageDel.locator(`${listaSelDel} .songcard`).first().click();
+await pageDel.waitForTimeout(320);
+ok(await deslocDel(listaSelDel, 0) === 0 && await pageDel.locator("#view-lib").isVisible(),
+  "Card aberto: o toque no corpo recolhe a faixa e NÃO abre a cifra");
+
+// (c) arraste curto volta com mola
+await arrastaDel(listaSelDel, 0, -30, 0);
+ok(await deslocDel(listaSelDel, 0) === 0, "Arraste curto volta sozinho (não abre a faixa)");
+
+// (d) rolagem vertical não abre a faixa (a regressão que mataria a lista)
+await arrastaDel(listaSelDel, 0, -18, -120);
+ok(await deslocDel(listaSelDel, 0) === 0, "Arrasto vertical é rolagem: a faixa NÃO abre");
+
+// (e) toque e segure = caminho sem gesto
+await seguraDedoDel(listaSelDel, 1, 620);
+ok(await deslocDel(listaSelDel, 1) <= -140 && await pageDel.locator("#view-lib").isVisible(),
+  "Toque e segure abre a faixa (caminho sem gesto) sem abrir a cifra");
+
+// (f) só um card aberto por vez
+await arrastaDel(listaSelDel, 0, -160, 0);
+ok(await deslocDel(listaSelDel, 0) <= -140 && await deslocDel(listaSelDel, 1) === 0,
+  "Abrir um card recolhe o outro (um aberto por vez)");
+
+// (g) Excluir → confirmação com o contexto real (em quais escalas a cifra está)
+await pageDel.locator(`${listaSelDel} .sa-del`).first().click();
+await pageDel.waitForTimeout(330);
+const confDel = await pageDel.evaluate(() => ({
+  aberto: document.getElementById("confirmdlg").classList.contains("show"),
+  titulo: document.getElementById("confirm-title").textContent,
+  sub: document.getElementById("confirm-sub").textContent,
+  papel: document.getElementById("confirmdlg").getAttribute("role"),
+  foco: document.activeElement && document.activeElement.id,
+  ok: document.getElementById("confirm-ok").textContent,
+}));
+ok(confDel.aberto && /Excluir “Alfa”\?/.test(confDel.titulo), "Excluir abre a confirmação do app (não o confirm() do navegador)");
+ok(/Está em 1 escala: Culto Domingo/.test(confDel.sub) && /ordem do culto/.test(confDel.sub),
+  "A confirmação diz em quais escalas a cifra está");
+ok(confDel.papel === "dialog" && confDel.foco === "confirm-cancel" && confDel.ok === "Excluir",
+  "Diálogo acessível e com o foco no Cancelar (ação destrutiva não recebe foco)");
+
+// (h) o voltar do celular CANCELA (e não dispara "Sair do Louvai?")
+await pageDel.goBack(); await pageDel.waitForTimeout(400);
+const aposVoltarDel = await pageDel.evaluate(() => ({
+  confDel: document.getElementById("confirmdlg").classList.contains("show"),
+  saida: !document.getElementById("exitdlg").classList.contains("hidden"),
+  temAlfa: songs.some(s => s.id === "d1"),
+}));
+ok(!aposVoltarDel.confDel && !aposVoltarDel.saida && aposVoltarDel.temAlfa,
+  "O voltar do celular CANCELA a exclusão (sem abrir o aviso de saída e sem excluir nada)");
+
+// (i) Cancelar mantém a cifra
+await arrastaDel(listaSelDel, 0, -160, 0);
+await pageDel.locator(`${listaSelDel} .sa-del`).first().click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#confirm-cancel").click(); await pageDel.waitForTimeout(350);
+ok(await pageDel.evaluate(() => songs.length === 2 && !document.getElementById("confirmdlg").classList.contains("show")),
+  "Cancelar fecha o diálogo e mantém a cifra");
+
+// (j) excluir de verdade: some da lista, do localStorage — e o DESFAZER traz de volta
+await arrastaDel(listaSelDel, 0, -160, 0);
+await pageDel.locator(`${listaSelDel} .sa-del`).first().click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#confirm-ok").click(); await pageDel.waitForTimeout(400);
+const excluidaDel = await pageDel.evaluate(() => ({
+  mem: songs.some(s => s.id === "d1"),
+  disco: (JSON.parse(localStorage.getItem("louvai.songs.v1")) || []).some(s => s.id === "d1"),
+  naTela: [...document.querySelectorAll("#songlist .c-ttl")].map(e => e.textContent),
+  desfazer: !!document.querySelector("#toast .toastact"),
+}));
+ok(!excluidaDel.mem && !excluidaDel.disco && !excluidaDel.naTela.includes("Alfa"),
+  "Excluir tira a cifra da memória, do armazenamento e da lista");
+ok(excluidaDel.desfazer, "Depois de excluir aparece o DESFAZER no toast");
+await pageDel.locator("#toast .toastact").click(); await pageDel.waitForTimeout(350);
+const restauradaDel = await pageDel.evaluate(() => ({
+  mem: songs.some(s => s.id === "d1"),
+  disco: (JSON.parse(localStorage.getItem("louvai.songs.v1")) || []).some(s => s.id === "d1"),
+  naTela: [...document.querySelectorAll("#songlist .c-ttl")].map(e => e.textContent),
+}));
+ok(restauradaDel.mem && restauradaDel.disco && restauradaDel.naTela.includes("Alfa"),
+  "DESFAZER restaura a cifra inteira (memória, armazenamento e lista)");
+
+// (k) Duplicar pela mesma faixa
+await arrastaDel(listaSelDel, 0, -160, 0);
+await pageDel.locator(`${listaSelDel} .sa-dup`).first().click(); await pageDel.waitForTimeout(350);
+ok(await pageDel.evaluate(() => songs.filter(s => /^Alfa/.test(s.title)).length === 2),
+  "A faixa também duplica (Duplicar · Excluir)");
+await pageDel.evaluate(() => { songs = songs.filter(s => s.title !== "Alfa (cópia)"); saveSongs(); renderLibrary(); });
+
+// (l) regressão: Compartilhar → Excluir → Cancelar NÃO pode largar a pessoa no editor
+await pageDel.locator(`${listaSelDel} .songcard`).first().click(); await pageDel.waitForTimeout(350);
+await pageDel.locator("#p-settings").click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#p-share").click(); await pageDel.waitForTimeout(350);
+await pageDel.locator("#sheet-body .sheetitem.danger").click(); await pageDel.waitForTimeout(350);
+const viaFolhaDel = await pageDel.evaluate(() => ({
+  confDel: document.getElementById("confirmdlg").classList.contains("show"),
+  titulo: document.getElementById("confirm-title").textContent,
+}));
+ok(viaFolhaDel.confDel && /Alfa/.test(viaFolhaDel.titulo), "Compartilhar → Excluir abre a MESMA confirmação");
+await pageDel.locator("#confirm-cancel").click(); await pageDel.waitForTimeout(400);
+ok(await pageDel.evaluate(() => view), "Cancelar devolve a pessoa à tela de origem");
+ok(await pageDel.evaluate(() => view === "player") && !(await pageDel.locator("#view-editor").isVisible()),
+  "Cancelar pela folha NÃO larga a pessoa dentro do editor (regressão do caminho antigo)");
+
+// (m) excluir a cifra ABERTA no player sai para a lista
+await pageDel.locator("#p-settings").click(); await pageDel.waitForTimeout(250);
+await pageDel.locator("#p-share").click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#sheet-body .sheetitem.danger").click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#confirm-ok").click(); await pageDel.waitForTimeout(450);
+ok(await pageDel.evaluate(() => view === "lib" && !songs.some(s => s.id === "d1")),
+  "Excluir a cifra aberta no player devolve a pessoa à lista");
+await pageDel.locator("#toast .toastact").click(); await pageDel.waitForTimeout(300);
+
+// (n) escala: mesma faixa, mensagem própria, exclusão e desfazer
+await pageDel.locator("#tab-escalas").click(); await pageDel.waitForTimeout(350);
+const escSelDel = "#escalalist .swipewrap";
+await arrastaDel(escSelDel, 0, -160, 0);
+const dEscDel = await pageDel.evaluate(() => {
+  const w = document.querySelector("#escalalist .swipewrap"), c = w.querySelector(".escard");
+  return Math.round(c.getBoundingClientRect().x - w.getBoundingClientRect().x);
+});
+ok(dEscDel <= -140, `A lista de escalas tem a mesma faixa (deslocamento ${dEscDel}px)`);
+await pageDel.locator(`${escSelDel} .sa-del`).first().click(); await pageDel.waitForTimeout(330);
+ok(await pageDel.evaluate(() => /não apaga as cifras/.test(document.getElementById("confirm-sub").textContent)),
+  "A confirmação da escala tranquiliza: excluir a escala não apaga as cifras");
+await pageDel.locator("#confirm-ok").click(); await pageDel.waitForTimeout(400);
+ok(await pageDel.evaluate(() => escalas.length === 0 && songs.length === 2),
+  "Excluir a escala não leva as cifras junto");
+await pageDel.locator("#toast .toastact").click(); await pageDel.waitForTimeout(350);
+ok(await pageDel.evaluate(() => escalas.length === 1 && escalas[0].id === "ed1"),
+  "DESFAZER restaura a escala");
+
+ok(delErrors.length === 0, "Excluir: nenhum erro de JS no fluxo" + (delErrors.length ? ": " + delErrors.join(" | ") : ""));
+await ctxDel.close();
 
 // 9) Sem erros de JS em todo o fluxo
 ok(jsErrors.length === 0, "Nenhum erro de JS" + (jsErrors.length ? ": " + jsErrors.join(" | ") : ""));

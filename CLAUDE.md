@@ -169,6 +169,11 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   `popstate` como fonte única, funil `openS`/`closeS`. **Implementado na v0.57.0**; o desenho foi
   **validado adversarialmente antes de codar** (protótipo injetado no app: 9 falhas achadas e já
   nascidas corrigidas).
+- `docs/planos/PLANO-excluir.md` — **excluir cifra e escala** pela lista: deslizar o card revela
+  **Duplicar · Excluir**, confirmação em **diálogo do app** (linguagem do "Sair do Louvai?", mas
+  **empilhando** no histórico — o voltar cancela) e **Desfazer** no toast. Inc. 2 = **lápides**
+  (`deleted:[{id,k,at}]` no snapshot, objeto apagado de verdade + poda), sem as quais o sync
+  **ressuscita** o que foi excluído. **Status: 🟡 Inc. 1 entregue na v0.59.0; Inc. 2 pendente.**
 - `docs/planos/PLANO-ui.md` — polimento de UI/ícones em **ondas**, **concluído (v0.28.0→v0.36.1)**: Onda 1
   (ganhos rápidos + ícone do Backup, v0.28.0); Onda 2 (ícones SVG inline via `ICONS`/`icon()`,
   v0.29.0); Onda 3 = M2 ⚙ seções (v0.30.0) · M4 linguagem de card (v0.31.0) · M5 `#reposheet`
@@ -428,6 +433,24 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   "grátis" por documento**, que intercepta o voltar **sem gesto**. O watcher é **desarmado em
   `navOpen`** ao sair da raiz (senão o voltar dentro do app abriria "Sair do Louvai?") e rearmado ao
   voltar pra lista; `navInit` o arma no boot.
+- **Excluir cifra/escala (v0.59.0):** **fonte única** `deleteSong(id)`/`deleteEscala(id)` (confirma →
+  `doDeleteSong`/`doDeleteEscala` → `toastAction` com DESFAZER) por trás de **todos** os caminhos:
+  faixa de deslize, `shareSheet`/`shareEscalaSheet` e `#e-delete`/`#ee-delete` do editor (o
+  `confirm()` nativo e o `openEditor()+click()` saíram — este largava a pessoa no editor ao cancelar).
+  **Faixa por deslize:** `swipeWrap(card,acts)` embrulha o card num `.swipewrap` (`touch-action:pan-y`
+  = o eixo X é do JS, a rolagem continua do navegador) com `.swipeacts` atrás; `enableSwipe` decide o
+  eixo (`SWIPE_AXIS`), segue o dedo até `SWIPE_W`(144px), abre passando de `SWIPE_OPEN` e tem
+  *toque e segure* (`SWIPE_HOLD`) como caminho sem gesto. ⚠️ **Três armadilhas já corrigidas:** (1) o
+  `staggerIn` procura os cards entre os **filhos diretos** da lista — o wrapper entrou no meio e a
+  classe passou a ir nele; (2) soltar o deslize dispara um `click` que **recolhia o card recém-aberto**
+  — `swipeWasActive` agora só **suprime** o clique, e morre **no pointerdown seguinte** (por relógio
+  engoliria o toque de verdade); (3) `closeSwipe()` só desfaz o card **aberto**, então o arraste curto
+  precisa limpar o `transform` inline na mão. **Confirmação:** `confirmDialog({icon,title,lines,
+  okLabel,onOk})` + `#confirmdlg`/`#confirmbg` — mesmo cartão do `.exitdlg`, mas passa pelo funil
+  `openS`/`closeS` e está em `NAV_SHEETS`: **empilha**, logo o voltar do celular **cancela** (se não
+  empilhasse, na lista o voltar consumiria a guarda e abriria "Sair do Louvai?" por cima). Linhas por
+  `textContent`; `escalasNote(id)` diz em quais escalas a cifra está. `toastAction` monta o botão
+  DESFAZER por DOM (título de música não pode virar HTML) e o `.toastact` reativa o toque no toast.
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).
@@ -519,6 +542,9 @@ Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
    `repoUrl` é derivado do próprio endereço (`new URL("louvai.json", location.href)`) quando não há link
    colado: o membro abre o app hospedado e já puxa/sincroniza **sem colar nada** (link explícito tem
    prioridade; auto-sync opt-in). `deriveRepoUrl`/`defaultRepoUrl`/`effectiveRepoUrl`/`repoUrlFromField`.
-4. **PWA instalável** — fecha o offline do app hospedado e **encerra a regra "arquivo único"**
+4. **Excluir cifra/escala** (`PLANO-excluir.md`) — **Inc. 1 entregue na v0.59.0** (deslize +
+   confirmação + desfazer). **Falta o Inc. 2 (lápides)**: sem ele, sincronizar **ressuscita** o que
+   foi excluído, porque `mergeSongs`/`mergeEscala` são união pura.
+5. **PWA instalável** — fecha o offline do app hospedado e **encerra a regra "arquivo único"**
    (ver seção "Horizonte"). *(A acessibilidade contínua da análise — `:focus-visible`, `--muted` no
    dark, alvo da `.chip` ≥44px — foi **entregue na v0.43.2**.)*
