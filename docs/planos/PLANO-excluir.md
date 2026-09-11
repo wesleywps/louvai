@@ -3,10 +3,12 @@
 > **Como retomar:** abra o Claude Code nesta pasta e peça *"vamos executar o PLANO-excluir.md"*
 > (ou *"vamos pro Incremento 1 do excluir"*).
 >
-> **Status: 🟡 EM ANDAMENTO** _(planejado com o app na v0.58.3)._
-> **Inc. 1 ✅ ENTREGUE na v0.59.0** — deslize com Duplicar · Excluir, confirmação em diálogo do app
-> (com as escalas em que a cifra está), Desfazer, voltar cancelando e a unificação dos caminhos.
-> 432 verificações (26 novas), gesto medido pela geometria. **Inc. 2 (lápides) pendente.**
+> **Status: ✅ CONCLUÍDO** _(planejado com o app na v0.58.3)._
+> **Inc. 1 — v0.59.0:** deslize com Duplicar · Excluir, confirmação em diálogo do app (com as escalas
+> em que a cifra está), Desfazer, voltar cancelando e a unificação dos caminhos (432 verificações,
+> 26 novas; gesto medido pela geometria).
+> **Inc. 2 — v0.60.0:** lápides `{id,k,at}` no snapshot, poda de 180 dias + teto de 500, propagação
+> da exclusão para a equipe (443 verificações, 11 novas).
 >
 > **Decisões do dono (2026-09-11):** ① a ação nasce de um **deslize lateral no card**, revelando
 > **duas ações** (Duplicar · Excluir); ② a exclusão **tem de valer para a equipe** — com **lápides**
@@ -130,7 +132,7 @@ editor. Excluir a cifra **aberta no player** sai para a lista (`exitPlayer`), in
 
 ---
 
-# Incremento 2 — a exclusão vale para a equipe (v0.60.0)
+# Incremento 2 — a exclusão vale para a equipe (v0.60.0) ✅
 
 ## 2.1 Formato: lápide enxuta, objeto apagado de verdade
 O snapshot `louvai-full` (`{songs, escalas}`) ganha **um** campo:
@@ -211,6 +213,20 @@ a lápide · `diffRepo` segue contando os removidos na confirmação de publicar
 `npm test` verde → `APP_VERSION` = `package.json` → CHANGELOG (o **porquê**) → ROTEIRO (linha do
 tempo + rodapé + backlog) → README se a lista de recursos mudar → **este plano** (status) → commit +
 tag → `npm run deploy`.
+
+## O que a execução ensinou (além do planejado)
+1. **Soltar o deslize dispara um `click`** — o card abria e era **recolhido no mesmo gesto**. A flag
+   de supressão não pode **fechar** nada: só suprime o clique. E ela morre **no `pointerdown`
+   seguinte**, nunca por relógio — um timeout de 400ms engolia o toque real logo depois do gesto.
+2. **`closeSwipe()` só desfaz o card que estava aberto.** Um arraste curto deixa `transform` inline
+   pendurado: a volta com mola precisa limpá-lo na mão.
+3. **A armadilha nº2 (o `staggerIn`) aconteceu de verdade** — e quem a pegou foi o teste da v0.34.0,
+   não o olho. Um wrapper novo entre a lista e o card quebra tudo que procura filho direto.
+4. **O `opts` se perdia na folha de "título repetido"** (`importJSON` → `doImport`): um pull manual
+   que caísse nesse aviso voltaria a ignorar as lápides. Caminho lateral é onde a regra vaza.
+5. **`applyTombs` roda também na importação explícita de um snapshot completo** — decisão consciente:
+   restaurar o snapshot da equipe é adotar o estado dela, exclusões inclusive. O "gesto explícito
+   vence" vale para **trazer de volta** uma cifra específica (arquivo/link daquela cifra).
 
 ## Fora de escopo (registrado para não virar surpresa)
 - Excluir **em lote** / modo de seleção múltipla.

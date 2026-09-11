@@ -944,7 +944,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.59.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.60.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1461,6 +1461,7 @@ function chunkOne(line, cols){
 const KEYS = ["C","C#","Db","D","D#","Eb","E","F","F#","Gb","G","G#","Ab","A","A#","Bb","B",
               "Cm","C#m","Dm","D#m","Em","Fm","F#m","Gm","G#m","Am","A#m","Bm"];
 const LS_SONGS="louvai.songs.v1", LS_SET="louvai.settings.v1", LS_ESC="louvai.escalas.v1";
+const LS_DEL="louvai.deleted.v1";   // lápides: marcas de exclusão que viajam no snapshot (v0.60.0)
 let songs=[], settings={theme:"dark"}, escalas=[];
 
 function migrateLevita(){
@@ -1479,6 +1480,8 @@ function load(){
   try{settings=Object.assign({theme:"dark"},JSON.parse(localStorage.getItem(LS_SET))||{});}catch(e){}
   if(typeof settings.fontSize==="number") fontSize=clampFont(settings.fontSize);   // tamanho da cifra é lembrado entre sessões
   try{escalas=JSON.parse(localStorage.getItem(LS_ESC))||[];}catch(e){escalas=[];}
+  try{deleted=JSON.parse(localStorage.getItem(LS_DEL))||[];}catch(e){deleted=[];}
+  purgeTombstones();
   // semeia a cifra de exemplo só numa instalação NUNCA inicializada;
   // assim, esvaziar o repertório de propósito não faz o exemplo voltar a cada abertura.
   if(!settings.seeded){
@@ -1489,6 +1492,54 @@ function load(){
 function saveSongs(){ try{localStorage.setItem(LS_SONGS, JSON.stringify(songs));}catch(e){console.warn("Sem armazenamento local:",e);} markDirty(); }
 function saveSettings(){ try{localStorage.setItem(LS_SET, JSON.stringify(settings));}catch(e){} }
 function saveEscalas(){ try{localStorage.setItem(LS_ESC, JSON.stringify(escalas));}catch(e){console.warn("Sem armazenamento local:",e);} markDirty(); }
+
+/* ---------- Lápides: a exclusão vale para a equipe (v0.60.0) ----------
+   O merge do sync é união pura: sem uma marca, o que eu excluo aqui VOLTA no próximo
+   "Atualizar do link" (a nuvem ainda tem). A marca é enxuta de propósito — {id, k, at},
+   ~40 bytes — e o objeto é apagado DE VERDADE do louvai.json: nada de registro morto
+   carregando corpo, título e tags. Regra em uma frase: a lápide vence por carimbo de
+   tempo; o gesto explícito do usuário (importar um arquivo/link) vence sempre. */
+let deleted=[];
+const TOMB_TTL=180*864e5;   // 180 dias: a equipe sincroniza toda semana, seis meses é folga larga
+const TOMB_MAX=500;         // teto duro, para o arquivo não crescer sem fim
+function saveDeleted(){ try{localStorage.setItem(LS_DEL, JSON.stringify(deleted));}catch(e){} }
+function purgeTombstones(){
+  const lim=Date.now()-TOMB_TTL, antes=deleted.length;
+  deleted=(deleted||[]).filter(t=>t&&t.id&&(t.at||0)>lim);
+  if(deleted.length>TOMB_MAX){ deleted.sort((a,b)=>(b.at||0)-(a.at||0)); deleted=deleted.slice(0,TOMB_MAX); }
+  if(deleted.length!==antes) saveDeleted();   // marca podada não ressuscita nada: todo aparelho já sincronizou a ausência
+}
+function tombAt(id){ const t=deleted.find(x=>x.id===id); return t?(t.at||0):0; }
+function tomb(id,k,at){
+  const nova={id,k:k||"s",at:at||Date.now()};
+  const ix=deleted.findIndex(x=>x.id===id);
+  if(ix>=0){ if((deleted[ix].at||0)>=nova.at) return; deleted[ix]=nova; }
+  else deleted.push(nova);
+  saveDeleted();
+}
+function untomb(id){ const ix=deleted.findIndex(x=>x.id===id); if(ix<0) return; deleted.splice(ix,1); saveDeleted(); }
+// lápides que CHEGAM do snapshot: é assim que a exclusão do líder some do celular da equipe.
+// Item editado DEPOIS da marca sobrevive (e a marca é descartada) — não se apaga trabalho recente.
+function applyTombs(list){
+  let sRem=0, eRem=0;
+  (list||[]).forEach(t=>{
+    if(!t||!t.id) return;
+    const at=t.at||0;
+    const si=songs.findIndex(x=>x.id===t.id);
+    if(si>=0){
+      if((songs[si].updatedAt||0)>at) return;
+      songs.splice(si,1); sRem++;
+    }else{
+      const ei=escalas.findIndex(x=>x.id===t.id);
+      if(ei>=0){
+        if((escalas[ei].updatedAt||0)>at) return;
+        escalas.splice(ei,1); eRem++;
+      }
+    }
+    tomb(t.id, t.k, at);
+  });
+  return {sRem,eRem};
+}
 
 /* ---------- Rede de segurança do backup (local, sem nuvem) ---------- */
 // Dados moram só no aparelho: se trocar/limpar o celular sem exportar, perde tudo.
@@ -1553,7 +1604,7 @@ function dupEscala(id){ const e=escalas.find(x=>x.id===id); if(!e) return;
    confirmação com o contexto real → exclusão → DESFAZER. Antes, cada caminho chamava confirm()
    nativo — e o da folha ainda abria o editor pra clicar no botão, largando a pessoa lá se
    cancelasse. */
-const DELETE_SYNC_NOTE="Some deste aparelho. Para valer para a equipe, publique na nuvem.";
+const DELETE_SYNC_NOTE="Não volta ao sincronizar. Publique na nuvem para sumir também para a equipe.";
 function escalasComSong(id){ return escalas.filter(e=>(e.items||[]).some(it=>it.kind==="song"&&it.songId===id)); }
 function escalaLabel(e){ return e.title||fmtDate(e.date)||"(sem título)"; }
 function escalasNote(id){
@@ -1570,12 +1621,12 @@ function doDeleteSong(id){
   const ix=songs.findIndex(s=>s.id===id); if(ix<0) return;
   const naTela=(view==="player"&&current&&current.id===id)||(view==="editor"&&editingId===id);
   const removida=songs.splice(ix,1)[0];
-  saveSongs();
+  tomb(id,"s"); saveSongs();
   if(editingId===id) editingId=null;
   if(naTela){ if(view==="player") exitPlayer(); else { current=null; show("lib"); } }
   renderLibrary();
   toastAction("Cifra excluída","DESFAZER",()=>{
-    songs.push(removida); saveSongs(); renderLibrary(); toast("Cifra restaurada","ok");
+    untomb(id); songs.push(removida); saveSongs(); renderLibrary(); toast("Cifra restaurada","ok");
   });
 }
 function deleteEscala(id){
@@ -1586,14 +1637,14 @@ function deleteEscala(id){
 function doDeleteEscala(id){
   const ix=escalas.findIndex(e=>e.id===id); if(ix<0) return;
   const removida=escalas.splice(ix,1)[0];
-  saveEscalas();
+  tomb(id,"e"); saveEscalas();
   if(editEscala&&editEscala.id===id) editEscala=null;
   if(escalaCtx&&escalaCtx.id===id) escalaCtx=null;
   if(currentEscalaId===id) currentEscalaId=null;
   if(view!=="lib"){ switchTab("escalas"); show("lib"); }
   renderEscalas(); renderLibrary();       // a recência vem das escalas confirmadas: pode mudar
   toastAction("Escala excluída","DESFAZER",()=>{
-    escalas.push(removida); saveEscalas(); renderEscalas(); renderLibrary(); toast("Escala restaurada","ok");
+    untomb(id); escalas.push(removida); saveEscalas(); renderEscalas(); renderLibrary(); toast("Escala restaurada","ok");
   });
 }
 
@@ -2814,7 +2865,7 @@ $("#importBtn").onclick=()=>$("#fileInput").click();
 /* ---------- Repertório na nuvem (pull de um snapshot publicado, mão única) ----------
    Um arquivo louvai.json {songs, escalas} hospedado (GitHub Pages). A app BAIXA e mescla
    (reusa importJSON). Escrever de volta exige login → fase online (fora de escopo). */
-function fullEnvelope(){ return {type:"louvai-full",version:1,app:APP_VERSION,songs,escalas}; }
+function fullEnvelope(){ purgeTombstones(); return {type:"louvai-full",version:1,app:APP_VERSION,songs,escalas,deleted}; }
 function exportFull(){
   shareFile("louvai.json",JSON.stringify(fullEnvelope()),"Louvai — repertório + escalas");
   recordBackup();   // snapshot completo também é um backup (o mais completo)
@@ -2867,7 +2918,7 @@ async function pullRepo(opts){
   if(data.app) settings.repoCloudApp=String(data.app);        // versão do snapshot que veio da nuvem
   settings.repoCloudAt=data.publishedAt||null;                // quando foi publicado (se o snapshot tiver o carimbo)
   saveSettings();
-  importJSON(txt, {silent});   // reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
+  importJSON(txt, {silent, sync:true});   // sync: respeita as lápides (não ressuscita o excluído). Reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
 }
 // auto-sync (v0.37.0): pull silencioso se habilitado e há link; um link em importação tem prioridade.
 // Disparado no boot (sem throttle) e ao voltar pro app (v0.38.0, com throttle p/ não martelar a rede).
@@ -3044,7 +3095,7 @@ function collidingTitles(incoming){
   });
   return out;
 }
-function mergeSongs(arr, policy){
+function mergeSongs(arr, policy, viaSync){
   let added=0,updated=0; const remap={};   // remap: id que chegou → id da cifra que ficou (p/ remapear escala)
   (arr||[]).forEach(s=>{
     if(!s)return;
@@ -3054,6 +3105,10 @@ function mergeSongs(arr, policy){
     if(s.key!=null) s.key=String(s.key);
     if(s.artist!=null) s.artist=String(s.artist);
     s.tags=s.tags||[]; s.capo=s.capo||0; s.updatedAt=s.updatedAt||Date.now();
+    // lápide (v0.60.0): no SYNC, o que chega igual ou mais velho que a marca NÃO ressuscita.
+    // Editado depois da exclusão vence — e a marca cai (alguém quis a música de volta).
+    // Importar um arquivo/link é gesto explícito: vence sempre.
+    if(s.id){ const at=tombAt(s.id); if(at){ if(viaSync && (s.updatedAt||0)<=at) return; untomb(s.id); } }
     const ex=s.id&&songs.find(x=>x.id===s.id);
     // sobrescreve com updatedAt ≥ (nuvem ganha empate), mas só CONTA como atualizada se for
     // ESTRITAMENTE mais nova — senão re-puxar o mesmo snapshot (timestamps iguais) "criaria" novidade
@@ -3090,8 +3145,8 @@ function importJSON(text, opts){
     // duplicata sem querer nem sobrescreve a versão dele silenciosamente.
     const names=dups.slice(0,3).join(", ")+(dups.length>3?` +${dups.length-3}`:"");
     openSheet("Você já tem: "+names,[
-      {ic:icon("user"),label:"Manter as minhas (não duplicar)",fn:()=>{closeSheet();doImport(data,tp,incoming,"mine");}},
-      {ic:icon("copy"),label:"Importar como cópias (ficar com as duas)",fn:()=>{closeSheet();doImport(data,tp,incoming,"both");}},
+      {ic:icon("user"),label:"Manter as minhas (não duplicar)",fn:()=>{closeSheet();doImport(data,tp,incoming,"mine",opts);}},
+      {ic:icon("copy"),label:"Importar como cópias (ficar com as duas)",fn:()=>{closeSheet();doImport(data,tp,incoming,"both",opts);}},
       {ic:icon("x"),label:"Cancelar importação",fn:closeSheet},
     ]);
     return;
@@ -3103,9 +3158,10 @@ function importJSON(text, opts){
 // referências de cifra quando o usuário escolheu "manter as minhas". Retorna "add" (nova),
 // "upd" (atualizou uma existente) ou "" (ignorou) — p/ a contagem do sync distinguir
 // escalas novas × atualizadas (padrão de código de string já usado em ghGetCurrent).
-function mergeEscala(inc, remap){
+function mergeEscala(inc, remap, viaSync){
   if(!inc) return "";
   inc.updatedAt=inc.updatedAt||Date.now();
+  if(inc.id){ const at=tombAt(inc.id); if(at){ if(viaSync && (inc.updatedAt||0)<=at) return ""; untomb(inc.id); } }
   if(Array.isArray(inc.items)) inc.items.forEach(it=>{ if(it&&it.songId&&remap&&remap[it.songId]) it.songId=remap[it.songId]; });
   const ix=inc.id?escalas.findIndex(x=>x.id===inc.id):-1;
   if(ix>=0){ if((inc.updatedAt||0)>=(escalas[ix].updatedAt||0)){ const upd=(inc.updatedAt||0)>(escalas[ix].updatedAt||0); escalas[ix]=inc; return upd?"upd":""; } return ""; }   // só conta "upd" se ESTRITAMENTE mais nova (re-pull idêntico = sem novidade, v0.42.1)
@@ -3114,10 +3170,11 @@ function mergeEscala(inc, remap){
 }
 function doImport(data,tp,incoming,policy,opts){
   const silent=!!(opts&&opts.silent);
+  const viaSync=!!(opts&&opts.sync);   // pull do repertório: respeita lápide. Arquivo/link: gesto explícito, vence.
   // Escala avulsa (traz as cifras junto)
   if(tp==="louvai-escala"&&data.escala){
-    const {added,remap}=mergeSongs(incoming,policy);
-    mergeEscala(data.escala, remap);
+    const {added,remap}=mergeSongs(incoming,policy,viaSync);
+    mergeEscala(data.escala, remap, viaSync);
     saveSongs(); saveEscalas();
     renderLibrary();            // cifras agregadas pela escala já aparecem na aba Cifras
     switchTab("escalas"); renderEscalas();
@@ -3126,9 +3183,11 @@ function doImport(data,tp,incoming,policy,opts){
   }
   // Snapshot da nuvem: repertório + escalas juntos
   if(tp==="louvai-full"){
-    const {added,updated,remap}=mergeSongs(incoming,policy);
+    // as lápides vêm ANTES do merge: o que foi excluído na nuvem sai daqui e não entra de volta
+    const {sRem,eRem}=applyTombs(data.deleted);
+    const {added,updated,remap}=mergeSongs(incoming,policy,viaSync);
     let escAdd=0,escUpd=0;
-    (data.escalas||[]).forEach(e=>{ const r=mergeEscala(e, remap); if(r==="add") escAdd++; else if(r==="upd") escUpd++; });
+    (data.escalas||[]).forEach(e=>{ const r=mergeEscala(e, remap, viaSync); if(r==="add") escAdd++; else if(r==="upd") escUpd++; });
     saveSongs(); saveEscalas(); renderLibrary(); renderEscalas();
     // contagem: músicas novas → músicas atualizadas → escalas novas → escalas atualizadas
     const parts=[];
@@ -3136,11 +3195,13 @@ function doImport(data,tp,incoming,policy,opts){
     if(updated) parts.push(pl(updated,"música atualizada","músicas atualizadas"));
     if(escAdd)  parts.push("+"+pl(escAdd,"escala","escalas"));
     if(escUpd)  parts.push(pl(escUpd,"escala atualizada","escalas atualizadas"));
+    if(sRem)    parts.push("−"+pl(sRem,"música","músicas"));      // exclusão da equipe chegando
+    if(eRem)    parts.push("−"+pl(eRem,"escala","escalas"));
     if(parts.length) toast("Sincronizado: "+parts.join(", "),"ok");   // manual e auto-sync: anuncia a novidade
     else if(!silent) toast("Já está tudo sincronizado","ok");          // só o pull manual fala quando não há nada novo (auto-sync cala)
     return;
   }
-  const {added,updated}=mergeSongs(incoming,policy);
+  const {added,updated}=mergeSongs(incoming,policy,viaSync);
   saveSongs(); renderLibrary();
   toast(`Importado: ${added} nova(s)`+(updated?`, ${updated} atualizada(s)`:""));
 }

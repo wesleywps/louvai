@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.59.0**.
+seguir. Atualizado até a **v0.60.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -141,6 +141,8 @@ instalação complexa.
 
 | **v0.59.0** | recurso | **Excluir cifra e escala pela lista:** antes só dava pra excluir entrando no **editor** (ou pela folha Compartilhar, que abria o editor por baixo dos panos). Agora **deslizar o card** revela **Duplicar · Excluir**, com **confirmação em diálogo do app** (diz em quais escalas a cifra está; na escala, que as cifras não vão junto) e **DESFAZER** no toast. O **voltar do celular cancela** (a confirmação é camada da pilha, ao contrário do diálogo de saída). `touch-action:pan-y` preserva a rolagem; **toque e segure** é o caminho sem gesto. Corrige de quebra o cancelar que largava a pessoa dentro do editor. |
 
+| **v0.60.0** | recurso | **A exclusão passa a valer para a equipe:** antes, excluir e sincronizar **trazia a música de volta** (o merge é união pura). Agora a exclusão deixa uma **lápide** enxuta `{id,k,at}` (~40 bytes) que viaja no snapshot — o objeto é **apagado de verdade** do `louvai.json`, sem registro morto. No sync a marca vence por carimbo de tempo (item **editado depois** sobrevive); **importar arquivo/link vence sempre** (gesto explícito). Poda de 180 dias + teto de 500 p/ não inchar o arquivo; o DESFAZER retira a marca junto. |
+
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
 ---
@@ -256,11 +258,11 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 - [x] **Dar o tom** (referência sonora da tônica do tom atual, Web Audio) *(entregue na v0.49.0)*.
 - [x] **Link da versão guia (YouTube)** por música — sincronizado (`song.ref`). *(entregue na v0.47.0)*
 - [x] **Observações da música** (compartilhadas, `song.notes`) — sincroniza; no player e na Apresentação. *(entregue na v0.48.0)*
-- [x] **Excluir cifra e escala pela lista** (`PLANO-excluir.md`) — **Inc. 1 entregue na v0.59.0**:
+- [x] **Excluir cifra e escala pela lista** (`PLANO-excluir.md`) — **concluído**. Inc. 1 (v0.59.0):
   deslizar o card revela **Duplicar · Excluir**, confirmação em **diálogo do app** (diz em quantas
-  escalas a cifra está), **Desfazer** no toast e o voltar do celular cancelando. **Inc. 2 (obrigatório,
-  em andamento):** **lápides** no snapshot — sem elas o sincronizar **traz de volta** o que foi
-  excluído, porque o merge é união pura.
+  escalas a cifra está), **Desfazer** no toast e o voltar do celular cancelando. Inc. 2 (v0.60.0):
+  **lápides** `{id,k,at}` no snapshot — a exclusão **não volta no sincronizar** e **se propaga** para
+  a equipe, com o objeto apagado de verdade (poda de 180 dias + teto de 500).
 - [ ] **Campos extras na música:** BPM, tema/categoria, andamento.
 - [ ] **Itens não-musicais no modo Apresentar** (mostrar o card de aviso/oração na sequência).
 
@@ -361,4 +363,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.59.0.*
+*Última atualização deste roteiro: v0.60.0.*

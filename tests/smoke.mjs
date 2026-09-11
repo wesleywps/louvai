@@ -2559,6 +2559,121 @@ await pageDel.locator("#toast .toastact").click(); await pageDel.waitForTimeout(
 ok(await pageDel.evaluate(() => escalas.length === 1 && escalas[0].id === "ed1"),
   "DESFAZER restaura a escala");
 
+// ===== v0.60.0 — lápides: a exclusão vale para a equipe (e o sync não a desfaz) =====
+// O caminho REAL: excluir pelo gesto → tocar "Atualizar do link" com a nuvem ainda tendo a cifra.
+await pageDel.evaluate(() => {
+  deleted.length = 0; saveDeleted();
+  window.__real = window.fetch;
+  window.__snap = { type: "louvai-full", app: "0.60.0",
+    songs: JSON.parse(JSON.stringify(songs)), escalas: JSON.parse(JSON.stringify(escalas)) };
+  window.fetch = async () => ({ ok: true, status: 200, text: async () => JSON.stringify(window.__snap) });
+  settings.repoUrl = "https://louvai-teste.example/louvai.json"; saveSettings();   // host não-GitHub: fetch direto
+});
+await pageDel.locator("#tab-songs").click(); await pageDel.waitForTimeout(300);
+await arrastaDel(listaSelDel, 1, -160, 0);
+await pageDel.locator(`${listaSelDel} .sa-del`).nth(1).click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#confirm-ok").click(); await pageDel.waitForTimeout(400);
+const marcou = await pageDel.evaluate(() => ({
+  lapide: deleted.find(t => t.id === "d2"),
+  sumiu: !songs.some(s => s.id === "d2"),
+  nota: document.getElementById("confirm-sub") && true,
+}));
+ok(marcou.sumiu && marcou.lapide && marcou.lapide.k === "s" && marcou.lapide.at > 0,
+  "Excluir deixa uma lápide enxuta {id,k,at} — e só ela (o objeto sai de verdade)");
+// o botão REAL de sincronizar, com a nuvem ainda trazendo a cifra excluída
+await pageDel.locator("#backupBtn").click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#sheet-body .sheetitem", { hasText: "Repertório na nuvem" }).click();
+await pageDel.waitForTimeout(350);
+await pageDel.locator("#repo-pull").click(); await pageDel.waitForTimeout(600);
+ok(await pageDel.evaluate(() => !songs.some(s => s.id === "d2")),
+  "Sincronizar NÃO ressuscita a cifra excluída (o furo que tornaria a exclusão mentirosa)");
+await pageDel.evaluate(() => { closeS("#repobg", "#reposheet"); });
+await pageDel.waitForTimeout(300);
+
+// a lápide que CHEGA remove aqui — é assim que a exclusão do líder some do celular da equipe
+const chegando = await pageDel.evaluate(() => {
+  songs.length = 0; escalas.length = 0; deleted.length = 0;
+  songs.push({ id: "x1", title: "Some", key: "C", capo: 0, tags: [], updatedAt: 100, body: "C" });
+  songs.push({ id: "x2", title: "Editada Depois", key: "C", capo: 0, tags: [], updatedAt: 900, body: "C" });
+  escalas.push({ id: "xe1", title: "Escala Velha", date: "2026-01-01", items: [], updatedAt: 100 });
+  saveSongs(); saveEscalas(); saveDeleted();
+  importJSON(JSON.stringify({ type: "louvai-full", songs: [], escalas: [],
+    deleted: [{ id: "x1", k: "s", at: 500 }, { id: "x2", k: "s", at: 500 }, { id: "xe1", k: "e", at: 500 }] }),
+    { silent: true, sync: true });
+  return { foi: !songs.some(s => s.id === "x1"), ficou: songs.some(s => s.id === "x2"),
+           esc: !escalas.some(e => e.id === "xe1"),
+           marcaDoX2: deleted.some(t => t.id === "x2") };
+});
+ok(chegando.foi && chegando.esc, "A lápide que chega da nuvem remove a cifra e a escala daqui");
+ok(chegando.ficou && !chegando.marcaDoX2,
+  "Item editado DEPOIS da exclusão sobrevive (não se apaga trabalho recente) e a lápide é descartada");
+
+// importação explícita (arquivo/link) vence a lápide — o gesto do usuário manda
+const explicita = await pageDel.evaluate(() => {
+  songs.length = 0; deleted.length = 0; saveSongs(); saveDeleted();
+  const cifra = { id: "y1", title: "Quero De Volta", key: "C", capo: 0, tags: [], updatedAt: 10, body: "C" };
+  tomb("y1", "s", 50);                                          // excluída aqui DEPOIS da versão que vai chegar
+  importJSON(JSON.stringify({ type: "louvai-full", songs: [cifra], escalas: [] }), { silent: true, sync: true });
+  const bloqueou = !songs.some(s => s.id === "y1");
+  importJSON(JSON.stringify({ type: "louvai-song", song: cifra }));   // arquivo/link: gesto explícito
+  return { bloqueou, voltou: songs.some(s => s.id === "y1"), semMarca: !deleted.some(t => t.id === "y1") };
+});
+ok(explicita.bloqueou, "No sync, a lápide barra a versão antiga que insiste em voltar");
+ok(explicita.voltou && explicita.semMarca,
+  "Importar por arquivo/link VENCE a lápide (o gesto explícito manda) e apaga a marca");
+
+// o snapshot publicado leva as marcas — e nenhum registro morto
+const snapshot = await pageDel.evaluate(() => {
+  songs.length = 0; escalas.length = 0; deleted.length = 0;
+  songs.push({ id: "z1", title: "Fica", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });
+  saveSongs(); saveEscalas();
+  tomb("z9", "s", Date.now());
+  const env = fullEnvelope();
+  return { temDeleted: Array.isArray(env.deleted) && env.deleted.length === 1,
+           campos: Object.keys(env.deleted[0]).sort().join(","),
+           semCorpo: !env.songs.some(s => s.id === "z9"),
+           bytes: JSON.stringify(env.deleted).length };
+});
+ok(snapshot.temDeleted && snapshot.campos === "at,id,k" && snapshot.semCorpo,
+  `O snapshot leva só a marca {at,id,k} — o objeto foi apagado de verdade (${snapshot.bytes} bytes)`);
+
+// poda: por idade (180 dias) e por teto (500)
+const poda = await pageDel.evaluate(() => {
+  deleted.length = 0;
+  deleted.push({ id: "velha", k: "s", at: Date.now() - 200 * 864e5 });
+  deleted.push({ id: "nova", k: "s", at: Date.now() - 10 * 864e5 });
+  purgeTombstones();
+  const porIdade = !deleted.some(t => t.id === "velha") && deleted.some(t => t.id === "nova");
+  deleted.length = 0;
+  for (let i = 0; i < 620; i++) deleted.push({ id: "m" + i, k: "s", at: Date.now() - i * 1000 });
+  purgeTombstones();
+  return { porIdade, teto: deleted.length, guardouRecentes: deleted.some(t => t.id === "m0") && !deleted.some(t => t.id === "m600") };
+});
+ok(poda.porIdade, "Poda por idade: marca com mais de 180 dias some (não floodar o arquivo)");
+ok(poda.teto === 500 && poda.guardouRecentes, `Teto duro de 500 marcas, mantendo as mais recentes (ficaram ${poda.teto})`);
+
+// desfazer retira a lápide (senão o sync nunca mais traria a música de volta)
+const desfazTomb = await pageDel.evaluate(() => {
+  songs.length = 0; escalas.length = 0; deleted.length = 0;
+  songs.push({ id: "u1", title: "Undo", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });
+  saveSongs(); saveDeleted(); renderLibrary();
+  doDeleteSong("u1");
+  const marcada = deleted.some(t => t.id === "u1");
+  document.querySelector("#toast .toastact").click();
+  return { marcada, semMarca: !deleted.some(t => t.id === "u1"), voltou: songs.some(s => s.id === "u1") };
+});
+ok(desfazTomb.marcada && desfazTomb.semMarca && desfazTomb.voltou,
+  "DESFAZER retira a lápide junto (senão a cifra ficaria banida do sync)");
+
+// a confirmação agora conta a verdade nova
+await pageDel.evaluate(() => { deleted.length = 0; saveDeleted(); renderLibrary(); });
+await arrastaDel(listaSelDel, 0, -160, 0);
+await pageDel.locator(`${listaSelDel} .sa-del`).first().click(); await pageDel.waitForTimeout(300);
+ok(await pageDel.evaluate(() => /Não volta ao sincronizar/.test(document.getElementById("confirm-sub").textContent)),
+  "A confirmação diz o que passou a ser verdade: a exclusão não volta ao sincronizar");
+await pageDel.locator("#confirm-cancel").click(); await pageDel.waitForTimeout(300);
+await pageDel.evaluate(() => { if (window.__real) window.fetch = window.__real; });
+
 ok(delErrors.length === 0, "Excluir: nenhum erro de JS no fluxo" + (delErrors.length ? ": " + delErrors.join(" | ") : ""));
 await ctxDel.close();
 

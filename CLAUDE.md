@@ -173,7 +173,8 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   **Duplicar · Excluir**, confirmação em **diálogo do app** (linguagem do "Sair do Louvai?", mas
   **empilhando** no histórico — o voltar cancela) e **Desfazer** no toast. Inc. 2 = **lápides**
   (`deleted:[{id,k,at}]` no snapshot, objeto apagado de verdade + poda), sem as quais o sync
-  **ressuscita** o que foi excluído. **Status: 🟡 Inc. 1 entregue na v0.59.0; Inc. 2 pendente.**
+  **ressuscita** o que foi excluído. **Implementado: Inc. 1 na v0.59.0, Inc. 2 na v0.60.0** (status e
+  lições de execução no topo do plano).
 - `docs/planos/PLANO-ui.md` — polimento de UI/ícones em **ondas**, **concluído (v0.28.0→v0.36.1)**: Onda 1
   (ganhos rápidos + ícone do Backup, v0.28.0); Onda 2 (ícones SVG inline via `ICONS`/`icon()`,
   v0.29.0); Onda 3 = M2 ⚙ seções (v0.30.0) · M4 linguagem de card (v0.31.0) · M5 `#reposheet`
@@ -451,6 +452,17 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   empilhasse, na lista o voltar consumiria a guarda e abriria "Sair do Louvai?" por cima). Linhas por
   `textContent`; `escalasNote(id)` diz em quais escalas a cifra está. `toastAction` monta o botão
   DESFAZER por DOM (título de música não pode virar HTML) e o `.toastact` reativa o toque no toast.
+- **Lápides / exclusão que vale para a equipe (v0.60.0):** `deleted` (`LS_DEL`) = lista de
+  `{id,k,at}` — **só a marca**; o objeto sai de `songs`/`escalas` de verdade (nada de registro morto
+  no `louvai.json`). `tomb`/`untomb`/`tombAt`, `purgeTombstones` (TTL **180 dias** `TOMB_TTL` + teto
+  **500** `TOMB_MAX`; roda no `load` e no `fullEnvelope`) e `applyTombs(list)` (lápide que CHEGA
+  remove aqui; item com `updatedAt >` a marca **sobrevive** e a marca é descartada). `mergeSongs`/
+  `mergeEscala` ganharam o 3º parâmetro **`viaSync`**: no pull (`importJSON(txt,{silent,sync:true})`)
+  a lápide barra o que chega igual/mais velho; **importação explícita (arquivo/link) vence sempre** e
+  chama `untomb`. `fullEnvelope()` leva `deleted` (é assim que a exclusão do líder some do celular da
+  equipe). ⚠️ **O `opts` precisa ser propagado** nas escolhas da folha de "título repetido" do
+  `importJSON` — sem isso o pull manual com conflito ignora as lápides. Regra: **lápide vence por
+  carimbo de tempo; gesto explícito vence sempre.**
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).
@@ -542,9 +554,9 @@ Ver `ROTEIRO-louvai.md` (seções 4 e 5). **Próximo passo imediato:**
    `repoUrl` é derivado do próprio endereço (`new URL("louvai.json", location.href)`) quando não há link
    colado: o membro abre o app hospedado e já puxa/sincroniza **sem colar nada** (link explícito tem
    prioridade; auto-sync opt-in). `deriveRepoUrl`/`defaultRepoUrl`/`effectiveRepoUrl`/`repoUrlFromField`.
-4. **Excluir cifra/escala** (`PLANO-excluir.md`) — **Inc. 1 entregue na v0.59.0** (deslize +
-   confirmação + desfazer). **Falta o Inc. 2 (lápides)**: sem ele, sincronizar **ressuscita** o que
-   foi excluído, porque `mergeSongs`/`mergeEscala` são união pura.
+4. ✅ **Excluir cifra/escala** (`PLANO-excluir.md`) — **concluído**: Inc. 1 na v0.59.0 (deslize +
+   confirmação + desfazer) e Inc. 2 na v0.60.0 (**lápides**: a exclusão não volta no sincronizar e
+   se propaga para a equipe).
 5. **PWA instalável** — fecha o offline do app hospedado e **encerra a regra "arquivo único"**
    (ver seção "Horizonte"). *(A acessibilidade contínua da análise — `:focus-visible`, `--muted` no
    dark, alvo da `.chip` ≥44px — foi **entregue na v0.43.2**.)*

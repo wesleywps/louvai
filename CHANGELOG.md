@@ -8,6 +8,38 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.60.0 — A exclusão agora vale para a equipe (e não ressuscita no sincronizar)
+**Recurso — a outra metade do excluir.** A v0.59.0 deu o gesto; faltava a verdade. O merge do sync
+era **união pura**: quem excluísse uma cifra aqui e depois tocasse em *Atualizar do link* **via a
+música voltar**, porque a nuvem ainda a tinha. Uma exclusão que se desfaz sozinha não é exclusão.
+- **Lápides (marcas de exclusão):** excluir passa a registrar `{id, k, at}` — **~40 bytes**, sem
+  corpo, sem título, sem tags. O **objeto é apagado de verdade** do `louvai.json`: o arquivo não
+  acumula registro morto (pedido explícito do dono ao aprovar o plano).
+- **A marca viaja no snapshot:** o líder publica e, no próximo sincronizar da equipe, a cifra
+  excluída **some do celular de todo mundo** — é a exclusão se propagando, que antes não existia.
+- **Quem ganha de quem** (regra em uma frase: *lápide vence por carimbo de tempo; gesto explícito
+  vence sempre*): no **sync**, o que chega igual ou mais velho que a marca não ressuscita; quem foi
+  **editado depois** da exclusão sobrevive e derruba a marca (não se apaga trabalho recente de
+  ninguém); **importar um arquivo ou link** — gesto explícito, confirmado pela pessoa — vence a
+  marca e a apaga.
+- **Não floodar:** `purgeTombstones()` roda ao abrir e antes de publicar — descarta marca com mais
+  de **180 dias** (a equipe sincroniza toda semana; seis meses é folga larga) e mantém no máximo
+  **500**, as mais recentes. Marca podada não ressuscita nada: a essa altura todo aparelho já
+  sincronizou a ausência.
+- **DESFAZER retira a lápide** junto — senão a cifra restaurada ficaria banida do sync para sempre.
+- **A confirmação conta a verdade nova:** *"Não volta ao sincronizar. Publique na nuvem para sumir
+  também para a equipe."*
+- **Armadilha corrigida no caminho:** o `opts` (silencioso/sync) se perdia na folha de "título
+  repetido" — um pull manual que caísse nesse aviso voltaria a ignorar as lápides.
+- **Compatibilidade:** app antigo ignora o campo `deleted` e, como o objeto já saiu de `songs`,
+  simplesmente não recebe a música. Nada quebra; o snapshot continua legível pelas versões anteriores.
+- **443 verificações** (11 novas): o caminho real (excluir pelo gesto → tocar *Atualizar do link*
+  com a nuvem ainda trazendo a cifra), lápide que chega removendo daqui, item editado depois
+  sobrevivendo, importação explícita vencendo, o snapshot levando só a marca, as duas podas e o
+  desfazer limpando a marca.
+
+---
+
 ## v0.59.0 — Excluir cifra e escala pela lista (deslizar → confirmar → desfazer)
 **Recurso (pedido do dono).** Tirar uma música ou uma escala do app exigia entrar no **editor** —
 ou passar pela folha Compartilhar, que abria o editor por baixo dos panos só para clicar no botão
