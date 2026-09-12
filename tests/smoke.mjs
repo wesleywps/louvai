@@ -2609,15 +2609,14 @@ const marcou = await pageDel.evaluate(() => ({
 }));
 ok(marcou.sumiu && marcou.lapide && marcou.lapide.k === "s" && marcou.lapide.at > 0,
   "Excluir deixa uma lápide enxuta {id,k,at} — e só ela (o objeto sai de verdade)");
-// o botão REAL de sincronizar, com a nuvem ainda trazendo a cifra excluída
+// o caminho REAL de sincronizar (v0.64.0: o 1º item da folha já baixa), com a nuvem ainda
+// trazendo a cifra excluída
 await pageDel.locator("#backupBtn").click(); await pageDel.waitForTimeout(300);
-await pageDel.locator("#sheet-body .sheetitem", { hasText: "Repertório na nuvem" }).click();
-await pageDel.waitForTimeout(350);
-await pageDel.locator("#repo-pull").click(); await pageDel.waitForTimeout(600);
+await pageDel.locator("#sheet-body .sheetitem", { hasText: "Atualizar do repertório" }).click();
+await pageDel.waitForTimeout(700);
 ok(await pageDel.evaluate(() => !songs.some(s => s.id === "d2")),
   "Sincronizar NÃO ressuscita a cifra excluída (o furo que tornaria a exclusão mentirosa)");
-await pageDel.evaluate(() => { closeS("#repobg", "#reposheet"); });
-await pageDel.waitForTimeout(300);
+await pageDel.waitForTimeout(200);
 
 // a lápide que CHEGA remove aqui — é assim que a exclusão do líder some do celular da equipe
 const chegando = await pageDel.evaluate(() => {
@@ -2935,16 +2934,103 @@ const folha = await pageDel.evaluate(() => ({
   titulo: document.getElementById("sheet-title").textContent,
   itens: [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent.trim()),
 }));
-ok(/nuvem/i.test(folha.itens[0] || ""), `A folha começa pelo que a equipe mais usa: "${folha.itens[0]}"`);
-ok(folha.itens.length === 4 && /arquivo/i.test(folha.itens[3] || ""),
+ok(/atualizar/i.test(folha.itens[0] || "") && /nuvem/i.test(folha.itens[1] || ""),
+  `A folha começa pelo dia a dia: "${folha.itens[0]}" (configurar a nuvem vem depois)`);
+ok(folha.itens.length === 5 && /arquivo/i.test(folha.itens[4] || ""),
   "Importar/restaurar de arquivo é o último item (uso raro, mas alcançável e com rótulo em texto)");
 // o caminho de importar continua funcionando de ponta a ponta (sem abrir o seletor nativo)
 await pageDel.evaluate(() => { window.__abriu = false; document.getElementById("fileInput").click = () => { window.__abriu = true; }; });
-await pageDel.locator("#sheet-body .sheetitem").nth(3).click(); await pageDel.waitForTimeout(400);
+await pageDel.locator("#sheet-body .sheetitem").nth(4).click(); await pageDel.waitForTimeout(400);
 ok(await pageDel.evaluate(() => window.__abriu === true),
   "Tocar em 'Importar/restaurar de um arquivo' ainda abre o seletor de arquivo (nada se perdeu ao tirar o botão do topo)");
 ok(await pageDel.evaluate(() => !document.getElementById("sheet").classList.contains("show")),
   "A folha fecha ao escolher importar (não fica por cima do seletor)");
+
+// ===== v0.64.0 — puxar a lista para baixo atualiza (o líder publica, o membro puxa) =====
+await pageDel.evaluate(() => {
+  songs.length = 0; escalas.length = 0; deleted.length = 0;
+  songs.push({ id: "q1", title: "Ja tinha", key: "C", capo: 0, tags: [], updatedAt: 1, body: "C" });
+  saveSongs(); saveEscalas(); saveDeleted();
+  settings.repoUrl = "https://louvai-teste.example/louvai.json"; saveSettings();
+  show("lib"); switchTab("songs"); renderLibrary(); window.scrollTo(0, 0);
+  window.__pulls = 0;
+  window.fetch = async () => { window.__pulls++; return { ok: true, status: 200,
+    text: async () => JSON.stringify({ type: "louvai-full", songs: [
+      { id: "q2", title: "Cifra que o lider publicou", key: "G", capo: 0, tags: [], updatedAt: 9, body: "G" }], escalas: [] }) }; };
+});
+await pageDel.waitForTimeout(300);
+const ptrEstado = () => pageDel.evaluate(() => {
+  const el = document.getElementById("ptr");
+  return { visivel: el.classList.contains("on"), texto: el.querySelector(".ptr-tx").textContent,
+           y: Math.round(el.getBoundingClientRect().y), girando: el.classList.contains("spin"),
+           pulls: window.__pulls, titulos: [...document.querySelectorAll("#songlist .c-ttl")].map(e => e.textContent) };
+});
+async function puxaLista(dy) {
+  await pageDel.mouse.move(206, 220);
+  await pageDel.mouse.down();
+  for (let i = 1; i <= 6; i++) { await pageDel.mouse.move(206, 220 + dy * i / 6); await pageDel.waitForTimeout(30); }
+  const meio = await ptrEstado();
+  await pageDel.mouse.up(); await pageDel.waitForTimeout(800);
+  return { meio, fim: await ptrEstado(), view: await pageDel.evaluate(() => view) };
+}
+// puxão curto: aparece o convite, mas nada é buscado
+const curto = await puxaLista(40);
+ok(curto.meio.visivel && /Puxe para atualizar/.test(curto.meio.texto),
+  `Puxar a lista mostra o convite ("${curto.meio.texto}")`);
+ok(curto.fim.pulls === 0 && !curto.fim.visivel,
+  "Puxão curto volta sozinho e NÃO busca nada (não gasta rede por engano)");
+ok(curto.view === "lib",
+  "Puxar a lista NÃO abre a cifra que estava sob o dedo (o gesto termina em clique — precisa ser suprimido)");
+// puxão além do limiar: busca e traz o que o líder publicou
+const longo = await puxaLista(200);
+ok(longo.meio.visivel && /Solte para atualizar/.test(longo.meio.texto) && longo.meio.y > 0,
+  `Passando do limiar o puxador muda de recado ("${longo.meio.texto}") e fica visível na tela`);
+ok(longo.fim.pulls === 1, "Soltar dispara a busca no repertório da nuvem");
+ok(longo.fim.titulos.includes("Cifra que o lider publicou"),
+  "A cifra publicada pelo líder chega na lista pelo gesto (sem abrir menu nenhum)");
+ok(!longo.fim.visivel, "O puxador se recolhe quando termina");
+
+// na cifra o gesto NÃO existe: ali puxar é rolagem
+await pageDel.locator("#songlist .songcard").first().click(); await pageDel.waitForTimeout(400);
+await pageDel.evaluate(() => { window.__pulls = 0; });
+await pageDel.mouse.move(206, 300); await pageDel.mouse.down();
+for (let i = 1; i <= 6; i++) { await pageDel.mouse.move(206, 300 + 200 * i / 6); await pageDel.waitForTimeout(25); }
+await pageDel.mouse.up(); await pageDel.waitForTimeout(500);
+ok(await pageDel.evaluate(() => window.__pulls === 0 && !document.getElementById("ptr").classList.contains("on")),
+  "Dentro da cifra o gesto não existe (puxar é rolagem, não sincronismo)");
+await pageDel.evaluate(() => exitPlayer()); await pageDel.waitForTimeout(350);
+
+// sem link configurado o gesto nem começa (nada a buscar)
+const semLink = await pageDel.evaluate(async () => {
+  settings.repoUrl = ""; saveSettings();            // em file:// não há link derivado
+  return { url: effectiveRepoUrl() };
+});
+await pageDel.waitForTimeout(200);
+const semLinkPuxao = await puxaLista(200);
+ok(semLink.url === "" && semLinkPuxao.fim.pulls === 0 && !semLinkPuxao.fim.visivel,
+  "Sem link nenhum o gesto nem começa (nada a buscar, nada a prometer)");
+await pageDel.evaluate(() => { settings.repoUrl = "https://louvai-teste.example/louvai.json"; saveSettings(); });
+
+// ===== v0.64.0 — sincronizar ao abrir passa a nascer LIGADO =====
+const autoSync = await pageDel.evaluate(() => {
+  const guardado = settings.autoPull;
+  delete settings.autoPull;                          // aparelho novo, nunca mexeu no interruptor
+  const novo = autoPullOn();
+  settings.autoPull = false;                         // quem desligou de propósito
+  const desligado = autoPullOn();
+  settings.autoPull = true;
+  const ligado = autoPullOn();
+  settings.autoPull = guardado;
+  return { novo, desligado, ligado };
+});
+ok(autoSync.novo === true, "Aparelho novo já nasce sincronizando ao abrir (era opt-in escondido)");
+ok(autoSync.desligado === false && autoSync.ligado === true,
+  "Quem desligou de propósito continua desligado (só `false` explícito conta como não)");
+await pageDel.locator("#backupBtn").click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#sheet-body .sheetitem", { hasText: "Nuvem" }).click(); await pageDel.waitForTimeout(400);
+ok(await pageDel.evaluate(() => document.getElementById("auto-pull").checked === true),
+  "O interruptor na folha da nuvem reflete o novo padrão (ligado)");
+await pageDel.evaluate(() => closeS("#repobg", "#reposheet")); await pageDel.waitForTimeout(300);
 
 ok(delErrors.length === 0, "Excluir: nenhum erro de JS no fluxo" + (delErrors.length ? ": " + delErrors.join(" | ") : ""));
 await ctxDel.close();

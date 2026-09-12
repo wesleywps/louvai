@@ -35,13 +35,13 @@ e sem backend: abre no navegador do celular/tablet e compartilha por arquivo ou 
   escala como texto no WhatsApp** — com a **equipe escalada**, momentos e observações.
 - **☁️ Compartilhar & nuvem** — por **arquivo `.json`**, por **link auto-importável**
   (a pessoa toca o link e o app oferece importar, sem servidor) e por **"Repertório na
-  nuvem"**: o líder publica um snapshot e a equipe **puxa de um link** — com **sincronizar
-  ao abrir** (opcional) e **sem backend**.
+  nuvem"**: o líder publica um snapshot e a equipe **puxa de um link** — **puxando a lista para
+  baixo** ou com **sincronizar ao abrir** (ligado por padrão), e **sem backend**.
 - **🔒 Confiável** — **100% offline** (dados só no aparelho), **backup com lembrete**,
   conferência opcional do **tom pelos acordes**, importação à prova de arquivo malformado
   (sem XSS) e **acessível** (foco por teclado, contraste no escuro, alvos de toque grandes).
 
-*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.63.0**.*
+*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.64.0**.*
 
 ## Usar
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"** — desde a

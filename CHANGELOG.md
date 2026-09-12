@@ -8,6 +8,33 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.64.0 — Puxar a lista para baixo atualiza · sincronizar ao abrir agora vem ligado
+**Recurso (pedido do dono).** O líder publica uma cifra; o membro **puxa a lista para baixo** e
+recebe. Sem menu, sem folha, sem procurar link — o gesto que todo aplicativo tem.
+- **Três estados claros:** *"Puxe para atualizar"* → *"Solte para atualizar"* (passando do limiar) →
+  *"Atualizando…"* girando. O resultado vem no toast de sempre (*"Sincronizado: +2 músicas"* ou
+  *"Já está tudo sincronizado"*).
+- **Sem brigar com o navegador:** `overscroll-behavior-y:contain` desliga o "recarregar a página"
+  nativo do Chrome Android — que roubaria o gesto e ainda faria o app perder o estado da tela.
+- **Só onde faz sentido:** na lista, no topo dela, e havendo link configurado. Dentro da cifra puxar
+  continua sendo rolagem.
+- **Armadilha achada e corrigida:** o gesto termina em `click` — e **abria a cifra que estava sob o
+  dedo**. A mesma supressão do deslize lateral resolveu (e morre no toque seguinte, não por relógio).
+
+**Sincronizar ao abrir passa a nascer LIGADO.** Existia desde a v0.37.0, mas como opt-in escondido
+dentro da folha da nuvem: quem não fuçou nunca soube que existia. Agora o app já abre atualizado.
+- **Quem desligou de propósito continua desligado** — só `false` explícito conta como "não".
+- Em `file://` (sem link derivado) nada muda: não há o que buscar.
+- Com as lápides da v0.60.0, as **exclusões** do líder também chegam sozinhas — que é o esperado.
+
+**E o caminho manual encurtou:** na folha Repertório, o primeiro item passou a ser *"Atualizar do
+repertório"*, que **já baixa** (2 toques em vez de 3); configurar/publicar virou um item próprio.
+- **489 verificações** (12 novas): o gesto medido pela geometria do puxador, puxão curto que não
+  busca nada **nem abre a cifra**, puxão longo trazendo a cifra publicada, o gesto inexistente dentro
+  da cifra, o caso sem link, e o padrão do auto-sync nos três estados (novo, desligado, ligado).
+
+---
+
 ## v0.63.0 — Um botão a menos no topo (o de importar era a mesma ação, em dois lugares)
 **Ajuste de UI (provocação do dono, confirmada no código).** O topo tinha três ícones e dois deles
 falavam da mesma coisa: o botão de **importar arquivo** fazia `$("#fileInput").click()` — exatamente

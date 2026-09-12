@@ -517,10 +517,21 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   via `openPlayer(...,atLast)`). As setas ‹ › de música seguem indo pro início.
 - **Armazenamento:** chaves `LS_SONGS`, `LS_ESC`, `LS_SET` (`louvai.*.v1`);
   funções `load`, `migrateLevita`, `saveSongs`, `saveEscalas`, `saveSettings`.
+- **Puxar para atualizar (v0.64.0):** `PTR_TRIGGER`(70)/`PTR_MAX`(120), `ptrMove`/`ptrDispara`/
+  `ptrPodeComecar` + o pílula `#ptr`. Só em `view==="lib"`, com `scrollY<=0` e `effectiveRepoUrl()`.
+  **`html,body{overscroll-behavior-y:contain}`** desliga o refresh nativo do Chrome Android (senão o
+  gesto é do sistema e recarrega o app). ⚠️ **Duas armadilhas, as mesmas do deslize:** o `pointermove`
+  precisa de `preventDefault` (`{passive:false}`) senão o navegador inicia arrasto nativo e **cancela
+  o ponteiro no meio**; e o gesto termina em **`click`** — sem `markSwipe()` ao assumir, soltar
+  **abre a cifra que estava sob o dedo**.
+- **Auto-sync nasce LIGADO (v0.64.0):** `autoPullOn()` = `settings.autoPull!==false` — quem desligou
+  de propósito continua desligado. Usado em `maybeAutoPull` e no toggle `#auto-pull`. Era opt-in
+  desde a v0.37.0, escondido dentro do `#reposheet`.
 - **Topo da biblioteca (v0.63.0):** dois botões só — `#themeBtn` (aparência) e `#backupBtn` (dados).
   O `#importBtn` **foi removido**: era `$("#fileInput").click()`, a MESMA ação do item da folha
   Repertório (e com ícone contraditório — `download` no topo × `upload` na folha). A folha do
-  `#backupBtn` segue a **frequência de uso**: nuvem → exportar → enviar link → importar/restaurar.
+  `#backupBtn` segue a **frequência de uso** e o 1º item **já baixa** (v0.64.0): atualizar → nuvem
+  (configurar/publicar) → exportar → enviar link → importar/restaurar.
   Quem for reintroduzir um atalho no topo: a porta de arquivo é o `#fileInput`, e ele já tem dono.
 - **Rede de segurança do backup (v0.23.0):** `settings.lastBackup` (data) +
   `settings.dirtySinceBackup` (marcado em `saveSongs`/`saveEscalas` via `markDirty`,
