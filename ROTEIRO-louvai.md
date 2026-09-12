@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.61.0**.
+seguir. Atualizado até a **v0.62.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -144,6 +144,8 @@ instalação complexa.
 | **v0.60.0** | recurso | **A exclusão passa a valer para a equipe:** antes, excluir e sincronizar **trazia a música de volta** (o merge é união pura). Agora a exclusão deixa uma **lápide** enxuta `{id,k,at}` (~40 bytes) que viaja no snapshot — o objeto é **apagado de verdade** do `louvai.json`, sem registro morto. No sync a marca vence por carimbo de tempo (item **editado depois** sobrevive); **importar arquivo/link vence sempre** (gesto explícito). Poda de 180 dias + teto de 500 p/ não inchar o arquivo; o DESFAZER retira a marca junto. |
 
 | **v0.61.0** | recurso+correção | **Tirar a música da ordem do culto deslizando:** dentro da escala, o mesmo gesto da lista — deslizou, **Tirar** —, com confirmação que tranquiliza (*a cifra continua no repertório*) e DESFAZER que devolve na **mesma posição**. Antes era preciso abrir o editor. **Correções achadas no caminho:** o aviso de saída sumia em **notebook com touchscreen** (o app se achava celular por `maxTouchPoints>0` e confiava no CloseWatcher, que no desktop não intercepta o voltar) — agora o sinal é o **ponteiro grosso**; e o deslize morria quando havia **texto selecionado** (o navegador iniciava arrasto nativo e cancelava o ponteiro). |
+
+| **v0.62.0** | correção+recurso | **A Apresentação não se desfaz mais ao voltar do editor:** mexer na cifra pelo ⚙ no meio do culto e voltar matava o contexto da escala — a barra virava a do player comum e o "livro" parava de trocar de música. `playerCtxFor(id)` devolve o contexto do culto no *Cancelar* e no *Salvar* (música nova segue abrindo avulsa). **E o logo virou botão:** leva à lista de cifras, limpando busca e tag — antes só selecionava o texto no celular. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -366,4 +368,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.61.0.*
+*Última atualização deste roteiro: v0.62.0.*

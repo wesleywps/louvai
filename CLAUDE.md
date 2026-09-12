@@ -473,6 +473,15 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   equipe). ⚠️ **O `opts` precisa ser propagado** nas escolhas da folha de "título repetido" do
   `importJSON` — sem isso o pull manual com conflito ignora as lápides. Regra: **lápide vence por
   carimbo de tempo; gesto explícito vence sempre.**
+- **Voltar do editor sem perder a Apresentação (v0.62.0):** `playerCtxFor(id)` devolve
+  `{id,idx,list}` do `escalaCtx` **se a música estiver naquela escala** (senão `null`). Usado nos
+  QUATRO retornos ao player — `#e-cancel`, salvar-sobrescrever, salvar-como-nova e "salvar o tom
+  como nova". ⚠️ **Por quê:** o `escalaCtx` sobrevive à edição; quem o matava era `openPlayer(id)`
+  **sem ctx**, e o sintoma só aparecia depois (o "livro" parava de trocar de música). Quem adicionar
+  um caminho novo de volta ao player a partir do editor precisa passar por aqui.
+- **Logo = "voltar pra casa" (v0.62.0):** `#homeBtn` (o `.brand` do `#view-lib`) chama `goHome()`
+  → `switchTab("songs")` + limpa `#search`/`activeTag` + `renderLibrary()` + topo. `clickable()` dá
+  `role="button"`/teclado e o `.brand` tem `user-select:none` (no celular o toque só selecionava o texto).
 - **Escalas/Setlists:** bloco "ESCALAS / SETLISTS" — lista, detalhe (`openEscala`),
   editor (`openEscalaEditor`), seletor de música (`openPicker`) e modo Apresentar
   (`escalaCtx`, `presentGo`). Equipe = `e.team` (lista de `{role,name}`, funções em `FUNCOES`).

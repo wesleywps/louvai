@@ -2782,6 +2782,87 @@ ok(await pageDel.locator("#view-player").isVisible() && await pageDel.evaluate((
   "Tocar na linha continua abrindo a Apresentação (o deslize não roubou o toque)");
 await pageDel.evaluate(() => exitPlayer()); await pageDel.waitForTimeout(350);
 
+// ===== v0.62.0 — voltar do editor NÃO pode sair da Apresentação =====
+// Sintoma de campo: no culto, mexer no Tom pelo ⚙ (onde ele mora na Apresentação), tocar em
+// Editar e voltar matava o contexto da escala. A pessoa só percebia depois, ao tocar para virar
+// a página e o "livro" não trocar mais de música.
+await pageDel.evaluate(() => {
+  songs.length = 0; escalas.length = 0; deleted.length = 0;
+  songs.push({ id: "a1", title: "Abertura", key: "C", capo: 0, tags: [], updatedAt: 1, body: "[Intro]\nC G\nletra um" });
+  songs.push({ id: "a2", title: "Adoração", key: "D", capo: 0, tags: [], updatedAt: 1, body: "[Intro]\nD A\nletra dois" });
+  escalas.push({ id: "ae", title: "Culto da noite", date: "2026-09-13", team: [], items: [
+    { kind: "song", songId: "a1" }, { kind: "song", songId: "a2" }], updatedAt: 1 });
+  saveSongs(); saveEscalas(); show("lib"); switchTab("escalas"); renderEscalas();
+});
+await pageDel.waitForTimeout(300);
+await pageDel.locator("#escalalist .escard").first().click(); await pageDel.waitForTimeout(400);
+await pageDel.locator("#es-present").click(); await pageDel.waitForTimeout(500);
+const naApresentacao = () => pageDel.evaluate(() => ({
+  view, present: document.getElementById("view-player").classList.contains("present"),
+  ctx: !!escalaCtx, idx: escalaCtx ? escalaCtx.idx : null,
+  pos: document.getElementById("pv-pos").textContent,
+  barra: !document.getElementById("presentbar").classList.contains("hidden"),
+}));
+ok((await naApresentacao()).present, "Apresentação aberta pelo caminho real (Escalas → escala → Apresentar)");
+
+// ⚙ → Editar → Cancelar
+await pageDel.locator("#pv-settings").click(); await pageDel.waitForTimeout(350);
+await pageDel.locator("#p-edit").click(); await pageDel.waitForTimeout(450);
+ok(await pageDel.evaluate(() => view === "editor"), "Do ⚙ da Apresentação dá pra editar a cifra");
+await pageDel.locator("#e-cancel").click(); await pageDel.waitForTimeout(550);
+const posCancel = await naApresentacao();
+ok(posCancel.view === "player" && posCancel.present && posCancel.ctx && posCancel.barra && /1 de 2/.test(posCancel.pos),
+  `Cancelar a edição volta para a APRESENTAÇÃO, não para o player solto (posição: "${posCancel.pos}")`);
+// prova funcional: o "livro"/setas continuam vivos
+await pageDel.locator("#pv-next").click(); await pageDel.waitForTimeout(450);
+ok(await pageDel.evaluate(() => escalaCtx && escalaCtx.idx === 1 && current.id === "a2"),
+  "Depois de voltar do editor, trocar de música na Apresentação ainda funciona");
+
+// ⚙ → Editar → Salvar (sobrescrever)
+await pageDel.locator("#pv-settings").click(); await pageDel.waitForTimeout(350);
+await pageDel.locator("#p-edit").click(); await pageDel.waitForTimeout(450);
+await pageDel.locator("#e-save").click(); await pageDel.waitForTimeout(650);
+const posSave = await naApresentacao();
+ok(posSave.view === "player" && posSave.present && posSave.ctx && posSave.idx === 1,
+  "Salvar a edição também devolve à Apresentação, na música certa do culto");
+
+// música NOVA não está no culto: abre como cifra avulsa (deliberado)
+const nova = await pageDel.evaluate(() => {
+  const ctxAntes = !!escalaCtx;
+  const inventada = cloneSong(songs[0], { title: "Fora do culto" });
+  songs.push(inventada); saveSongs();
+  openPlayer(inventada.id, playerCtxFor(inventada.id));
+  return { ctxAntes, ctxDepois: !!escalaCtx, view };
+});
+ok(nova.ctxAntes && !nova.ctxDepois && nova.view === "player",
+  "Cifra que não está na escala abre fora da Apresentação (playerCtxFor devolve null)");
+
+// ===== v0.62.0 — o logo leva para a home (lista de cifras) =====
+await pageDel.evaluate(() => { exitPlayer(); });
+await pageDel.waitForTimeout(350);
+await pageDel.evaluate(() => { switchTab("escalas"); $("#search").value = "zzz"; activeTag = "qualquer"; });
+await pageDel.waitForTimeout(200);
+const logo = await pageDel.evaluate(() => {
+  const b = document.getElementById("homeBtn");
+  const st = getComputedStyle(b);
+  return { existe: !!b, papel: b.getAttribute("role"), rotulo: b.getAttribute("aria-label"),
+           semSelecao: st.userSelect === "none" || st.webkitUserSelect === "none",
+           alvo: Math.round(b.getBoundingClientRect().height) };
+});
+ok(logo.existe && logo.papel === "button" && /cifras/i.test(logo.rotulo || "") && logo.alvo >= 28,
+  "O logo é um botão de verdade (role + rótulo), não um texto solto");
+ok(logo.semSelecao, "Tocar no logo não seleciona o texto (fim da 'área selecionada' no celular)");
+await pageDel.locator("#homeBtn").click(); await pageDel.waitForTimeout(450);
+const depoisLogo = await pageDel.evaluate(() => ({
+  aba: document.getElementById("pane-songs").classList.contains("hidden") ? "escalas" : "songs",
+  busca: $("#search").value, tag: activeTag, view,
+  cards: document.querySelectorAll("#songlist .swipewrap").length,
+}));
+ok(depoisLogo.aba === "songs" && depoisLogo.view === "lib" && depoisLogo.cards > 0,
+  "Tocar no logo volta para a lista de cifras");
+ok(depoisLogo.busca === "" && !depoisLogo.tag,
+  "O logo limpa a busca e a tag ativa (volta para a casa mesmo, não para um filtro)");
+
 ok(delErrors.length === 0, "Excluir: nenhum erro de JS no fluxo" + (delErrors.length ? ": " + delErrors.join(" | ") : ""));
 await ctxDel.close();
 

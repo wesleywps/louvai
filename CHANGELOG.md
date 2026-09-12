@@ -8,6 +8,31 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.62.0 — A Apresentação não se desfaz mais ao voltar do editor · o logo leva para casa
+**Correção (reporte de campo — atrapalhava no culto).** No modo Apresentação, mexer na cifra pelo
+⚙ e voltar **matava o contexto da escala**: a música seguia aberta, mas a barra virava a do player
+comum — sem o *"2 de 5"*, sem as setas ‹ ›, e o **"livro" parava de trocar de música** ao virar a
+última página. Como o Tom mora no ⚙ justamente na Apresentação, era fácil cair nisso no meio do culto.
+- **Causa:** o `escalaCtx` continua vivo durante a edição — quem o zerava era o `openPlayer(id)`
+  **sem contexto** do *Cancelar* e do *Salvar*. Agora os dois voltam por `playerCtxFor(id)`, que
+  devolve o contexto do culto quando a música está naquela escala (e ajusta a posição).
+- **Música nova continua fora:** *salvar como nova* cria uma cifra que **não** está na ordem do
+  culto, então ela abre como cifra avulsa — deliberado, não regressão.
+- **Achado com varredura, não com sorte:** sete fluxos foram exercitados com toque real
+  (toque duplo, tela cheia, 8 toques seguidos passando de música, diagrama de acorde, tela girada);
+  só os dois do editor perdiam a Apresentação, e são exatamente esses que agora têm teste.
+
+**Recurso — o logo volta para casa.** Tocar no "Louvai" no topo não fazia nada: no celular só
+aparecia a **seleção azul** do texto. Agora ele é um botão de verdade: leva à **lista de cifras**,
+limpando busca e tag e voltando ao topo — de qualquer aba. Com `role="button"`, rótulo para leitor
+de tela, resposta ao toque e `user-select:none` (fim da área selecionada).
+
+- **465 verificações** (10 novas): Apresentação preservada ao cancelar **e** ao salvar, com a prova
+  funcional de que trocar de música volta a funcionar; cifra fora da escala abrindo avulsa; e o logo
+  levando à home com busca/tag limpas.
+
+---
+
 ## v0.61.0 — Tirar a música da ordem do culto deslizando (e duas correções que apareceram no caminho)
 **Recurso (pedido do dono).** Dentro da escala, tirar uma música exigia abrir o **editor**, achar a
 linha e tocar no ✕. Agora o mesmo gesto da lista vale na **ordem do culto**: deslizou, **Tirar**.
