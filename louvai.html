@@ -609,8 +609,7 @@ body.light .keyhint{color:#b45309}
       <div class="brand" id="homeBtn" title="Ir para as cifras"><svg class="brandlogo" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="blg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c7a9ff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient><radialGradient id="bglow" cx="50%" cy="0%" r="95%"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".30"/><stop offset=".4" stop-color="#7c3aed" stop-opacity=".07"/><stop offset="1" stop-color="#7c3aed" stop-opacity="0"/></radialGradient></defs><rect width="512" height="512" fill="#121212"/><rect width="512" height="512" fill="url(#bglow)"/><g transform="translate(12,0)"><path d="M132 98 L256 98 L256 130 Q236 130 234 162 L234 360 L356 360 L356 412 L132 412 L132 372 Q154 372 154 344 L154 162 Q152 130 132 130 Z" fill="url(#blg)"/><g transform="translate(286,300)"><rect x="31" y="-156" width="14" height="164" rx="7" fill="#c7a9ff"/><ellipse cx="0" cy="0" rx="44" ry="31" fill="#c7a9ff" transform="rotate(-21)"/></g></g></svg>Louvai<span class="ver" id="appVer"></span></div>
       <div class="spacer"></div>
       <button class="iconbtn" id="themeBtn" title="Tema" aria-label="Alternar tema claro/escuro"></button>
-      <button class="iconbtn" id="backupBtn" title="Repertório" aria-label="Repertório (backup, compartilhar, nuvem)"></button>
-      <button class="iconbtn" id="importBtn" title="Restaurar/Importar" aria-label="Importar arquivo"></button>
+      <button class="iconbtn" id="backupBtn" title="Repertório" aria-label="Repertório: sincronizar com a nuvem, backup e importar arquivo"></button>
     </div>
     <div class="lib">
       <!-- aba Cifras -->
@@ -954,7 +953,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.62.1";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.63.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1769,7 +1768,7 @@ function icon(name,cls){
     'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||"")+'</svg>';
 }
 /* botões só-ícone (innerHTML=ícone) e botões ícone+rótulo (prefixa o ícone, mantém o texto do HTML) */
-const ICON_ONLY={"#backupBtn":"archive","#importBtn":"download","#p-back":"arrow-left","#es-back":"arrow-left",
+const ICON_ONLY={"#backupBtn":"archive","#p-back":"arrow-left","#es-back":"arrow-left",
   "#pv-back":"arrow-left","#p-struct":"list-music","#p-settings":"sliders","#pv-settings":"sliders",
   "#pv-prev":"chevron-left","#pv-next":"chevron-right","#e-cancel":"x","#ee-cancel":"x","#es-edit":"pencil",
   "#es-share":"share-2","#lyr-toggle":"type","#tabs-toggle":"tabs","#scrollbar-toggle":"play","#scroll-toggle":"play",
@@ -2911,7 +2910,11 @@ function shareSheet(song){
 $("#backupBtn").onclick=()=>{
   const env={type:"louvai-library",version:1,app:APP_VERSION,songs};
   const sendFile=()=>shareFile("repertorio-louvai.json",JSON.stringify(env),"Repertório Louvai");
+  // Ordem por FREQUÊNCIA de uso (v0.63.0): sincronizar com a equipe é o dia a dia; exportar/enviar
+  // é eventual; importar arquivo é raro — mas agora mora SÓ aqui (o botão do topo era a mesma ação,
+  // com ícone contraditório: "download" no topo × "upload" na folha).
   openSheet("Repertório",[
+    {ic:icon("cloud"),label:"Repertório na nuvem (link)…",fn:()=>{closeSheet();openRepoSheet();}},
     {ic:icon("file-down"),label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); recordBackup(); closeSheet(); }},
     {ic:icon("link"),label:"Enviar link do repertório",fn:()=>{
       // repertório inteiro quase sempre passa do limite: o shareLink vai oferecer o
@@ -2919,11 +2922,9 @@ $("#backupBtn").onclick=()=>{
       closeSheet();
       shareLink(env,"Repertório Louvai",sendFile);
     }},
-    {ic:icon("upload"),label:"Restaurar de um arquivo (.json)",fn:()=>{closeSheet();$("#fileInput").click();}},
-    {ic:icon("cloud"),label:"Repertório na nuvem (link)…",fn:()=>{closeSheet();openRepoSheet();}},
+    {ic:icon("upload"),label:"Importar/restaurar de um arquivo (.json)",fn:()=>{closeSheet();$("#fileInput").click();}},
   ],backupNote());
 };
-$("#importBtn").onclick=()=>$("#fileInput").click();
 
 /* ---------- Repertório na nuvem (pull de um snapshot publicado, mão única) ----------
    Um arquivo louvai.json {songs, escalas} hospedado (GitHub Pages). A app BAIXA e mescla

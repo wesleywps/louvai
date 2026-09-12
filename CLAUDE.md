@@ -517,6 +517,11 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   via `openPlayer(...,atLast)`). As setas ‹ › de música seguem indo pro início.
 - **Armazenamento:** chaves `LS_SONGS`, `LS_ESC`, `LS_SET` (`louvai.*.v1`);
   funções `load`, `migrateLevita`, `saveSongs`, `saveEscalas`, `saveSettings`.
+- **Topo da biblioteca (v0.63.0):** dois botões só — `#themeBtn` (aparência) e `#backupBtn` (dados).
+  O `#importBtn` **foi removido**: era `$("#fileInput").click()`, a MESMA ação do item da folha
+  Repertório (e com ícone contraditório — `download` no topo × `upload` na folha). A folha do
+  `#backupBtn` segue a **frequência de uso**: nuvem → exportar → enviar link → importar/restaurar.
+  Quem for reintroduzir um atalho no topo: a porta de arquivo é o `#fileInput`, e ele já tem dono.
 - **Rede de segurança do backup (v0.23.0):** `settings.lastBackup` (data) +
   `settings.dirtySinceBackup` (marcado em `saveSongs`/`saveEscalas` via `markDirty`,
   limpo em `recordBackup` ao exportar — só o **arquivo** conta). `backupDue()` (nunca-backup

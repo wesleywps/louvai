@@ -8,6 +8,25 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.63.0 — Um botão a menos no topo (o de importar era a mesma ação, em dois lugares)
+**Ajuste de UI (provocação do dono, confirmada no código).** O topo tinha três ícones e dois deles
+falavam da mesma coisa: o botão de **importar arquivo** fazia `$("#fileInput").click()` — exatamente
+o que a folha **Repertório** já oferecia em *"Restaurar de um arquivo"*. Pior: o do topo usava o
+ícone de **download** e o da folha, o de **upload**. O mesmo gesto, desenhado de duas formas
+contrárias — sinal de que aquele botão nunca teve semântica firme.
+- **O topo ficou com dois botões, um por assunto:** aparência (tema) e dados (Repertório). Sem
+  mudança de cor — a limpeza já é o ganho (decisão do dono).
+- **A folha passou a seguir a frequência de uso:** *Repertório na nuvem* (o dia a dia da equipe)
+  primeiro, depois exportar e enviar link, e **importar/restaurar de arquivo** por último — raro,
+  mas agora com rótulo em **texto**, mais descobrível do que um ícone ambíguo no topo.
+- **Nada se perdeu:** o caminho de importar continua inteiro, a um toque a mais; o item ganhou o
+  nome "Importar/restaurar de um arquivo (.json)" e o botão que ficou anuncia no leitor de tela que
+  também importa.
+- **477 verificações** (5 novas): o topo com exatamente dois botões, a nova ordem da folha, e o
+  caminho de importar exercitado de ponta a ponta (o seletor de arquivo abre e a folha se fecha).
+
+---
+
 ## v0.62.1 — Correção: o "livro" em tela cheia saía da tela cheia ao trocar de música
 **Correção (reporte de campo).** Na Apresentação em **tela cheia**, virar da **última página de uma
 música para a primeira da próxima** tirava da tela cheia. Dentro da mesma música as páginas viravam

@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.62.1**.
+seguir. Atualizado até a **v0.63.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -148,6 +148,8 @@ instalação complexa.
 | **v0.62.0** | correção+recurso | **A Apresentação não se desfaz mais ao voltar do editor:** mexer na cifra pelo ⚙ no meio do culto e voltar matava o contexto da escala — a barra virava a do player comum e o "livro" parava de trocar de música. `playerCtxFor(id)` devolve o contexto do culto no *Cancelar* e no *Salvar* (música nova segue abrindo avulsa). **E o logo virou botão:** leva à lista de cifras, limpando busca e tag — antes só selecionava o texto no celular. |
 
 | **v0.62.1** | correção | **Tela cheia não cai mais ao trocar de música:** no "livro" (última página → próxima música), o app saía do modo imersivo. Trocar de música reabre a MESMA tela, e o `navOpen` tratava isso como *voltar até a tela*, consumindo a camada da tela cheia. Agora reabrir a tela atual não mexe na pilha — e o voltar do celular segue fechando a tela cheia primeiro. |
+
+| **v0.63.0** | recurso | **Topo mais limpo:** o botão de **importar arquivo** saiu — era a MESMA ação da folha Repertório (*Restaurar de um arquivo*), e ainda com ícone contraditório (download no topo × upload na folha). O topo fica com dois botões, um por assunto (aparência e dados), e a folha passa a seguir a frequência de uso: **nuvem primeiro**, importar/restaurar por último. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -370,4 +372,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.62.1.*
+*Última atualização deste roteiro: v0.63.0.*

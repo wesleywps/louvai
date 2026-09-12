@@ -679,8 +679,8 @@ ok(await page.evaluate(() => { songs.length = 0; escalas.length = 0; songs.push(
 // sheet de Backup: rótulo de restaurar + linha de status do backup
 await page.evaluate(() => document.getElementById("backupBtn").click());
 await page.waitForTimeout(200);
-ok(/Restaurar de um arquivo/.test(await page.evaluate(() => [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent).join("|"))),
-   "Sheet de Backup tem 'Restaurar de um arquivo (.json)'");
+ok(/restaurar de um arquivo/i.test(await page.evaluate(() => [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent).join("|"))),
+   "Sheet de Backup tem 'Importar/restaurar de um arquivo (.json)' (a porta única desde a v0.63.0)");
 ok(/[Úú]ltimo backup/.test(await page.evaluate(() => document.getElementById("sheet-note").textContent)),
    "Sheet de Backup mostra a linha do último backup");
 await page.evaluate(() => closeSheet());
@@ -933,7 +933,7 @@ ok(await page.evaluate(() => document.getElementById("backupBtn").getAttribute("
 ok(await page.evaluate(() => typeof icon === "function" && /^<svg class="ic-svg"/.test(icon("archive")) && icon("archive").length > 30),
    "icon(name) devolve um <svg class=ic-svg> a partir do ICONS");
 // botões só-ícone foram pintados com SVG no boot (sem glifo de texto sobrando)
-ok(await page.evaluate(() => ["#themeBtn","#backupBtn","#importBtn","#p-back","#p-struct","#p-settings","#es-share","#es-edit"]
+ok(await page.evaluate(() => ["#themeBtn","#backupBtn","#p-back","#p-struct","#p-settings","#es-share","#es-edit"]
      .every(s => { const e=document.querySelector(s); return e && e.querySelector(".ic-svg") && e.textContent.trim()===""; })),
    "Botões só-ícone usam SVG (sem glifo de texto)");
 // botões ícone+rótulo mantêm o texto e ganham o SVG prefixado (.ic-tx)
@@ -2916,6 +2916,35 @@ ok(await pageDel.evaluate(() => escalaCtx && escalaCtx.idx === 0),
   "Fora da tela cheia, as setas da barra seguem trocando de música");
 await pageDel.evaluate(() => exitPlayer()); await pageDel.waitForTimeout(350);
 await pageDel.evaluate(() => { show("lib"); switchTab("songs"); renderLibrary(); }); await pageDel.waitForTimeout(300);
+
+// ===== v0.63.0 — o topo perdeu o botão redundante de importar (a ação mora na folha) =====
+await pageDel.evaluate(() => { show("lib"); switchTab("songs"); renderLibrary(); });
+await pageDel.waitForTimeout(300);
+const topo = await pageDel.evaluate(() => ({
+  importBtn: !!document.getElementById("importBtn"),
+  botoes: [...document.querySelectorAll("#view-lib .topbar .iconbtn")].map(b => b.id),
+  rotulo: document.getElementById("backupBtn").getAttribute("aria-label") || "",
+}));
+ok(!topo.importBtn && topo.botoes.length === 2 && topo.botoes.join(",") === "themeBtn,backupBtn",
+  `O topo ficou com dois botões, um por assunto: aparência e dados (${topo.botoes.join(" · ")})`);
+ok(/importar/i.test(topo.rotulo) && /nuvem/i.test(topo.rotulo),
+  "O botão que ficou anuncia que também importa arquivo (leitor de tela)");
+
+await pageDel.locator("#backupBtn").click(); await pageDel.waitForTimeout(400);
+const folha = await pageDel.evaluate(() => ({
+  titulo: document.getElementById("sheet-title").textContent,
+  itens: [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent.trim()),
+}));
+ok(/nuvem/i.test(folha.itens[0] || ""), `A folha começa pelo que a equipe mais usa: "${folha.itens[0]}"`);
+ok(folha.itens.length === 4 && /arquivo/i.test(folha.itens[3] || ""),
+  "Importar/restaurar de arquivo é o último item (uso raro, mas alcançável e com rótulo em texto)");
+// o caminho de importar continua funcionando de ponta a ponta (sem abrir o seletor nativo)
+await pageDel.evaluate(() => { window.__abriu = false; document.getElementById("fileInput").click = () => { window.__abriu = true; }; });
+await pageDel.locator("#sheet-body .sheetitem").nth(3).click(); await pageDel.waitForTimeout(400);
+ok(await pageDel.evaluate(() => window.__abriu === true),
+  "Tocar em 'Importar/restaurar de um arquivo' ainda abre o seletor de arquivo (nada se perdeu ao tirar o botão do topo)");
+ok(await pageDel.evaluate(() => !document.getElementById("sheet").classList.contains("show")),
+  "A folha fecha ao escolher importar (não fica por cima do seletor)");
 
 ok(delErrors.length === 0, "Excluir: nenhum erro de JS no fluxo" + (delErrors.length ? ": " + delErrors.join(" | ") : ""));
 await ctxDel.close();
