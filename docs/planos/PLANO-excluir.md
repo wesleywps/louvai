@@ -9,6 +9,8 @@
 > 26 novas; gesto medido pela geometria).
 > **Inc. 2 — v0.60.0:** lápides `{id,k,at}` no snapshot, poda de 180 dias + teto de 500, propagação
 > da exclusão para a equipe (443 verificações, 11 novas).
+> **Inc. 3 — v0.61.0** _(pedido de campo, 2026-09-12)_**:** o mesmo deslize **dentro da escala**, para
+> tirar a música da ordem do culto sem abrir o editor (455 verificações, 12 novas).
 >
 > **Decisões do dono (2026-09-11):** ① a ação nasce de um **deslize lateral no card**, revelando
 > **duas ações** (Duplicar · Excluir); ② a exclusão **tem de valer para a equipe** — com **lápides**
@@ -214,6 +216,21 @@ a lápide · `diffRepo` segue contando os removidos na confirmação de publicar
 tempo + rodapé + backlog) → README se a lista de recursos mudar → **este plano** (status) → commit +
 tag → `npm run deploy`.
 
+# Incremento 3 — tirar a música da ordem do culto (v0.61.0) ✅
+Pedido de campo: *"dentro da escala não dá para excluir a música desse mesmo jeito deslizante; tenho
+de abrir a escala, selecionar a música e excluir"*.
+
+- **Onde:** na tela de **detalhe** da escala (`openEscala`), que salva na hora — não no editor, que é
+  onde se **monta** a ordem (lá as setas ↑↓ continuam sendo o caminho).
+- **Uma ação só:** `🗑 Tirar` (decisão do dono). Reordenar segue no editor.
+- **Confirmação com a preocupação certa** (decisão do dono: manter o mesmo diálogo): *"Tirar “X” da
+  escala? A cifra continua no repertório."* Item não musical (Avisos/Oração) usa o mesmo fluxo sem a
+  linha do repertório.
+- **DESFAZER devolve na MESMA posição** (`splice(idx,0,item)`), não no fim.
+- `removeEscalaItem(escId,idx)` / `doRemoveEscalaItem` reusam `confirmDialog` e `toastAction`;
+  `swipeWrap(row,acts,"row")` ganhou a classe para herdar o raio/margem da `.orow`, e o item não
+  musical (fundo transparente) recebeu fundo, senão o botão vermelho apareceria **através** da linha.
+
 ## O que a execução ensinou (além do planejado)
 1. **Soltar o deslize dispara um `click`** — o card abria e era **recolhido no mesmo gesto**. A flag
    de supressão não pode **fechar** nada: só suprime o clique. E ela morre **no `pointerdown`
@@ -224,7 +241,14 @@ tag → `npm run deploy`.
    não o olho. Um wrapper novo entre a lista e o card quebra tudo que procura filho direto.
 4. **O `opts` se perdia na folha de "título repetido"** (`importJSON` → `doImport`): um pull manual
    que caísse nesse aviso voltaria a ignorar as lápides. Caminho lateral é onde a regra vaza.
-5. **`applyTombs` roda também na importação explícita de um snapshot completo** — decisão consciente:
+5. **O arrasto nativo do navegador mata o gesto** (v0.61.0): com qualquer texto selecionado na
+   página, arrastar o card dispara `dragstart` → `pointercancel` e o deslize morre no meio. Cura:
+   `user-select:none` na faixa + `dragstart` barrado. Reproduz-se tocando num botão antes de deslizar.
+6. **Um teste intermitente pode ser o app falando** (v0.61.0): o "aviso de saída" falhava ~metade das
+   vezes. A causa não era o teste — era `navUsaWatcher()` decidindo por `maxTouchPoints`, cujo valor
+   **varia entre execuções** do mesmo Chromium e é >0 em notebook com touchscreen. O app se achava
+   celular e ficava sem proteção no desktop. Sinal instável não serve de decisão; o ponteiro serve.
+7. **`applyTombs` roda também na importação explícita de um snapshot completo** — decisão consciente:
    restaurar o snapshot da equipe é adotar o estado dela, exclusões inclusive. O "gesto explícito
    vence" vale para **trazer de volta** uma cifra específica (arquivo/link daquela cifra).
 

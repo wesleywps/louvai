@@ -8,6 +8,37 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.61.0 — Tirar a música da ordem do culto deslizando (e duas correções que apareceram no caminho)
+**Recurso (pedido do dono).** Dentro da escala, tirar uma música exigia abrir o **editor**, achar a
+linha e tocar no ✕. Agora o mesmo gesto da lista vale na **ordem do culto**: deslizou, **Tirar**.
+- **Onde faz sentido:** a faixa vive na tela de **detalhe** da escala, que salva na hora (como o
+  "Culto realizado") — o editor continua sendo o lugar de **montar** a ordem (com as setas ↑↓).
+- **Confirmação com a preocupação certa:** *"Tirar “Segunda” da escala? A cifra continua no
+  repertório."* Quem tira uma música da ordem quer saber exatamente isso. Vale também para item não
+  musical (Avisos, Oração), com o texto ajustado.
+- **DESFAZER devolve na MESMA posição** da ordem — não no fim da lista.
+
+**Correção 1 — o aviso de saída sumia em notebook com touchscreen.** A proteção da v0.58.3 escolhe
+entre `CloseWatcher` (celular) e entrada-guarda (desktop) por `maxTouchPoints > 0`. Só que **notebook
+Windows com tela sensível ao toque** reporta toque **com ponteiro fino**: o app se achava celular,
+largava a guarda e confiava no CloseWatcher — que no desktop **não** intercepta o botão voltar do
+navegador. Resultado: **nenhum aviso**. Agora o sinal é o **ponteiro grosso**; `maxTouchPoints` só
+reforça quando não há ponteiro fino. *(Achado ao investigar um teste intermitente: o valor de
+`maxTouchPoints` **varia entre execuções** do mesmo Chromium — sinal instável não serve de decisão.)*
+
+**Correção 2 — o deslize morria quando havia texto selecionado.** Arrastar o card com uma seleção
+ativa na página fazia o navegador iniciar o **arrasto nativo** (drag&drop), que dispara
+`pointercancel` e mata o gesto no meio — dava para reproduzir tocando em qualquer botão antes.
+`user-select:none` na faixa + `dragstart` barrado. De quebra, some a seleção acidental no
+"toque e segure" do celular.
+
+- **455 verificações** (12 novas): a faixa na ordem do culto medida pela geometria, o texto da
+  confirmação, cancelar sem mexer na ordem, tirar salvando na hora, desfazer devolvendo na posição
+  certa, item não musical, o toque na linha ainda abrindo a Apresentação, e a regra de celular ×
+  desktop testada com o ambiente forjado (não mais refém do `maxTouchPoints` do runner).
+
+---
+
 ## v0.60.0 — A exclusão agora vale para a equipe (e não ressuscita no sincronizar)
 **Recurso — a outra metade do excluir.** A v0.59.0 deu o gesto; faltava a verdade. O merge do sync
 era **união pura**: quem excluísse uma cifra aqui e depois tocasse em *Atualizar do link* **via a

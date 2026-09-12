@@ -431,7 +431,11 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   ponteiro é grosso (celular) → `armExitWatcher()`/`disarmExitWatcher()`; senão, a entrada-guarda.
   **Por quê:** a guarda só vale se nascer de um TOQUE (entrada criada sem interação é ignorada pelo
   Chrome), então quem abria o app e voltava na hora saía sem aviso; o CloseWatcher tem **um watcher
-  "grátis" por documento**, que intercepta o voltar **sem gesto**. O watcher é **desarmado em
+  "grátis" por documento**, que intercepta o voltar **sem gesto**. ⚠️ **O sinal é o PONTEIRO GROSSO,
+  não `maxTouchPoints` (correção v0.61.0):** notebook Windows com touchscreen tem toque **e** ponteiro
+  fino — caía como celular e ficava sem proteção nenhuma (no desktop o CloseWatcher não intercepta o
+  voltar do navegador). O valor de `maxTouchPoints` chega a **variar entre execuções** do mesmo
+  Chromium — foi o que deixou o teste do aviso de saída intermitente por duas versões. O watcher é **desarmado em
   `navOpen`** ao sair da raiz (senão o voltar dentro do app abriria "Sair do Louvai?") e rearmado ao
   voltar pra lista; `navInit` o arma no boot.
 - **Excluir cifra/escala (v0.59.0):** **fonte única** `deleteSong(id)`/`deleteEscala(id)` (confirma →
@@ -452,6 +456,12 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   empilhasse, na lista o voltar consumiria a guarda e abriria "Sair do Louvai?" por cima). Linhas por
   `textContent`; `escalasNote(id)` diz em quais escalas a cifra está. `toastAction` monta o botão
   DESFAZER por DOM (título de música não pode virar HTML) e o `.toastact` reativa o toque no toast.
+  **Na ordem do culto (v0.61.0):** `removeEscalaItem(escId,idx)`/`doRemoveEscalaItem` na tela de
+  **detalhe** (que salva na hora); `swipeWrap(row,acts,"row")` herda raio/margem da `.orow` e o item
+  não musical ganha fundo (transparente deixaria ver o botão vermelho ATRAVÉS da linha). O DESFAZER
+  devolve na **mesma posição** (`splice(idx,0,item)`). ⚠️ **`user-select:none` + `dragstart` barrado
+  no `.swipewrap` são obrigatórios**: com texto selecionado na página, arrastar dispara o **arrasto
+  nativo** do navegador → `pointercancel` → o deslize morre no meio.
 - **Lápides / exclusão que vale para a equipe (v0.60.0):** `deleted` (`LS_DEL`) = lista de
   `{id,k,at}` — **só a marca**; o objeto sai de `songs`/`escalas` de verdade (nada de registro morto
   no `louvai.json`). `tomb`/`untomb`/`tombAt`, `purgeTombstones` (TTL **180 dias** `TOMB_TTL` + teto

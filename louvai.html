@@ -157,7 +157,8 @@ input,textarea,select{font-family:inherit}
 /* faixa de ações por deslize (v0.59.0): o card corre p/ a esquerda e revela Duplicar · Excluir.
    touch-action:pan-y entrega o eixo X ao JS e MANTÉM a rolagem vertical nativa da lista (mesmo
    remédio da .cifra na pinça). A margem do card migrou p/ o wrapper: senão a faixa vaza no vão. */
-.swipewrap{position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:var(--sp-2);touch-action:pan-y}
+.swipewrap{position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:var(--sp-2);touch-action:pan-y;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}   /* sem seleção: arrastar texto selecionado viraria DRAG NATIVO e cancelaria o gesto */
 .swipewrap .songcard,.swipewrap .escard{margin-bottom:0;position:relative;z-index:1;
   transition:transform .22s cubic-bezier(.2,.9,.3,1)}
 .swipeacts{position:absolute;top:0;right:0;bottom:0;display:flex;z-index:0;visibility:hidden}
@@ -169,6 +170,12 @@ input,textarea,select{font-family:inherit}
 .swipeacts .sa-del{background:var(--danger);color:#fff}
 .swipeacts .sa:active{filter:brightness(.92)}
 /* o gesto não se descobre sozinho: na 1ª pintura o primeiro card espia a faixa e volta */
+/* mesma faixa na ORDEM DO CULTO (v0.61.0): raio/margem da .orow. O item não-musical tem fundo
+   transparente — dentro do wrapper isso deixaria ver o botão vermelho ATRAVÉS da linha ao deslizar. */
+.swipewrap.row{border-radius:14px;margin-bottom:9px}
+.swipewrap .orow{margin-bottom:0;position:relative;z-index:1;
+  transition:transform .22s cubic-bezier(.2,.9,.3,1)}
+.swipewrap .orow.item{background:var(--bg)}
 @keyframes swipePeek{0%,100%{transform:none}42%{transform:translateX(-28px)}}
 .swipewrap .peek{animation:swipePeek 1.1s ease-in-out .5s}
 .songcard .meta{flex:1;min-width:0}
@@ -944,7 +951,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.60.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.61.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1629,6 +1636,33 @@ function doDeleteSong(id){
     untomb(id); songs.push(removida); saveSongs(); renderLibrary(); toast("Cifra restaurada","ok");
   });
 }
+/* Tirar uma música (ou item) da ordem do culto pelo mesmo gesto (v0.61.0). Vive na tela de
+   DETALHE, que salva na hora (como o "Culto realizado") — não no editor, que é onde se monta.
+   A cifra continua no repertório: isto mexe só na ordem. */
+function itemLabel(it){
+  if(!it) return "este item";
+  if(it.kind==="song"){ const s=songById(it.songId); return s?s.title:"esta música"; }
+  return it.title||"este item";
+}
+function removeEscalaItem(escId,idx){
+  const e=escalas.find(x=>x.id===escId); if(!e) return;
+  const it=(e.items||[])[idx]; if(!it) return;
+  confirmDialog({ title:"Tirar “"+itemLabel(it)+"” da escala?",
+    lines:[ it.kind==="song" ? "A cifra continua no repertório." : "", "A ordem do culto muda na hora." ],
+    okLabel:"Tirar", onOk:()=>doRemoveEscalaItem(escId,idx) });
+}
+function doRemoveEscalaItem(escId,idx){
+  const e=escalas.find(x=>x.id===escId); if(!e) return;
+  const it=(e.items||[]).splice(idx,1)[0]; if(!it) return;
+  e.updatedAt=Date.now(); saveEscalas();
+  openEscala(escId); renderLibrary();          // a recência sai das escalas confirmadas: pode mudar
+  toastAction("Tirada da escala","DESFAZER",()=>{
+    const alvo=escalas.find(x=>x.id===escId); if(!alvo) return;
+    (alvo.items=alvo.items||[]).splice(idx,0,it);   // volta na MESMA posição da ordem
+    alvo.updatedAt=Date.now(); saveEscalas();
+    openEscala(escId); renderLibrary(); toast("De volta à escala","ok");
+  });
+}
 function deleteEscala(id){
   const e=escalas.find(x=>x.id===id); if(!e) return;
   confirmDialog({ title:"Excluir “"+(escalaLabel(e))+"”?",
@@ -1825,8 +1859,16 @@ function navRender(stack){
    voltar na hora saía sem aviso (reporte de campo, v0.58.3). O CloseWatcher resolve esse caso: todo
    documento tem direito a UM watcher "grátis", que intercepta o voltar do Android mesmo sem gesto
    nenhum. Onde ele existe (celular), é o caminho; onde não (desktop/Safari), fica a guarda. */
-const navUsaWatcher=()=> typeof CloseWatcher==="function" &&
-  (navigator.maxTouchPoints>0 || (window.matchMedia&&matchMedia("(pointer: coarse)").matches));
+// O sinal de "celular" é o PONTEIRO GROSSO — não a mera existência de toque (v0.61.0): notebook
+// Windows com touchscreen reporta maxTouchPoints>0 e ponteiro FINO, e cairia aqui como celular;
+// aí o app largava a entrada-guarda e confiava no CloseWatcher, que no desktop NÃO intercepta o
+// botão voltar do navegador — o aviso de saída simplesmente não aparecia. maxTouchPoints continua
+// valendo como reforço quando não há ponteiro fino (celular que não se declara coarse).
+const navUsaWatcher=()=>{
+  if(typeof CloseWatcher!=="function") return false;
+  const mm=window.matchMedia ? (q=>matchMedia(q).matches) : (()=>false);
+  return mm("(pointer: coarse)") || (navigator.maxTouchPoints>0 && !mm("(pointer: fine)"));
+};
 let exitWatcher=null;
 function armExitWatcher(){
   if(exitWatcher) return;
@@ -1947,8 +1989,8 @@ function openSwipe(wrap,card){
 // suprime o clique que NASCE do gesto (senão soltar o deslize abriria a cifra) — mesmo
 // papel do pinchWasActive na pinça da fonte (v0.50.0)
 function markSwipe(){ swipeWasActive=true; clearTimeout(swipeWasT); swipeWasT=setTimeout(()=>swipeWasActive=false,400); }
-function swipeWrap(card,acts){
-  const wrap=document.createElement("div"); wrap.className="swipewrap";
+function swipeWrap(card,acts,cls){
+  const wrap=document.createElement("div"); wrap.className="swipewrap"+(cls?" "+cls:"");
   const bar=document.createElement("div"); bar.className="swipeacts";
   acts.forEach(a=>{
     const b=document.createElement("button"); b.type="button"; b.className="sa "+(a.cls||"");
@@ -1959,6 +2001,9 @@ function swipeWrap(card,acts){
     bar.appendChild(b);
   });
   wrap.appendChild(bar); wrap.appendChild(card);
+  // o arrasto nativo do navegador (drag&drop de texto/imagem) dispara pointercancel e mata o
+  // deslize no meio — some quando há qualquer seleção na página
+  wrap.addEventListener("dragstart",e=>e.preventDefault());
   // intercepta o clique no WRAPPER, em captura: no próprio card ele perderia a corrida com o
   // onclick já registrado (no alvo vale a ordem de registro, não a fase de captura).
   wrap.addEventListener("click",e=>{
@@ -3386,7 +3431,7 @@ function openEscala(id){
   }
   const sList=songItems(e).map(it=>({songId:it.songId,key:it.key,capo:it.capo}));
   let n=0, si=-1;
-  (e.items||[]).forEach(it=>{
+  (e.items||[]).forEach((it,idx)=>{
     const row=document.createElement("div");
     if(it.kind==="song"){
       const s=songById(it.songId); if(!s){return;}
@@ -3404,7 +3449,9 @@ function openEscala(id){
       row.innerHTML='<div class="onum">•</div><div class="obody"><div class="ot">'+esc(it.title||"Item")+'</div>'+
         (sub?'<div class="os">'+sub+'</div>':'')+'</div>';
     }
-    order.appendChild(row);
+    order.appendChild(swipeWrap(row,[
+      {ic:"trash-2",label:"Tirar",cls:"sa-del",fn:()=>removeEscalaItem(id,idx)}
+    ],"row"));
   });
 
   $("#es-notes").textContent=e.notes||"";

@@ -2254,10 +2254,33 @@ await pageExit.addInitScript(() => {
   localStorage.setItem("louvai.songs.v1", JSON.stringify([
     { id: "x1", title: "Sair Um", artist: "A", key: "C", body: "[Intro]\nC G\nletra", tags: [] }]));
 });
-await pageExit.goto(APP_URL); await pageExit.waitForTimeout(400);
+await pageExit.goto(APP_URL);
+await pageExit.waitForFunction(() => typeof navStack !== "undefined");   // espera o BOOT (não um sleep fixo)
+await pageExit.waitForTimeout(150);
 await pageExit.locator("#search").click();              // gesto real: é ele que arma a guarda
 await pageExit.waitForTimeout(200);
 await pageExit.goBack(); await pageExit.waitForTimeout(400);
+// v0.61.0 — a REGRA em si, com o ambiente forjado: maxTouchPoints sozinho não decide (ele varia até
+// entre execuções do mesmo Chromium, o que deixava este teste intermitente). O sinal é o ponteiro.
+const heur = await pageExit.evaluate(() => {
+  const orig = Object.getOwnPropertyDescriptor(Navigator.prototype, "maxTouchPoints");
+  const mmOrig = window.matchMedia;
+  const cenario = (pontos, coarse, fine) => {
+    Object.defineProperty(navigator, "maxTouchPoints", { configurable: true, value: pontos });
+    window.matchMedia = q => ({ matches: /coarse/.test(q) ? coarse : fine });
+    return navUsaWatcher();
+  };
+  const r = { notebookTouch: cenario(10, false, true),   // notebook Windows com touchscreen
+              celular:       cenario(5,  true,  false),
+              toqueSemMedia: cenario(5,  false, false),  // celular que não se declara coarse
+              desktopPuro:   cenario(0,  false, true) };
+  window.matchMedia = mmOrig;
+  if (orig) Object.defineProperty(Navigator.prototype, "maxTouchPoints", orig);
+  else delete navigator.maxTouchPoints;
+  return r;
+});
+ok(!heur.notebookTouch && !heur.desktopPuro, "Notebook com touchscreen (toque + ponteiro FINO) não é tratado como celular: fica com a entrada-guarda");
+ok(heur.celular && heur.toqueSemMedia, "Celular (ponteiro grosso, ou toque sem ponteiro fino) continua no CloseWatcher");
 const avisoSaida = await pageExit.evaluate(() => { const d = document.getElementById("exitdlg");
   return { visivel: !d.classList.contains("hidden"), texto: d.textContent.replace(/\s+/g, " ").trim(),
            fundo: !document.getElementById("exitbg").classList.contains("hidden") }; });
@@ -2350,7 +2373,9 @@ await pageTouch.addInitScript(() => {
     { id: "w1", title: "Watcher Um", artist: "A", key: "C", body: "[Intro]\nC G\nletra", tags: [] }]));
 });
 const dlgAberto = () => pageTouch.evaluate(() => !document.getElementById("exitdlg").classList.contains("hidden"));
-await pageTouch.goto(APP_URL); await pageTouch.waitForTimeout(400);
+await pageTouch.goto(APP_URL);
+await pageTouch.waitForFunction(() => typeof navStack !== "undefined");
+await pageTouch.waitForTimeout(150);
 const temWatcher = await pageTouch.evaluate(() => typeof CloseWatcher === "function");
 await pageTouch.keyboard.press("Escape"); await pageTouch.waitForTimeout(300);
 ok(temWatcher && await dlgAberto(),
@@ -2395,10 +2420,14 @@ const listaSelDel = "#songlist .swipewrap";
 // deslocamento REAL do card dentro do wrapper (não o estado lógico): é o que o usuário vê
 const deslocDel = (lista, i) => pageDel.evaluate(([lista, i]) => {
   const w = document.querySelectorAll(lista)[i];
-  const c = w.querySelector(".songcard,.escard");
+  const c = w.querySelector(".songcard,.escard,.orow");
   return Math.round(c.getBoundingClientRect().x - w.getBoundingClientRect().x);
 }, [lista, i]);
 async function arrastaDel(lista, i, dx, dy) {
+  // traz a linha p/ a viewport ANTES do gesto: o clique seguinte no botão rolaria a página,
+  // e rolar recolhe a faixa (comportamento do app) — o botão nunca chegaria a ficar visível
+  await pageDel.locator(lista).nth(i).scrollIntoViewIfNeeded();
+  await pageDel.waitForTimeout(120);
   const b = await pageDel.locator(lista).nth(i).boundingBox();
   const x0 = b.x + b.width - 24, y0 = b.y + b.height / 2;
   await pageDel.mouse.move(x0, y0);
@@ -2673,6 +2702,85 @@ ok(await pageDel.evaluate(() => /Não volta ao sincronizar/.test(document.getEle
   "A confirmação diz o que passou a ser verdade: a exclusão não volta ao sincronizar");
 await pageDel.locator("#confirm-cancel").click(); await pageDel.waitForTimeout(300);
 await pageDel.evaluate(() => { if (window.__real) window.fetch = window.__real; });
+
+// ===== v0.61.0 — tirar a música da ORDEM DO CULTO pelo mesmo gesto (dentro da escala) =====
+await pageDel.evaluate(() => {
+  songs.length = 0; escalas.length = 0; deleted.length = 0;
+  songs.push({ id: "o1", title: "Primeira", key: "C", capo: 0, tags: [], updatedAt: 1, body: "[Intro]\nC\nletra" });
+  songs.push({ id: "o2", title: "Segunda", key: "D", capo: 0, tags: [], updatedAt: 1, body: "[Intro]\nD\nletra" });
+  escalas.push({ id: "oe", title: "Culto de Teste", date: "2026-07-12", time: "", type: "Culto", team: [], notes: "",
+    items: [{ kind: "song", songId: "o1", key: "", capo: 0 },
+            { kind: "song", songId: "o2", key: "", capo: 0 },
+            { kind: "item", title: "Avisos" }], updatedAt: 1 });
+  saveSongs(); saveEscalas(); renderLibrary(); renderEscalas();
+});
+// caminho real: aba Escalas → abrir a escala → deslizar a 2ª linha da ordem
+await pageDel.locator("#tab-escalas").click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#escalalist .escard").first().click(); await pageDel.waitForTimeout(400);
+ok(await pageDel.locator("#view-escala").isVisible() && await pageDel.locator("#es-order .swipewrap").count() === 3,
+  "A ordem do culto monta as linhas dentro da faixa deslizante");
+const ordemSel = "#es-order .swipewrap";
+await arrastaDel(ordemSel, 1, -160, 0);
+const dOrdem = await pageDel.evaluate(() => {
+  const w = document.querySelectorAll("#es-order .swipewrap")[1], r = w.querySelector(".orow");
+  const bt = w.querySelector(".sa-del").getBoundingClientRect();
+  return { desloc: Math.round(r.getBoundingClientRect().x - w.getBoundingClientRect().x),
+           rotulo: w.querySelector(".sa-del").textContent.trim(), alvo: Math.round(bt.height) };
+});
+ok(dOrdem.desloc <= -140 && dOrdem.rotulo === "Tirar" && dOrdem.alvo >= 44,
+  `Deslizar a música na escala revela "Tirar" (deslocamento ${dOrdem.desloc}px, alvo ${dOrdem.alvo}px)`);
+
+// confirmação própria: aqui a cifra NÃO se perde
+await pageDel.locator(`${ordemSel} .sa-del`).nth(1).click(); await pageDel.waitForTimeout(330);
+const confOrdem = await pageDel.evaluate(() => ({
+  titulo: document.getElementById("confirm-title").textContent,
+  sub: document.getElementById("confirm-sub").textContent,
+  ok: document.getElementById("confirm-ok").textContent,
+}));
+ok(/Tirar “Segunda” da escala\?/.test(confOrdem.titulo) && /A cifra continua no repertório/.test(confOrdem.sub) && confOrdem.ok === "Tirar",
+  "Confirmação da ordem: fala em TIRAR da escala e tranquiliza que a cifra fica no repertório");
+
+// cancelar não mexe na ordem
+await pageDel.locator("#confirm-cancel").click(); await pageDel.waitForTimeout(350);
+ok(await pageDel.evaluate(() => escalas[0].items.length === 3),
+  "Cancelar mantém a ordem do culto intacta");
+
+// tirar de verdade: sai da ordem, a cifra fica no repertório e a escala salva na hora
+await arrastaDel(ordemSel, 1, -160, 0);
+await pageDel.locator(`${ordemSel} .sa-del`).nth(1).click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#confirm-ok").click(); await pageDel.waitForTimeout(450);
+const tirou = await pageDel.evaluate(() => ({
+  itens: escalas[0].items.map(it => it.kind === "song" ? it.songId : it.title),
+  disco: JSON.parse(localStorage.getItem("louvai.escalas.v1"))[0].items.length,
+  cifraFicou: songs.some(s => s.id === "o2"),
+  naTela: [...document.querySelectorAll("#es-order .ot")].map(e => e.textContent),
+  desfazer: !!document.querySelector("#toast .toastact"),
+  naEscala: document.getElementById("view-escala").classList.contains("hidden") === false,
+}));
+ok(tirou.itens.length === 2 && !tirou.itens.includes("o2") && tirou.disco === 2,
+  "Tirar remove o item da ordem e salva na hora (como o 'Culto realizado')");
+ok(tirou.cifraFicou && !tirou.naTela.includes("Segunda") && tirou.naEscala,
+  "A cifra continua no repertório e a pessoa segue na escala (a tela só se atualiza)");
+ok(tirou.desfazer, "Aparece o DESFAZER");
+
+// desfazer devolve na MESMA posição da ordem (não no fim)
+await pageDel.locator("#toast .toastact").click(); await pageDel.waitForTimeout(400);
+ok(await pageDel.evaluate(() => escalas[0].items.length === 3 && escalas[0].items[1].songId === "o2"),
+  "DESFAZER devolve a música na mesma posição da ordem do culto");
+
+// item não-musical (Avisos, Oração) usa a mesma faixa, com o texto certo
+await arrastaDel(ordemSel, 2, -160, 0);
+await pageDel.locator(`${ordemSel} .sa-del`).nth(2).click(); await pageDel.waitForTimeout(330);
+ok(await pageDel.evaluate(() => /Tirar “Avisos” da escala\?/.test(document.getElementById("confirm-title").textContent)
+    && !/repertório/.test(document.getElementById("confirm-sub").textContent)),
+  "Item não-musical (Avisos) usa a mesma faixa — sem falar em repertório");
+await pageDel.locator("#confirm-cancel").click(); await pageDel.waitForTimeout(350);
+
+// o toque na linha continua abrindo a Apresentação (o gesto não roubou o clique)
+await pageDel.locator("#es-order .orow").first().click(); await pageDel.waitForTimeout(450);
+ok(await pageDel.locator("#view-player").isVisible() && await pageDel.evaluate(() => !!escalaCtx),
+  "Tocar na linha continua abrindo a Apresentação (o deslize não roubou o toque)");
+await pageDel.evaluate(() => exitPlayer()); await pageDel.waitForTimeout(350);
 
 ok(delErrors.length === 0, "Excluir: nenhum erro de JS no fluxo" + (delErrors.length ? ": " + delErrors.join(" | ") : ""));
 await ctxDel.close();
