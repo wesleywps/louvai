@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.64.0**.
+seguir. Atualizado até a **v0.65.0**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -152,6 +152,8 @@ instalação complexa.
 | **v0.63.0** | recurso | **Topo mais limpo:** o botão de **importar arquivo** saiu — era a MESMA ação da folha Repertório (*Restaurar de um arquivo*), e ainda com ícone contraditório (download no topo × upload na folha). O topo fica com dois botões, um por assunto (aparência e dados), e a folha passa a seguir a frequência de uso: **nuvem primeiro**, importar/restaurar por último. |
 
 | **v0.64.0** | recurso | **Puxar a lista para baixo atualiza:** o líder publica, o membro puxa e recebe — sem menu nenhum (`overscroll-behavior-y:contain` desliga o recarregar nativo do Chrome Android, que roubaria o gesto). E **sincronizar ao abrir passa a nascer ligado** (era opt-in escondido na folha da nuvem; quem desligou de propósito continua desligado). O caminho manual caiu para 2 toques: o 1º item da folha Repertório já baixa. |
+
+| **v0.65.0** | recurso | **"Usar as da nuvem" no conflito de título:** quem sincronizava num aparelho com cifras próprias só podia *manter as minhas* ou *ficar com as duas* — faltava **adotar a da equipe**. A nova saída troca a cifra (id incluso, senão o conflito volta todo sincronismo), **mostra antes** quantas cifras e escalas mudam, remapeia as escalas deste aparelho e oferece **DESFAZER**. Não toca no que só existe aqui e **não cria lápide** (adoção local ≠ exclusão a propagar). |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -374,4 +376,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.64.0.*
+*Última atualização deste roteiro: v0.65.0.*

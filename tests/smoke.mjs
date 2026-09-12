@@ -618,13 +618,15 @@ const dupSheet = await page.evaluate(() => ({
   shown: document.getElementById("sheet").classList.contains("show"),
   title: document.getElementById("sheet-title").textContent,
   items: [...document.querySelectorAll("#sheet-body .sheetitem")].length,
+  rotulos: [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent.trim()),
 }));
 ok(dupSheet.shown && /Repetida/.test(dupSheet.title), "Título duplicado abre o aviso antes de mesclar");
-ok(dupSheet.items === 3, "Aviso de duplicado oferece 3 opções (minhas / cópias / cancelar)");
+ok(dupSheet.items === 4 && /nuvem/i.test(dupSheet.rotulos[1] || ""),
+  "Aviso de duplicado oferece 4 saídas (minhas / da nuvem / cópias / cancelar)");
 // nada foi salvo ainda (aviso antes de mexer)
 ok(await page.evaluate(() => songs.length === 1), "Antes de escolher, nada é importado (nada salvo no escuro)");
-// "Importar como cópias" (2º item) → fica com as duas, escala aponta pra cifra importada
-await page.locator("#sheet-body .sheetitem").nth(1).click();
+// "Importar como cópias" (3º item desde a v0.65.0) → fica com as duas, escala aponta pra cifra importada
+await page.locator("#sheet-body .sheetitem").nth(2).click();
 await page.waitForTimeout(150);
 const both = await page.evaluate(() => ({
   count: songs.filter(s => s.title === "Repetida").length,
@@ -644,6 +646,58 @@ const mine = await page.evaluate(() => ({
 }));
 ok(mine.reps.length === 1 && mine.reps[0] === "meu-1", "‘Manter as minhas’ não duplica (fica só a minha)");
 ok(mine.escSong === "meu-1", "Manter as minhas: a escala é remapeada pra minha cifra (meu-1)");
+
+// ===== v0.65.0 — "Usar as da nuvem": a terceira saída do conflito (pedido de campo) =====
+// Aparelho do membro com versões próprias: ele quer ADOTAR as da equipe, não manter nem duplicar.
+await page.evaluate(() => {
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id: "meu-1", title: "Repetida", key: "C", capo: 0, tags: [], updatedAt: 5, body: "C linha\nminha versao" });
+  songs.push({ id: "soh-minha", title: "So Minha", key: "A", capo: 0, tags: [], updatedAt: 5, body: "A linha\nminha" });
+  escalas.push({ id: "esc-local", title: "Culto daqui", date: "2026-09-20", team: [],
+    items: [{ kind: "song", songId: "meu-1" }, { kind: "song", songId: "soh-minha" }], updatedAt: 5 });
+  saveSongs(); saveEscalas();
+});
+await page.evaluate((env) => { importJSON(JSON.stringify(env)); }, dupEnv);
+await page.waitForTimeout(200);
+await page.locator("#sheet-body .sheetitem").nth(1).click();   // "Usar as da nuvem"
+await page.waitForTimeout(300);
+const aviso = await page.evaluate(() => ({
+  aberto: document.getElementById("confirmdlg").classList.contains("show"),
+  titulo: document.getElementById("confirm-title").textContent,
+  sub: document.getElementById("confirm-sub").textContent,
+  ok: document.getElementById("confirm-ok").textContent,
+  mexeu: songs.some(s => s.id === "deles-1"),
+}));
+ok(aviso.aberto && /Usar as cifras da nuvem\?/.test(aviso.titulo) && aviso.ok === "Substituir",
+  "‘Usar as da nuvem’ confirma antes de trocar");
+ok(/1 cifra/.test(aviso.sub) && /1 escala deste aparelho passa/.test(aviso.sub) && /Culto daqui/.test(aviso.sub),
+  `O aviso diz o tamanho da troca: "${aviso.sub}"`);
+ok(!aviso.mexeu, "Nada é trocado antes de confirmar");
+await page.locator("#confirm-ok").click(); await page.waitForTimeout(350);
+const trocou = await page.evaluate(() => ({
+  reps: songs.filter(s => s.title === "Repetida").map(s => s.id),
+  corpo: (songs.find(s => s.title === "Repetida") || {}).body,
+  soMinha: songs.some(s => s.id === "soh-minha"),
+  escItens: escalas.find(e => e.id === "esc-local").items.map(i => i.songId),
+  desfazer: !!document.querySelector("#toast .toastact"),
+}));
+ok(trocou.reps.length === 1 && trocou.reps[0] === "deles-1" && /versao deles/.test(trocou.corpo || ""),
+  "A cifra da nuvem toma o lugar da minha (inclusive o id, para o conflito não voltar no próximo sync)");
+ok(trocou.escItens[0] === "deles-1", "A escala DESTE aparelho passa a apontar para a cifra adotada (sem item órfão)");
+ok(trocou.soMinha && trocou.escItens[1] === "soh-minha",
+  "O que só existe aqui não é tocado (substituir ≠ espelhar tudo)");
+ok(trocou.desfazer, "Depois de substituir aparece o DESFAZER");
+await page.locator("#toast .toastact").click(); await page.waitForTimeout(300);
+const voltou = await page.evaluate(() => ({
+  reps: songs.filter(s => s.title === "Repetida").map(s => s.id),
+  escItens: escalas.find(e => e.id === "esc-local").items.map(i => i.songId),
+}));
+ok(voltou.reps.length === 1 && voltou.reps[0] === "meu-1" && voltou.escItens[0] === "meu-1",
+  "DESFAZER devolve a minha versão e a escala junto");
+// a lápide NÃO entra: adotar a da nuvem é decisão local, não uma exclusão para propagar à equipe
+ok(await page.evaluate(() => !deleted.some(t => t.id === "meu-1")),
+  "Adotar a da nuvem não cria lápide (não apaga a cifra de ninguém ao publicar)");
+
 // importar cifra de título NOVO não dispara aviso — entra direto (comportamento de sempre)
 await setupDup();
 await page.evaluate(() => {

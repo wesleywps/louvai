@@ -273,7 +273,12 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
 - **Importar JSON (arquivo/link):** `importJSON` reconhece o tipo e **detecta título
   repetido** via `collidingTitles` (mesmo título, `id` diferente) **antes de mexer nos
   dados** → folha de escolha (`mine`/`both`/cancelar). `doImport(data,tp,incoming,policy)`
-  aplica a política: `mergeSongs(arr,policy)` deduplica por `id`, e com `policy="mine"`
+  aplica a política — **`mine` | `theirs` | `both`** (v0.65.0). **`theirs` ("Usar as da nuvem"):** a
+  cifra que chega toma o lugar da local **com o id dela** (sem isso o conflito volta a cada sync);
+  `preverSubstituicao(incoming)` dá os números do aviso ANTES (cifras + escalas afetadas, pelo
+  `confirmDialog`), `remapLocal` leva as **escalas DESTE aparelho** para a cifra adotada
+  (`remapEscalasLocais`), e **não se cria lápide** — adotar é decisão local, não exclusão a propagar.
+  O que só existe aqui fica intacto. Com `policy="mine"`
   pula o título repetido e devolve um **`remap`** (id que chegou → id local) que `doImport`
   usa pra **remapear `escala.items`** (a escala continua íntegra). Título inédito = sem
   folha, importa direto.

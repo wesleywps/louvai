@@ -25,7 +25,7 @@ e sem backend: abre no navegador do celular/tablet e compartilha por arquivo ou 
   **"última vez que tocamos"** e **ordenar** por alfabética / recentes / **menos tocadas**
   (dá vez ao que está esquecido) e **excluir deslizando o card** na lista (com confirmação que diz
   em quais escalas a cifra está — e **Desfazer** logo depois); a exclusão **não volta no sincronizar**
-  e some para a equipe quando o líder publica. Importar **avisa antes de duplicar** título repetido.
+  e some para a equipe quando o líder publica. Importar **avisa antes de duplicar** título repetido — e deixa escolher: manter as minhas, **usar as da nuvem** ou ficar com as duas.
   **Link da versão guia** (YouTube) por música, que **sincroniza** com a equipe.
   E **observações da música** (cues de arranjo: "começa só voz", "tom da guia ≠ o que tocamos") que também sincronizam.
 - **📅 Escalas / setlists** — ordem do culto (**deslize a música para tirar da escala**, com desfazer),
@@ -41,7 +41,7 @@ e sem backend: abre no navegador do celular/tablet e compartilha por arquivo ou 
   conferência opcional do **tom pelos acordes**, importação à prova de arquivo malformado
   (sem XSS) e **acessível** (foco por teclado, contraste no escuro, alvos de toque grandes).
 
-*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.64.0**.*
+*Detalhe de cada recurso, versão a versão, no [`CHANGELOG.md`](CHANGELOG.md) — versão atual **v0.65.0**.*
 
 ## Usar
 Abra `louvai.html` no navegador. No celular, use **"Adicionar à Tela de Início"** — desde a

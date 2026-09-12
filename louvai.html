@@ -969,7 +969,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.64.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.65.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -3236,8 +3236,36 @@ function collidingTitles(incoming){
   });
   return out;
 }
+/* "Usar as da nuvem" (v0.65.0): até aqui, título repetido com id diferente só dava duas saídas —
+   manter as minhas ou ficar com as duas. Faltava a terceira, que é o caso do membro cujo aparelho
+   tem versões antigas: ADOTAR a da nuvem. Adotar de verdade significa ficar com o id da equipe
+   (senão o mesmo conflito volta no próximo sincronismo), e por isso as escalas DESTE aparelho
+   precisam passar a apontar para ela — o dono pediu para ver esse número antes de aplicar. */
+function preverSubstituicao(incoming){
+  const idsLocais=new Set(), titulos=[];
+  (incoming||[]).forEach(s=>{
+    if(!s||!String(s.title||"").trim()) return;
+    if(s.id&&songs.some(x=>x.id===s.id)) return;      // mesmo id: é atualização normal, não troca
+    const local=songs.find(x=>normTitle(x.title)===normTitle(s.title)&&x.id!==s.id);
+    if(local&&!idsLocais.has(local.id)){ idsLocais.add(local.id); titulos.push(local.title); }
+  });
+  const escalasAfetadas=escalas.filter(e=>(e.items||[]).some(it=>it&&idsLocais.has(it.songId)));
+  return {cifras:titulos.length, titulos, escalas:escalasAfetadas.length,
+          nomesEscalas:escalasAfetadas.map(escalaLabel)};
+}
+// as escalas deste aparelho passam a apontar para a cifra adotada (sem item órfão na ordem do culto)
+function remapEscalasLocais(remapLocal){
+  if(!remapLocal||!Object.keys(remapLocal).length) return 0;
+  let n=0;
+  escalas.forEach(e=>(e.items||[]).forEach(it=>{
+    if(it&&it.songId&&remapLocal[it.songId]){ it.songId=remapLocal[it.songId]; n++; }
+  }));
+  return n;
+}
 function mergeSongs(arr, policy, viaSync){
-  let added=0,updated=0; const remap={};   // remap: id que chegou → id da cifra que ficou (p/ remapear escala)
+  let added=0,updated=0,replaced=0;
+  const remap={};        // id que chegou → id da cifra local que ficou (p/ remapear a escala que CHEGA)
+  const remapLocal={};   // id local trocado → id adotado da nuvem (p/ remapear as escalas DAQUI)
   (arr||[]).forEach(s=>{
     if(!s)return;
     // normaliza tipos na importação (dados saudáveis): um título numérico vindo de
@@ -3260,9 +3288,38 @@ function mergeSongs(arr, policy, viaSync){
       const byTitle=songs.find(x=>normTitle(x.title)===normTitle(s.title));
       if(byTitle){ if(s.id) remap[s.id]=byTitle.id; return; }   // mantém a minha; só remapeia referências
     }
+    if(policy==="theirs"){
+      const ix=songs.findIndex(x=>normTitle(x.title)===normTitle(s.title));
+      if(ix>=0){
+        const local=songs[ix];
+        s.id=s.id||uid();
+        songs.splice(ix,1);                                     // a minha sai; entra a da equipe
+        if(local.id!==s.id) remapLocal[local.id]=s.id;           // escalas locais seguem a adotada
+        songs.push(s); replaced++;
+        return;   // sem lápide: isto é ADOÇÃO local, não uma exclusão para propagar à equipe
+      }
+    }
     s.id=s.id||uid(); if(songs.some(x=>x.id===s.id))s.id=uid(); songs.push(s); added++;
   });
-  return {added,updated,remap};
+  return {added,updated,replaced,remap,remapLocal};
+}
+// Substituir é troca de dados: o dono pediu para VER o tamanho antes — quantas cifras e quantas
+// escalas deste aparelho passam a usar a versão da equipe. Com DESFAZER logo depois.
+function confirmarSubstituir(data,tp,incoming,opts){
+  const p=preverSubstituicao(incoming);
+  const linhas=[p.cifras ? "Suas versões de "+pl(p.cifras,"cifra","cifras")+" saem e entram as da nuvem." : ""];
+  if(p.escalas) linhas.push(pl(p.escalas,"escala deste aparelho passa","escalas deste aparelho passam")+
+    " a usar a versão da nuvem: "+p.nomesEscalas.slice(0,3).join(" · ")+(p.escalas>3?"…":"")+".");
+  else linhas.push("Nenhuma escala deste aparelho é afetada.");
+  confirmDialog({ icon:"cloud", title:"Usar as cifras da nuvem?", okLabel:"Substituir", lines:linhas,
+    onOk:()=>{
+      const antes=JSON.parse(JSON.stringify({songs,escalas}));
+      doImport(data,tp,incoming,"theirs",opts);
+      toastAction("Substituídas pelas da nuvem","DESFAZER",()=>{
+        songs=antes.songs; escalas=antes.escalas; saveSongs(); saveEscalas();
+        renderLibrary(); renderEscalas(); toast("Suas versões voltaram","ok");
+      });
+    }});
 }
 function importJSON(text, opts){
   const silent=!!(opts&&opts.silent);
@@ -3287,6 +3344,7 @@ function importJSON(text, opts){
     const names=dups.slice(0,3).join(", ")+(dups.length>3?` +${dups.length-3}`:"");
     openSheet("Você já tem: "+names,[
       {ic:icon("user"),label:"Manter as minhas (não duplicar)",fn:()=>{closeSheet();doImport(data,tp,incoming,"mine",opts);}},
+      {ic:icon("cloud"),label:"Usar as da nuvem (substituir as minhas)",fn:()=>{closeSheet();confirmarSubstituir(data,tp,incoming,opts);}},
       {ic:icon("copy"),label:"Importar como cópias (ficar com as duas)",fn:()=>{closeSheet();doImport(data,tp,incoming,"both",opts);}},
       {ic:icon("x"),label:"Cancelar importação",fn:closeSheet},
     ]);
@@ -3314,8 +3372,9 @@ function doImport(data,tp,incoming,policy,opts){
   const viaSync=!!(opts&&opts.sync);   // pull do repertório: respeita lápide. Arquivo/link: gesto explícito, vence.
   // Escala avulsa (traz as cifras junto)
   if(tp==="louvai-escala"&&data.escala){
-    const {added,remap}=mergeSongs(incoming,policy,viaSync);
+    const {added,remap,remapLocal}=mergeSongs(incoming,policy,viaSync);
     mergeEscala(data.escala, remap, viaSync);
+    remapEscalasLocais(remapLocal);
     saveSongs(); saveEscalas();
     renderLibrary();            // cifras agregadas pela escala já aparecem na aba Cifras
     switchTab("escalas"); renderEscalas();
@@ -3326,7 +3385,8 @@ function doImport(data,tp,incoming,policy,opts){
   if(tp==="louvai-full"){
     // as lápides vêm ANTES do merge: o que foi excluído na nuvem sai daqui e não entra de volta
     const {sRem,eRem}=applyTombs(data.deleted);
-    const {added,updated,remap}=mergeSongs(incoming,policy,viaSync);
+    const {added,updated,replaced,remap,remapLocal}=mergeSongs(incoming,policy,viaSync);
+    remapEscalasLocais(remapLocal);   // antes de mesclar as que chegam: as daqui seguem a cifra adotada
     let escAdd=0,escUpd=0;
     (data.escalas||[]).forEach(e=>{ const r=mergeEscala(e, remap, viaSync); if(r==="add") escAdd++; else if(r==="upd") escUpd++; });
     saveSongs(); saveEscalas(); renderLibrary(); renderEscalas();
@@ -3336,15 +3396,17 @@ function doImport(data,tp,incoming,policy,opts){
     if(updated) parts.push(pl(updated,"música atualizada","músicas atualizadas"));
     if(escAdd)  parts.push("+"+pl(escAdd,"escala","escalas"));
     if(escUpd)  parts.push(pl(escUpd,"escala atualizada","escalas atualizadas"));
+    if(replaced) parts.push(pl(replaced,"música substituída","músicas substituídas"));
     if(sRem)    parts.push("−"+pl(sRem,"música","músicas"));      // exclusão da equipe chegando
     if(eRem)    parts.push("−"+pl(eRem,"escala","escalas"));
     if(parts.length) toast("Sincronizado: "+parts.join(", "),"ok");   // manual e auto-sync: anuncia a novidade
     else if(!silent) toast("Já está tudo sincronizado","ok");          // só o pull manual fala quando não há nada novo (auto-sync cala)
     return;
   }
-  const {added,updated}=mergeSongs(incoming,policy,viaSync);
-  saveSongs(); renderLibrary();
-  toast(`Importado: ${added} nova(s)`+(updated?`, ${updated} atualizada(s)`:""));
+  const {added,updated,replaced,remapLocal}=mergeSongs(incoming,policy,viaSync);
+  remapEscalasLocais(remapLocal); saveEscalas();
+  saveSongs(); renderLibrary(); renderEscalas();
+  toast(`Importado: ${added} nova(s)`+(updated?`, ${updated} atualizada(s)`:"")+(replaced?`, ${replaced} substituída(s)`:""));
 }
 
 /* ---------- Receber por LINK (#imp=...) ---------- */

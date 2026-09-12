@@ -8,6 +8,28 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.65.0 — "Usar as da nuvem": a saída que faltava quando o título repete
+**Recurso (reporte de campo).** Ao sincronizar num aparelho que já tinha as suas próprias cifras, o
+app avisava do título repetido e oferecia só duas saídas: **manter as minhas** ou **ficar com as
+duas**. Faltava justamente a que o membro queria — **adotar a versão da equipe**.
+- **Nova opção:** *"Usar as da nuvem (substituir as minhas)"*. A cifra da equipe toma o lugar da
+  local — **inclusive o id**, de propósito: sem isso o mesmo conflito voltaria a cada sincronismo.
+- **O tamanho da troca aparece antes** (escolha do dono): *"Suas versões de 2 cifras saem e entram as
+  da nuvem. 1 escala deste aparelho passa a usar a versão da nuvem: Culto daqui."* Só depois de
+  confirmar é que algo muda — e ainda vem **DESFAZER** logo em seguida, que devolve cifras **e**
+  escalas.
+- **As escalas daqui acompanham:** os itens que apontavam para a sua versão passam a apontar para a
+  adotada; a ordem do culto não fica com item órfão.
+- **Substituir ≠ espelhar tudo:** o que só existe neste aparelho (cifra que a equipe não tem) **não
+  é tocado**. E adotar **não cria lápide** — é decisão local, não uma exclusão para propagar: ninguém
+  perde cifra porque você adotou a versão da equipe.
+- *"Ficar com as duas"* continua ali, intacta, e o que vem da nuvem entra sem alteração.
+- **498 verificações** (9 novas): a folha com as quatro saídas, o aviso com os números certos, nada
+  mexido antes de confirmar, a troca (id incluso), a escala local remapeada, a cifra exclusiva
+  preservada, o desfazer e a ausência de lápide.
+
+---
+
 ## v0.64.0 — Puxar a lista para baixo atualiza · sincronizar ao abrir agora vem ligado
 **Recurso (pedido do dono).** O líder publica uma cifra; o membro **puxa a lista para baixo** e
 recebe. Sem menu, sem folha, sem procurar link — o gesto que todo aplicativo tem.
