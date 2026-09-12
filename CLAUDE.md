@@ -298,6 +298,13 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   com fura-cache só em http(s), erros tratados) → `importJSON`, que agora trata `louvai-full` no
   pré-check e no `doImport` (mescla cifras via `mergeSongs` + cada escala via `mergeEscala`,
   extraído). Folha "Repertório na nuvem" (`openRepoSheet`, `#reposheet`).
+- **Espelhar a nuvem (v0.66.0):** `espelharNuvem()` + botão `#repo-mirror` (cartão *Baixar* do
+  `#reposheet`). Baixa o snapshot, **mostra a diferença no `confirmDialog`** (quantas cifras ficam ×
+  quantas há hoje + os NOMES do que só existe aqui — é o diagnóstico de aparelhos divergentes) e só
+  então troca `songs`/`escalas`/`deleted` por cópias do snapshot, com `toastAction` de DESFAZER.
+  ⚠️ **Não cria lápide** do que sumiu daqui: espelhar é decisão local; lápide apagaria a cifra da
+  equipe no próximo publish. Mescla **soma** — por isso divergência de contagem não se resolve com
+  "Atualizar", só com este caminho.
 - **Pull pelo commit atual (v0.39.0):** `getRepoText(url)` — se a URL é do GitHub, lê o `louvai.json`
   do **commit atual** pela **API Contents** (`api.github.com`, reusa `ghRepoFromUrl`/`ghGetCurrent`),
   evitando o atraso do rebuild/CDN do **GitHub Pages** (causa do "sincronizei e veio velho"). Fallback

@@ -872,6 +872,7 @@ body.light .keyhint{color:#b45309}
     <input id="repo-url" class="search" inputmode="url" placeholder="https://…/louvai.json" style="width:100%;margin-bottom:8px">
     <div id="repo-status" class="sheetnote" style="margin:0 0 10px"></div>
     <button class="btn primary" id="repo-pull" style="width:100%">Atualizar do link</button>
+    <button class="btn" id="repo-mirror" style="width:100%;margin-top:8px">Substituir tudo pelo da nuvem…</button>
     <label class="repo-auto"><input type="checkbox" id="auto-pull"> Sincronizar ao abrir o app</label>
   </div>
 
@@ -969,7 +970,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.65.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.66.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -3057,6 +3058,52 @@ async function pullRepo(opts){
   saveSettings();
   importJSON(txt, {silent, sync:true});   // sync: respeita as lápides (não ressuscita o excluído). Reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
 }
+/* "Substituir tudo pelo da nuvem" (v0.66.0) — aparelhos da mesma equipe divergindo (um com 67
+   cifras, outro com 70) precisam de um botão que ZERE a dúvida: o aparelho passa a ser uma cópia
+   fiel do snapshot publicado. A confirmação é também o diagnóstico: lista o que só existe aqui e
+   vai embora. NÃO gera lápide — apagar aqui não pode apagar a cifra da equipe ao publicar. */
+async function espelharNuvem(){
+  const url=effectiveRepoUrl();
+  if(!url){ toast("Cole o link do repertório primeiro","warn"); return; }
+  toast("Buscando o repertório da nuvem…");
+  let txt; try{ txt=await getRepoText(url); }
+  catch(e){ toast("Não consegui buscar — sem internet?","err"); return; }
+  let data; try{ data=JSON.parse(txt); }catch(e){ data=null; }
+  const tp=String((data&&data.type)||"").replace(/^levita-/,"louvai-");
+  if(!data||tp!=="louvai-full"||!Array.isArray(data.songs)){
+    toast("O link não tem um repertório completo (cifras + escalas)","err"); return;
+  }
+  const nuvemSongs=data.songs, nuvemEsc=Array.isArray(data.escalas)?data.escalas:[];
+  const idsNuvem=new Set(nuvemSongs.map(s=>s&&s.id).filter(Boolean));
+  const titulosNuvem=new Set(nuvemSongs.map(s=>normTitle(s&&s.title)));
+  const soAqui=songs.filter(s=>!idsNuvem.has(s.id)&&!titulosNuvem.has(normTitle(s.title)));
+  const linhas=["Este aparelho fica igual à nuvem: "+pl(nuvemSongs.length,"cifra","cifras")+
+                " e "+pl(nuvemEsc.length,"escala","escalas")+" (hoje você tem "+songs.length+")."];
+  linhas.push(soAqui.length
+    ? pl(soAqui.length,"cifra que só existe aqui vai","cifras que só existem aqui vão")+" embora: "+
+      soAqui.slice(0,4).map(s=>s.title).join(" · ")+(soAqui.length>4?"…":"")+"."
+    : "Nada que só existe aqui será perdido.");
+  confirmDialog({ icon:"cloud", title:"Substituir tudo pelo da nuvem?", okLabel:"Substituir tudo", lines:linhas,
+    onOk:()=>{
+      const antes=JSON.parse(JSON.stringify({songs,escalas,deleted}));
+      songs=JSON.parse(JSON.stringify(nuvemSongs));
+      escalas=JSON.parse(JSON.stringify(nuvemEsc));
+      deleted=Array.isArray(data.deleted)?JSON.parse(JSON.stringify(data.deleted)):[];   // adota as marcas da equipe
+      saveSongs(); saveEscalas(); saveDeleted();
+      settings.repoPulledAt=Date.now();
+      if(data.app) settings.repoCloudApp=String(data.app);
+      settings.repoCloudAt=data.publishedAt||null; saveSettings();
+      const st=$("#repo-status"); if(st) st.textContent=repoStatus();
+      renderLibrary(); renderEscalas();
+      toastAction("Agora igual à nuvem: "+pl(songs.length,"cifra","cifras"),"DESFAZER",()=>{
+        songs=antes.songs; escalas=antes.escalas; deleted=antes.deleted;
+        saveSongs(); saveEscalas(); saveDeleted(); renderLibrary(); renderEscalas();
+        toast("Seu repertório voltou como estava","ok");
+      });
+    }});
+}
+$("#repo-mirror").onclick=()=>{ closeRepoSheet(); espelharNuvem(); };
+
 // auto-sync (v0.37.0): pull silencioso se habilitado e há link; um link em importação tem prioridade.
 // Disparado no boot (sem throttle) e ao voltar pro app (v0.38.0, com throttle p/ não martelar a rede).
 let lastAutoSync=0;

@@ -8,6 +8,27 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.66.0 — "Substituir tudo pelo da nuvem" (quando os aparelhos da equipe divergem)
+**Recurso (reporte de campo).** Dois aparelhos na mesma versão mostrando **67 e 70 cifras**. Mesclar
+não resolve divergência — mescla soma. Faltava o botão que **zera a dúvida**: o aparelho passa a ser
+uma cópia fiel do que o líder publicou.
+- **Onde:** folha **Repertório → Nuvem**, logo abaixo de *Atualizar do link* — é onde quem está fora
+  de sincronia vai procurar.
+- **A confirmação é o diagnóstico.** Antes de mexer em qualquer coisa, o app baixa o snapshot e diz:
+  *"Este aparelho fica igual à nuvem: 67 cifras e 4 escalas (hoje você tem 70). 3 cifras que só
+  existem aqui vão embora: Fulano, Beltrano, Sicrano."* **É essa lista que explica a diferença** —
+  dá para abrir o aviso nos dois aparelhos, comparar e cancelar sem aplicar nada.
+- **Adota também as marcas de exclusão** da equipe, para a divergência não voltar no sincronismo
+  seguinte.
+- **Não cria lápide do que apagou aqui** — apagar no seu aparelho não pode apagar a cifra da equipe
+  quando você publicar. Espelhar é decisão local.
+- **DESFAZER** devolve o repertório inteiro (cifras, escalas e marcas) se você se arrepender.
+- **510 verificações** (12 novas): o botão na folha, o aviso com o depois e o antes, os nomes do que
+  se perde, nada tocado antes de confirmar, cancelar preservando tudo, o espelhamento (inclusive o
+  conteúdo da cifra e as lápides adotadas) e o desfazer completo.
+
+---
+
 ## v0.65.0 — "Usar as da nuvem": a saída que faltava quando o título repete
 **Recurso (reporte de campo).** Ao sincronizar num aparelho que já tinha as suas próprias cifras, o
 app avisava do título repetido e oferecia só duas saídas: **manter as minhas** ou **ficar com as

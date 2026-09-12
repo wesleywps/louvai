@@ -3086,6 +3086,75 @@ ok(await pageDel.evaluate(() => document.getElementById("auto-pull").checked ===
   "O interruptor na folha da nuvem reflete o novo padrão (ligado)");
 await pageDel.evaluate(() => closeS("#repobg", "#reposheet")); await pageDel.waitForTimeout(300);
 
+// ===== v0.66.0 — "Substituir tudo pelo da nuvem" (aparelhos da equipe divergindo) =====
+// Caso real: um aparelho com 67 cifras, outro com 70, mesma versão. Precisa de um botão que zere a
+// dúvida — e a confirmação é também o diagnóstico (lista o que só existe naquele aparelho).
+await pageDel.evaluate(() => {
+  songs.length = 0; escalas.length = 0; deleted.length = 0;
+  songs.push({ id: "n1", title: "Da nuvem um", key: "C", capo: 0, tags: [], updatedAt: 3, body: "C velha" });
+  songs.push({ id: "extra-1", title: "So neste aparelho", key: "A", capo: 0, tags: [], updatedAt: 5, body: "A" });
+  songs.push({ id: "extra-2", title: "Outra so daqui", key: "E", capo: 0, tags: [], updatedAt: 5, body: "E" });
+  escalas.push({ id: "e-local", title: "Escala velha", date: "2026-01-01", items: [], updatedAt: 1 });
+  saveSongs(); saveEscalas(); saveDeleted();
+  settings.repoUrl = "https://louvai-teste.example/louvai.json"; saveSettings();
+  window.__snapshot = { type: "louvai-full", app: "0.66.0", publishedAt: 1757000000000,
+    songs: [{ id: "n1", title: "Da nuvem um", key: "C", capo: 0, tags: [], updatedAt: 9, body: "C nova da equipe" },
+            { id: "n2", title: "Da nuvem dois", key: "G", capo: 0, tags: [], updatedAt: 9, body: "G" }],
+    escalas: [{ id: "e-nuvem", title: "Culto da equipe", date: "2026-09-20", items: [{ kind: "song", songId: "n2" }], updatedAt: 9 }],
+    deleted: [{ id: "morta-1", k: "s", at: Date.now() }] };
+  window.fetch = async () => ({ ok: true, status: 200, text: async () => JSON.stringify(window.__snapshot) });
+  show("lib"); switchTab("songs"); renderLibrary();
+});
+await pageDel.waitForTimeout(300);
+// caminho real: Repertório → Nuvem → Substituir tudo…
+await pageDel.locator("#backupBtn").click(); await pageDel.waitForTimeout(350);
+await pageDel.locator("#sheet-body .sheetitem", { hasText: "Nuvem" }).click(); await pageDel.waitForTimeout(400);
+ok(await pageDel.locator("#repo-mirror").isVisible(),
+  "A folha da nuvem oferece 'Substituir tudo pelo da nuvem…' junto do Atualizar");
+await pageDel.locator("#repo-mirror").click(); await pageDel.waitForTimeout(900);
+const espelhoAviso = await pageDel.evaluate(() => ({
+  aberto: document.getElementById("confirmdlg").classList.contains("show"),
+  titulo: document.getElementById("confirm-title").textContent,
+  sub: document.getElementById("confirm-sub").textContent,
+  ok: document.getElementById("confirm-ok").textContent,
+  intacto: songs.length,
+}));
+ok(espelhoAviso.aberto && /Substituir tudo pelo da nuvem\?/.test(espelhoAviso.titulo) && espelhoAviso.ok === "Substituir tudo",
+  "Substituir tudo confirma antes (e busca o snapshot para saber o que vai acontecer)");
+ok(/2 cifras e 1 escala/.test(espelhoAviso.sub) && /hoje você tem 3/.test(espelhoAviso.sub),
+  `O aviso mostra o depois e o antes: "${espelhoAviso.sub.slice(0, 80)}…"`);
+ok(/2 cifras que só existem aqui vão embora/.test(espelhoAviso.sub) &&
+   /So neste aparelho/.test(espelhoAviso.sub) && /Outra so daqui/.test(espelhoAviso.sub),
+  "O aviso NOMEIA o que só existe neste aparelho — é o diagnóstico da divergência");
+ok(espelhoAviso.intacto === 3, "Nada é apagado antes de confirmar");
+// cancelar mantém tudo
+await pageDel.locator("#confirm-cancel").click(); await pageDel.waitForTimeout(350);
+ok(await pageDel.evaluate(() => songs.length === 3 && escalas.length === 1),
+  "Cancelar mantém o repertório local intacto");
+// confirmar: o aparelho vira cópia fiel do snapshot
+await pageDel.locator("#backupBtn").click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#sheet-body .sheetitem", { hasText: "Nuvem" }).click(); await pageDel.waitForTimeout(350);
+await pageDel.locator("#repo-mirror").click(); await pageDel.waitForTimeout(900);
+await pageDel.locator("#confirm-ok").click(); await pageDel.waitForTimeout(500);
+const espelhado = await pageDel.evaluate(() => ({
+  ids: songs.map(s => s.id).sort(), corpo: (songs.find(s => s.id === "n1") || {}).body,
+  esc: escalas.map(e => e.id), lapides: deleted.map(t => t.id),
+  disco: JSON.parse(localStorage.getItem("louvai.songs.v1")).length,
+  desfazer: !!document.querySelector("#toast .toastact"),
+  pulledAt: !!settings.repoPulledAt,
+}));
+ok(espelhado.ids.join(",") === "n1,n2" && espelhado.esc.join(",") === "e-nuvem" && espelhado.disco === 2,
+  "O aparelho fica IGUAL à nuvem: some o que era só daqui, entram as cifras e escalas da equipe");
+ok(/nova da equipe/.test(espelhado.corpo || ""), "A versão da equipe substitui a local até no conteúdo da cifra");
+ok(espelhado.lapides.join(",") === "morta-1",
+  "As lápides adotadas são as da nuvem — apagar aqui NÃO cria lápide (publicar não apagaria cifra de ninguém)");
+ok(espelhado.pulledAt, "O espelhamento conta como sincronismo (a folha passa a mostrar 'baixou há…')");
+ok(espelhado.desfazer, "Depois de substituir tudo aparece o DESFAZER");
+await pageDel.locator("#toast .toastact").click(); await pageDel.waitForTimeout(400);
+ok(await pageDel.evaluate(() => songs.length === 3 && escalas.length === 1 && deleted.length === 0 &&
+     songs.some(s => s.id === "extra-1")),
+  "DESFAZER devolve o repertório inteiro como estava (cifras, escalas e marcas)");
+
 ok(delErrors.length === 0, "Excluir: nenhum erro de JS no fluxo" + (delErrors.length ? ": " + delErrors.join(" | ") : ""));
 await ctxDel.close();
 
