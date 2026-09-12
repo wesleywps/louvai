@@ -8,6 +8,24 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.62.1 — Correção: o "livro" em tela cheia saía da tela cheia ao trocar de música
+**Correção (reporte de campo).** Na Apresentação em **tela cheia**, virar da **última página de uma
+música para a primeira da próxima** tirava da tela cheia. Dentro da mesma música as páginas viravam
+sem problema — o tranco era exatamente na troca.
+- **Causa:** trocar de música reabre a **mesma tela** (o player) e o `navOpen` tratava isso como
+  *"voltar até a tela player"* — o que **consome a camada da tela cheia** empilhada por cima. O
+  `popstate` então via uma pilha sem `full` e desligava o modo imersivo, fazendo o certo com a
+  informação errada.
+- **Correção:** reabrir a tela que **já é a atual** não mexe mais na pilha. As camadas acima (tela
+  cheia, diagrama de acorde) são daquela tela e continuam de pé; o voltar do celular segue fechando
+  a tela cheia primeiro, como antes.
+- **471 verificações** (6 novas, com o gesto real de dedo): tela cheia ligada no Modo Página, virar
+  páginas dentro da música, o toque decisivo da última página para a próxima música (que falhava
+  antes desta correção — foi escrito primeiro e visto vermelho), e o voltar do celular ainda saindo
+  da tela cheia sem perder a Apresentação.
+
+---
+
 ## v0.62.0 — A Apresentação não se desfaz mais ao voltar do editor · o logo leva para casa
 **Correção (reporte de campo — atrapalhava no culto).** No modo Apresentação, mexer na cifra pelo
 ⚙ e voltar **matava o contexto da escala**: a música seguia aberta, mas a barra virava a do player

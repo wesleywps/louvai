@@ -954,7 +954,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.62.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.62.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1806,6 +1806,11 @@ function navOpen(entry){
   const top=navStack[navStack.length-1];
   if(top&&top.t===entry.t&&top.id===entry.id){ navSync(navStack.slice(0,-1).concat([entry]),"replace"); return; }
   if(entry.t==="view"){
+    // Re-abrir a MESMA tela (trocar de música na Apresentação) NÃO mexe na pilha: as camadas acima
+    // — tela cheia, diagrama — pertencem a essa tela, e "voltar até ela" as derrubaria. Era o bug
+    // de campo do "livro": virar da última página para a próxima música saía da TELA CHEIA (v0.62.1).
+    let telaAtual=null; navStack.forEach(e=>{ if(e.t==="view") telaAtual=e.id; });
+    if(telaAtual===entry.id) return;
     // "voltar" escrito como abertura (exitPlayer→openEscala, #e-cancel→openPlayer): se a tela já
     // está na pilha, isso é voltar até ela — nunca empilhar de novo (senão o back não sai nunca)
     let at=-1; navStack.forEach((e,i)=>{ if(e.t==="view"&&e.id===entry.id) at=i; });

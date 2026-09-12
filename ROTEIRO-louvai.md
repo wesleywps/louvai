@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.62.0**.
+seguir. Atualizado até a **v0.62.1**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -146,6 +146,8 @@ instalação complexa.
 | **v0.61.0** | recurso+correção | **Tirar a música da ordem do culto deslizando:** dentro da escala, o mesmo gesto da lista — deslizou, **Tirar** —, com confirmação que tranquiliza (*a cifra continua no repertório*) e DESFAZER que devolve na **mesma posição**. Antes era preciso abrir o editor. **Correções achadas no caminho:** o aviso de saída sumia em **notebook com touchscreen** (o app se achava celular por `maxTouchPoints>0` e confiava no CloseWatcher, que no desktop não intercepta o voltar) — agora o sinal é o **ponteiro grosso**; e o deslize morria quando havia **texto selecionado** (o navegador iniciava arrasto nativo e cancelava o ponteiro). |
 
 | **v0.62.0** | correção+recurso | **A Apresentação não se desfaz mais ao voltar do editor:** mexer na cifra pelo ⚙ no meio do culto e voltar matava o contexto da escala — a barra virava a do player comum e o "livro" parava de trocar de música. `playerCtxFor(id)` devolve o contexto do culto no *Cancelar* e no *Salvar* (música nova segue abrindo avulsa). **E o logo virou botão:** leva à lista de cifras, limpando busca e tag — antes só selecionava o texto no celular. |
+
+| **v0.62.1** | correção | **Tela cheia não cai mais ao trocar de música:** no "livro" (última página → próxima música), o app saía do modo imersivo. Trocar de música reabre a MESMA tela, e o `navOpen` tratava isso como *voltar até a tela*, consumindo a camada da tela cheia. Agora reabrir a tela atual não mexe na pilha — e o voltar do celular segue fechando a tela cheia primeiro. |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -368,4 +370,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.62.0.*
+*Última atualização deste roteiro: v0.62.1.*

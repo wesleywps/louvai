@@ -2863,6 +2863,60 @@ ok(depoisLogo.aba === "songs" && depoisLogo.view === "lib" && depoisLogo.cards >
 ok(depoisLogo.busca === "" && !depoisLogo.tag,
   "O logo limpa a busca e a tag ativa (volta para a casa mesmo, não para um filtro)");
 
+// ===== v0.62.1 — o "livro" em TELA CHEIA não pode sair da tela cheia ao trocar de música =====
+// Reporte de campo: na última página de uma música, o toque que deveria levar à primeira página da
+// próxima tirava da tela cheia. A troca de música reabre a MESMA tela (player) e o "voltar até a
+// tela" derrubava a camada da tela cheia que estava por cima.
+await pageDel.evaluate(() => {
+  const corpo = n => "[Intro]\n" + Array.from({ length: 45 }, (_, i) => "C           G\nlinha " + i + " da musica " + n).join("\n");
+  songs.length = 0; escalas.length = 0;
+  songs.push({ id: "f1", title: "Livro Um", key: "C", capo: 0, tags: [], updatedAt: 1, body: corpo(1) });
+  songs.push({ id: "f2", title: "Livro Dois", key: "D", capo: 0, tags: [], updatedAt: 1, body: corpo(2) });
+  escalas.push({ id: "fe", title: "Culto tela cheia", date: "2026-09-13", team: [], items: [
+    { kind: "song", songId: "f1" }, { kind: "song", songId: "f2" }], updatedAt: 1 });
+  settings.readMode = "page"; saveSettings(); saveSongs(); saveEscalas();
+  show("lib"); switchTab("escalas"); renderEscalas();
+});
+await pageDel.waitForTimeout(300);
+await pageDel.locator("#escalalist .escard").first().click(); await pageDel.waitForTimeout(400);
+await pageDel.locator("#es-present").click(); await pageDel.waitForTimeout(600);
+await pageDel.locator("#pv-full").click(); await pageDel.waitForTimeout(600);
+const cheia = () => pageDel.evaluate(() => ({
+  immersive: document.getElementById("view-player").classList.contains("immersive"),
+  idx: escalaCtx ? escalaCtx.idx : null, pag: +document.getElementById("p-body").dataset.page,
+  pags: pageCount(), stack: navStack.map(e => e.t + ":" + (e.id || "")).join(">"),
+}));
+const antesLivro = await cheia();
+ok(antesLivro.immersive && antesLivro.pags > 1 && /full/.test(antesLivro.stack),
+  `Tela cheia ligada na Apresentação, no Modo Página (${antesLivro.pags} páginas)`);
+// toca até a última página — sem sair da tela cheia no caminho
+for (let i = 0; i < 12; i++) {
+  const e = await pageDel.evaluate(() => ({ p: +document.getElementById("p-body").dataset.page, n: pageCount() }));
+  if (e.p >= e.n - 1) break;
+  await pageDel.touchscreen.tap(340, 500); await pageDel.waitForTimeout(320);
+}
+const naUltima = await cheia();
+ok(naUltima.immersive && naUltima.pag === naUltima.pags - 1 && naUltima.idx === 0,
+  "Virar páginas dentro da música mantém a tela cheia");
+// o toque decisivo: última página → próxima música
+await pageDel.touchscreen.tap(340, 500); await pageDel.waitForTimeout(700);
+const depoisLivro = await cheia();
+ok(depoisLivro.idx === 1 && depoisLivro.pag === 0, "O 'livro' passa para a primeira página da próxima música");
+ok(depoisLivro.immersive && /full/.test(depoisLivro.stack),
+  "…e CONTINUA em tela cheia (a troca de música não derruba a camada da tela cheia)");
+// (em tela cheia a barra fica SEM botões — de propósito: ali só o "livro" troca de música)
+// e o voltar do celular ainda sai da tela cheia: a camada continua na pilha, não vazou
+await pageDel.goBack(); await pageDel.waitForTimeout(550);
+const aposVoltarCheia = await cheia();
+ok(!aposVoltarCheia.immersive && aposVoltarCheia.idx === 1 && await pageDel.locator("#view-player").isVisible(),
+  "O voltar do celular continua saindo da tela cheia e mantendo a Apresentação (a camada não vazou)");
+// e a Apresentação segue viva: a seta › troca de música normalmente
+await pageDel.locator("#pv-prev").click(); await pageDel.waitForTimeout(500);
+ok(await pageDel.evaluate(() => escalaCtx && escalaCtx.idx === 0),
+  "Fora da tela cheia, as setas da barra seguem trocando de música");
+await pageDel.evaluate(() => exitPlayer()); await pageDel.waitForTimeout(350);
+await pageDel.evaluate(() => { show("lib"); switchTab("songs"); renderLibrary(); }); await pageDel.waitForTimeout(300);
+
 ok(delErrors.length === 0, "Excluir: nenhum erro de JS no fluxo" + (delErrors.length ? ": " + delErrors.join(" | ") : ""));
 await ctxDel.close();
 

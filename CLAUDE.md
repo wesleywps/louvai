@@ -401,7 +401,10 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   `{t:"view"|"sheet"|"diag"|"full", id}`) e o **`popstate` é a ÚNICA fonte da verdade**: `navRender(stack)`
   **renderiza a pilha de destino** (idempotente) usando os "voltares" do próprio app (`navViewBack` chama
   `exitPlayer`/`#e-cancel`/`#es-back`/`#ee-cancel`, que já limpam auto-scroll, DOM paginado e `escalaCtx`).
-  `navOpen` decide **push × replace × voltar-até**: tela **já presente na pilha** = voltar até ela (cobre
+  `navOpen` decide **push × replace × voltar-até** — e, desde a v0.62.1, **reabrir a tela que já é a
+  atual não mexe na pilha** (trocar de música na Apresentação): as camadas acima (`full`, `diag`) são
+  daquela tela, e "voltar até ela" as derrubava — era o "livro" saindo da **tela cheia** ao passar de
+  música. Regra: tela **já presente na pilha** = voltar até ela (cobre
   `exitPlayer`→`openEscala` e `#e-cancel`→`openPlayer`, que são *voltares escritos como aberturas*);
   mesma camada no topo = replace (trocar de música na Apresentação **não** empilha). `navCloseTop` tira a
   camada da pilha na hora e agenda o `history.go(-n)` no fim do tick — se abrir algo no mesmo toque
