@@ -2,7 +2,7 @@
 
 App de cifras **offline-first** para ministério de música de igreja. Documento de
 acompanhamento: liga o que já foi construído (ver `CHANGELOG.md`) ao que vem a
-seguir. Atualizado até a **v0.67.0**.
+seguir. Atualizado até a **v0.67.1**.
 
 > **Nome:** o projeto nasceu como **Levita** e foi renomeado para **Louvai** na
 > v0.9.0 — "louvai" é convite a todos adorarem, sem remeter a uma classe
@@ -158,6 +158,8 @@ instalação complexa.
 | **v0.66.0** | recurso | **"Substituir tudo pelo da nuvem":** dois aparelhos da equipe com contagens diferentes (67 × 70) não se resolvem mesclando — mescla soma. O botão (Repertório ▸ Nuvem) faz o aparelho virar **cópia fiel** do snapshot publicado, adotando também as marcas de exclusão. A confirmação é o **diagnóstico**: diz quantas cifras ficam, quantas você tem hoje e **nomeia** o que só existe ali. Não cria lápide (espelhar é decisão local) e tem **DESFAZER**. |
 
 | **v0.67.0** | recurso | **Uma ação, um nome** (*Atualizar repertório* nas três portas: folha, nuvem e gesto) e o app passa a **dizer o que a equipe ainda não tem**. Mesclar é mão única: cifra criada aqui — ou editada depois da última publicação — ficava parada no aparelho. Ao fim do sincronismo **pedido**, o aviso lista o que ficou para trás e oferece **Publicar para a equipe** (com token) ou **Enviar ao líder** (envelope só com o que falta). O automático continua silencioso. |
+
+| **v0.67.1** | correção | **O puxador do gesto aparecia atrás da barra do topo** (`z-index` 29 contra 30, ancorado em `top:0`). Agora nasce **abaixo** da barra — medindo o rodapé dela na hora, porque a altura muda com a área de segurança — e **acima** no empilhamento. Regressão verificada por medição (geometria + camadas). |
 
 > O detalhamento de cada versão está em `CHANGELOG.md`.
 
@@ -380,4 +382,4 @@ Backlog organizado por tema. A **ordem sugerida** está logo abaixo.
 O ritual de versão é o mesmo nos dois: CHANGELOG → `APP_VERSION` → commit + tag →
 sincronizar o `index.html` (distribuição pelo GitHub Pages).
 
-*Última atualização deste roteiro: v0.67.0.*
+*Última atualização deste roteiro: v0.67.1.*

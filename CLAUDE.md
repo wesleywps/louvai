@@ -540,7 +540,9 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
 - **Puxar para atualizar (v0.64.0):** `PTR_TRIGGER`(70)/`PTR_MAX`(120), `ptrMove`/`ptrDispara`/
   `ptrPodeComecar` + o pílula `#ptr`. Só em `view==="lib"`, com `scrollY<=0` e `effectiveRepoUrl()`.
   **`html,body{overscroll-behavior-y:contain}`** desliga o refresh nativo do Chrome Android (senão o
-  gesto é do sistema e recarrega o app). ⚠️ **Duas armadilhas, as mesmas do deslize:** o `pointermove`
+  gesto é do sistema e recarrega o app). **Posição (v0.67.1):** `ptrBase()` mede o rodapé da
+  `.topbar` na hora (a altura varia com a safe-area) e o `#ptr` fica em `z-index:31` — **acima** da
+  barra (30); com 29 e `top:0` ele nascia escondido atrás dela. ⚠️ **Duas armadilhas, as mesmas do deslize:** o `pointermove`
   precisa de `preventDefault` (`{passive:false}`) senão o navegador inicia arrasto nativo e **cancela
   o ponteiro no meio**; e o gesto termina em **`click`** — sem `markSwipe()` ao assumir, soltar
   **abre a cifra que estava sob o dedo**.

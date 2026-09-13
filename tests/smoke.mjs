@@ -3024,8 +3024,13 @@ await pageDel.evaluate(() => {
 await pageDel.waitForTimeout(300);
 const ptrEstado = () => pageDel.evaluate(() => {
   const el = document.getElementById("ptr");
+  const tb = document.querySelector("#view-lib .topbar").getBoundingClientRect();
+  const r = el.getBoundingClientRect();
   return { visivel: el.classList.contains("on"), texto: el.querySelector(".ptr-tx").textContent,
-           y: Math.round(el.getBoundingClientRect().y), girando: el.classList.contains("spin"),
+           y: Math.round(r.y), barra: Math.round(tb.bottom),
+           abaixoDaBarra: r.y >= tb.bottom - 1,
+           naFrente: +getComputedStyle(el).zIndex > +getComputedStyle(document.querySelector("#view-lib .topbar")).zIndex,
+           girando: el.classList.contains("spin"),
            pulls: window.__pulls, titulos: [...document.querySelectorAll("#songlist .c-ttl")].map(e => e.textContent) };
 });
 async function puxaLista(dy) {
@@ -3048,6 +3053,8 @@ ok(curto.view === "lib",
 const longo = await puxaLista(200);
 ok(longo.meio.visivel && /Solte para atualizar/.test(longo.meio.texto) && longo.meio.y > 0,
   `Passando do limiar o puxador muda de recado ("${longo.meio.texto}") e fica visível na tela`);
+ok(longo.meio.abaixoDaBarra && longo.meio.naFrente,
+  `O puxador aparece ABAIXO da barra do topo e por cima dela no empilhamento (topo do puxador ${longo.meio.y}px × rodapé da barra ${longo.meio.barra}px)`);
 ok(longo.fim.pulls === 1, "Soltar dispara a busca no repertório da nuvem");
 ok(longo.fim.titulos.includes("Cifra que o lider publicou"),
   "A cifra publicada pelo líder chega na lista pelo gesto (sem abrir menu nenhum)");

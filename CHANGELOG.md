@@ -8,6 +8,21 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.67.1 — Correção: o puxador aparecia escondido atrás da barra do topo
+**Correção (reporte de campo).** Ao puxar a lista para baixo, a pílula *"Puxe para atualizar o
+repertório"* surgia **por trás** da barra do topo — o gesto funcionava, mas sem o aviso visível não
+dá para saber que vai acontecer alguma coisa.
+- **Causa:** o puxador estava em `z-index:29` e a barra em `30`, ancorado no topo absoluto da tela
+  (`top:0`) — ou seja, nascia exatamente atrás dela.
+- **Correção:** ele passa a nascer **abaixo** da barra (o rodapé dela é medido na hora, porque a
+  altura muda com a área de segurança do aparelho) e fica **acima** no empilhamento, para nunca mais
+  sumir por trás de nada. Também acompanha o dedo com um deslocamento mais suave.
+- **Regressão medida, não presumida:** o teste compara a geometria do puxador com a da barra
+  (topo em 116px × rodapé da barra em 77px) e o empilhamento das duas camadas — falharia com o bug.
+- **522 verificações** (1 nova).
+
+---
+
 ## v0.67.0 — Uma ação, um nome — e o app passa a dizer o que a equipe ainda não tem
 **Ajuste + recurso (pedido do dono).** Havia três portas para a mesma coisa, cada uma com um nome:
 *"Atualizar do repertório"* na folha, *"Atualizar do link"* na nuvem e *"Puxe para atualizar"* no

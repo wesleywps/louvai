@@ -100,11 +100,14 @@ input,textarea,select{font-family:inherit}
    nativo do Chrome Android — senão o gesto do sistema roubaria o do app (e recarregar perde o
    estado da tela). O puxador é um pílula que desce com o dedo. */
 html,body{overscroll-behavior-y:contain}
-.ptr{position:fixed;left:50%;top:0;z-index:29;display:flex;align-items:center;gap:9px;
+/* nasce ABAIXO da barra do topo (o JS mede o rodapé dela) e por CIMA dela no eixo Z — com
+   z-index menor que a .topbar (30) o puxador aparecia escondido atrás dela (v0.67.1) */
+.ptr{position:fixed;left:50%;top:var(--ptr-top,64px);z-index:31;display:flex;align-items:center;gap:9px;
   padding:9px 16px;border-radius:var(--r-pill);background:var(--panel);border:1px solid var(--line);
   color:var(--muted);font-size:var(--fs-sm);font-weight:600;box-shadow:var(--shadow);
-  transform:translate(-50%,-64px);opacity:0;pointer-events:none;visibility:hidden}
-.ptr.on{opacity:1;visibility:visible}
+  transform:translate(-50%,-14px) scale(.92);opacity:0;pointer-events:none;visibility:hidden;
+  transition:opacity .12s,transform .12s}
+.ptr.on{opacity:1;visibility:visible;transform:translate(-50%,var(--ptr-y,0px)) scale(1)}
 .ptr.solta{color:var(--accent)}
 .ptr-ic{width:16px;height:16px;border-radius:50%;flex:none;
   border:2px solid var(--line);border-top-color:var(--accent);transition:transform var(--dur)}
@@ -971,7 +974,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.67.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.67.1";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -2100,10 +2103,17 @@ function ptrPinta(txt,classe){
   el.classList.toggle("solta",classe==="solta");
   el.classList.toggle("spin",classe==="spin");
 }
+// o puxador mora logo abaixo da barra do topo — medida na hora (a barra cresce com a safe-area)
+function ptrBase(){
+  const tb=document.querySelector("#view-lib .topbar");
+  const r=tb&&tb.getBoundingClientRect();
+  return Math.max(0,(r?r.bottom:56))+8;
+}
 function ptrMove(y){
   ptrY=y; const el=$("#ptr"); if(!el) return;
   el.classList.toggle("on",y>0);
-  el.style.transform="translate(-50%,"+(y-64)+"px)";
+  el.style.setProperty("--ptr-top",ptrBase()+"px");
+  el.style.setProperty("--ptr-y",Math.round(y*.35)+"px");   // acompanha o dedo sem descer a tela toda
   // mesmo nome da ação nas três portas (v0.67.0): botão da folha, botão da nuvem e este gesto
   if(!ptrOcupado) ptrPinta(y>=PTR_TRIGGER?"Solte para atualizar o repertório":"Puxe para atualizar o repertório", y>=PTR_TRIGGER?"solta":"");
 }
