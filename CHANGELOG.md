@@ -8,6 +8,30 @@ mudança grande/incompatível. A versão atual aparece dentro do app, ao lado do
 
 ---
 
+## v0.67.0 — Uma ação, um nome — e o app passa a dizer o que a equipe ainda não tem
+**Ajuste + recurso (pedido do dono).** Havia três portas para a mesma coisa, cada uma com um nome:
+*"Atualizar do repertório"* na folha, *"Atualizar do link"* na nuvem e *"Puxe para atualizar"* no
+gesto. Agora as três chamam a ação pelo mesmo nome: **Atualizar repertório**.
+
+**E o mais importante: mesclar é mão única.** As cifras que você criou — e as que editou depois da
+última publicação — ficavam paradas no seu aparelho e a equipe nunca recebia. Ninguém era avisado
+disso. Agora, **ao terminar um sincronismo que você pediu**, o app conta o que ficou para trás:
+- *"1 cifra sua não está na nuvem: Minha nova."* · *"2 cifras você editou depois da última
+  publicação: Santo · Aleluia."* · e o mesmo para escalas.
+- **Com token (líder):** o botão é **"Publicar para a equipe"** — cai na publicação de sempre, com o
+  diff e a confirmação.
+- **Sem token (a maior parte da equipe):** **"Enviar ao líder"** — monta um envelope **só com o que
+  falta ou mudou** (não o repertório inteiro) e manda por link ou arquivo. O líder importa e publica.
+- **"Agora não"** fecha sem mexer em nada. O botão não é vermelho: enviar não destrói nada.
+- **Só no sincronismo pedido** (botão ou gesto). O automático de abertura **nunca** abre o aviso —
+  domingo de manhã não é hora de folha na tela.
+- **Silêncio quando está tudo em ordem:** sem divergência, nenhum aviso.
+- **521 verificações** (11 novas): o nome igual nas três portas (e o puxador cabendo na tela), o
+  aviso com os nomes certos separando *novo* de *editado*, as duas saídas conforme o token, o
+  envelope levando só o que falta, e as duas garantias de silêncio.
+
+---
+
 ## v0.66.0 — "Substituir tudo pelo da nuvem" (quando os aparelhos da equipe divergem)
 **Recurso (reporte de campo).** Dois aparelhos na mesma versão mostrando **67 e 70 cifras**. Mesclar
 não resolve divergência — mescla soma. Faltava o botão que **zera a dúvida**: o aparelho passa a ser

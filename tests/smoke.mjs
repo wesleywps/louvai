@@ -2469,6 +2469,14 @@ await pageDel.addInitScript(() => {
     { id: "ed1", title: "Culto Domingo", date: "2026-07-12", items: [{ kind: "song", songId: "d1" }], updatedAt: 1 }]));
 });
 await pageDel.goto(APP_URL); await pageDel.waitForTimeout(400);
+// v0.67.0: todo sincronismo PEDIDO pode terminar com o aviso de divergência — os testes que só
+// querem o efeito da mesclagem fecham o aviso antes de seguir
+const fecharAvisoDiv = async () => {
+  if (await pageDel.evaluate(() => document.getElementById("confirmdlg").classList.contains("show"))) {
+    await pageDel.locator("#confirm-cancel").click(); await pageDel.waitForTimeout(300);
+  }
+};
+
 
 const listaSelDel = "#songlist .swipewrap";
 // deslocamento REAL do card dentro do wrapper (não o estado lógico): é o que o usuário vê
@@ -2666,8 +2674,9 @@ ok(marcou.sumiu && marcou.lapide && marcou.lapide.k === "s" && marcou.lapide.at 
 // o caminho REAL de sincronizar (v0.64.0: o 1º item da folha já baixa), com a nuvem ainda
 // trazendo a cifra excluída
 await pageDel.locator("#backupBtn").click(); await pageDel.waitForTimeout(300);
-await pageDel.locator("#sheet-body .sheetitem", { hasText: "Atualizar do repertório" }).click();
+await pageDel.locator("#sheet-body .sheetitem", { hasText: "Atualizar repertório" }).click();
 await pageDel.waitForTimeout(700);
+await fecharAvisoDiv();
 ok(await pageDel.evaluate(() => !songs.some(s => s.id === "d2")),
   "Sincronizar NÃO ressuscita a cifra excluída (o furo que tornaria a exclusão mentirosa)");
 await pageDel.waitForTimeout(200);
@@ -2988,7 +2997,7 @@ const folha = await pageDel.evaluate(() => ({
   titulo: document.getElementById("sheet-title").textContent,
   itens: [...document.querySelectorAll("#sheet-body .sheetitem")].map(e => e.textContent.trim()),
 }));
-ok(/atualizar/i.test(folha.itens[0] || "") && /nuvem/i.test(folha.itens[1] || ""),
+ok(/^Atualizar repertório$/.test((folha.itens[0] || "").trim()) && /nuvem/i.test(folha.itens[1] || ""),
   `A folha começa pelo dia a dia: "${folha.itens[0]}" (configurar a nuvem vem depois)`);
 ok(folha.itens.length === 5 && /arquivo/i.test(folha.itens[4] || ""),
   "Importar/restaurar de arquivo é o último item (uso raro, mas alcançável e com rótulo em texto)");
@@ -3043,6 +3052,7 @@ ok(longo.fim.pulls === 1, "Soltar dispara a busca no repertório da nuvem");
 ok(longo.fim.titulos.includes("Cifra que o lider publicou"),
   "A cifra publicada pelo líder chega na lista pelo gesto (sem abrir menu nenhum)");
 ok(!longo.fim.visivel, "O puxador se recolhe quando termina");
+await fecharAvisoDiv();
 
 // na cifra o gesto NÃO existe: ali puxar é rolagem
 await pageDel.locator("#songlist .songcard").first().click(); await pageDel.waitForTimeout(400);
@@ -3154,6 +3164,95 @@ await pageDel.locator("#toast .toastact").click(); await pageDel.waitForTimeout(
 ok(await pageDel.evaluate(() => songs.length === 3 && escalas.length === 1 && deleted.length === 0 &&
      songs.some(s => s.id === "extra-1")),
   "DESFAZER devolve o repertório inteiro como estava (cifras, escalas e marcas)");
+
+// ===== v0.67.0 — um nome só para a ação, e o aviso do que a equipe ainda não tem =====
+await pageDel.evaluate(() => {
+  songs.length = 0; escalas.length = 0; deleted.length = 0;
+  songs.push({ id: "s-nuvem", title: "Da equipe", key: "C", capo: 0, tags: [], updatedAt: 5, body: "C" });
+  songs.push({ id: "s-minha", title: "Minha nova", key: "G", capo: 0, tags: [], updatedAt: 9, body: "G" });
+  songs.push({ id: "s-editada", title: "Editei aqui", key: "D", capo: 0, tags: [], updatedAt: 20, body: "D novo" });
+  saveSongs(); saveEscalas(); saveDeleted();
+  settings.repoUrl = "https://louvai-teste.example/louvai.json";
+  settings.ghToken = ""; saveSettings();
+  window.__snap2 = { type: "louvai-full", songs: [
+    { id: "s-nuvem", title: "Da equipe", key: "C", capo: 0, tags: [], updatedAt: 5, body: "C" },
+    { id: "s-editada", title: "Editei aqui", key: "D", capo: 0, tags: [], updatedAt: 10, body: "D velho" }], escalas: [] };
+  window.fetch = async () => ({ ok: true, status: 200, text: async () => JSON.stringify(window.__snap2) });
+  show("lib"); switchTab("songs"); renderLibrary();
+});
+await pageDel.waitForTimeout(300);
+// (a) o mesmo nome nas três portas
+await pageDel.locator("#backupBtn").click(); await pageDel.waitForTimeout(350);
+const nomeFolha = await pageDel.evaluate(() => document.querySelector("#sheet-body .sheetitem").textContent.trim());
+await pageDel.locator("#sheet-body .sheetitem", { hasText: "Nuvem" }).click(); await pageDel.waitForTimeout(400);
+const nomeBotao = await pageDel.evaluate(() => document.getElementById("repo-pull").textContent.trim());
+await pageDel.evaluate(() => closeS("#repobg", "#reposheet")); await pageDel.waitForTimeout(300);
+ok(nomeFolha === "Atualizar repertório" && nomeBotao === "Atualizar repertório",
+  `As portas chamam a ação pelo mesmo nome ("${nomeFolha}" / "${nomeBotao}")`);
+const puxador = await pageDel.evaluate(() => { ptrMove(20); const a = document.querySelector("#ptr .ptr-tx").textContent;
+  ptrMove(100); const b = document.querySelector("#ptr .ptr-tx").textContent;
+  const larg = Math.round(document.getElementById("ptr").getBoundingClientRect().width);
+  ptrMove(0); return { a, b, larg }; });
+ok(/repertório/.test(puxador.a) && /repertório/.test(puxador.b),
+  `O gesto também nomeia a ação ("${puxador.a}" → "${puxador.b}")`);
+ok(puxador.larg <= 412 - 24, `O puxador cabe na tela do celular (${puxador.larg}px)`);
+
+// (b) sincronismo PEDIDO: avisa o que a equipe ainda não tem, com os nomes
+await pageDel.locator("#backupBtn").click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#sheet-body .sheetitem", { hasText: "Atualizar repertório" }).click();
+await pageDel.waitForTimeout(800);
+const divAviso = await pageDel.evaluate(() => ({
+  aberto: document.getElementById("confirmdlg").classList.contains("show"),
+  titulo: document.getElementById("confirm-title").textContent,
+  sub: document.getElementById("confirm-sub").textContent,
+  ok: document.getElementById("confirm-ok").textContent,
+  vermelho: document.getElementById("confirm-ok").classList.contains("danger"),
+}));
+ok(divAviso.aberto && /A equipe ainda não tem isto/.test(divAviso.titulo),
+  "Depois de atualizar, o app diz o que a equipe ainda não tem");
+ok(/1 cifra sua não está na nuvem: Minha nova/.test(divAviso.sub) &&
+   /1 cifra você editou depois da última publicação: Editei aqui/.test(divAviso.sub),
+  `O aviso separa o que é novo do que foi editado: "${divAviso.sub}"`);
+ok(divAviso.ok === "Enviar ao líder" && !divAviso.vermelho,
+  "Sem token, a saída é mandar ao líder — e o botão não é vermelho (não é ação destrutiva)");
+
+// (c) "Enviar ao líder" leva só o que falta
+const envio = await pageDel.evaluate(() => {
+  window.__env = null;
+  const real = shareLink; shareLink = (env) => { window.__env = env; };
+  document.getElementById("confirm-ok").click();
+  shareLink = real;
+  return { tipo: window.__env && window.__env.type, ids: (window.__env && window.__env.songs || []).map(s => s.id).sort() };
+});
+ok(envio.tipo === "louvai-full" && envio.ids.join(",") === "s-editada,s-minha",
+  "O envio ao líder leva só o que falta ou mudou (não o repertório inteiro)");
+
+// (d) com token, a saída é publicar direto
+await pageDel.evaluate(() => { settings.ghToken = "github_pat_teste"; saveSettings(); });
+await pageDel.locator("#backupBtn").click(); await pageDel.waitForTimeout(300);
+await pageDel.locator("#sheet-body .sheetitem", { hasText: "Atualizar repertório" }).click();
+await pageDel.waitForTimeout(800);
+ok(await pageDel.evaluate(() => document.getElementById("confirm-ok").textContent === "Publicar para a equipe"),
+  "Com token (líder), a saída oferecida é publicar para a equipe");
+await pageDel.locator("#confirm-cancel").click(); await pageDel.waitForTimeout(300);
+ok(await pageDel.evaluate(() => songs.length === 3),
+  "'Agora não' fecha o aviso sem mexer em nada");
+await pageDel.evaluate(() => { settings.ghToken = ""; saveSettings(); });
+
+// (e) sem divergência, nenhum aviso; e o automático NUNCA avisa
+const semAviso = await pageDel.evaluate(async () => {
+  window.__snap2 = { type: "louvai-full", songs: JSON.parse(JSON.stringify(songs)), escalas: [] };
+  await pullRepo();                                   // manual, mas agora tudo está na nuvem
+  const depoisManual = document.getElementById("confirmdlg").classList.contains("show");
+  songs.push({ id: "nova-local", title: "Criada agora", key: "A", capo: 0, tags: [], updatedAt: 30, body: "A" });
+  saveSongs();
+  settings.autoPull = true; saveSettings();
+  await maybeAutoPull();                              // automático COM divergência
+  return { depoisManual, depoisAuto: document.getElementById("confirmdlg").classList.contains("show") };
+});
+ok(!semAviso.depoisManual, "Sem divergência, nenhum aviso aparece (silêncio quando está tudo em ordem)");
+ok(!semAviso.depoisAuto, "O sincronismo automático NUNCA abre o aviso (não atrapalha ao abrir o app)");
+await pageDel.evaluate(() => { settings.autoPull = false; saveSettings(); });
 
 ok(delErrors.length === 0, "Excluir: nenhum erro de JS no fluxo" + (delErrors.length ? ": " + delErrors.join(" | ") : ""));
 await ctxDel.close();

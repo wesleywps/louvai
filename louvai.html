@@ -605,6 +605,7 @@ body.light .keyhint{color:#b45309}
   transition:transform .18s cubic-bezier(.2,.9,.3,1),opacity .18s}
 #confirmdlg.show{visibility:visible;opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
 #confirmdlg .ex-ic{color:var(--danger)}
+#confirmdlg.neutro .ex-ic{color:var(--accent)}
 #confirmdlg .ex-sub div+div{margin-top:7px}
 #confirmdlg .btn+.btn{margin-top:9px}
 .btn.danger{background:var(--danger);color:#fff;border-color:transparent}
@@ -864,14 +865,14 @@ body.light .keyhint{color:#b45309}
   <div class="repo-card">
     <div class="repo-h">Baixar do link (equipe)</div>
     <div class="hint" style="margin:0 0 8px">
-      Já vem com o endereço deste app — é só tocar <b>Atualizar</b>, ou <b>puxar a lista para
-      baixo</b>. (Pra puxar de outro
+      Já vem com o endereço deste app — é só tocar <b>Atualizar repertório</b>, ou <b>puxar a
+      lista para baixo</b>. (Pra puxar de outro
       repositório, cole o link aqui.) Baixa as cifras e escalas e mescla no aparelho —
       mão única: você baixa, não escreve de volta.
     </div>
     <input id="repo-url" class="search" inputmode="url" placeholder="https://…/louvai.json" style="width:100%;margin-bottom:8px">
     <div id="repo-status" class="sheetnote" style="margin:0 0 10px"></div>
-    <button class="btn primary" id="repo-pull" style="width:100%">Atualizar do link</button>
+    <button class="btn primary" id="repo-pull" style="width:100%">Atualizar repertório</button>
     <button class="btn" id="repo-mirror" style="width:100%;margin-top:8px">Substituir tudo pelo da nuvem…</button>
     <label class="repo-auto"><input type="checkbox" id="auto-pull"> Sincronizar ao abrir o app</label>
   </div>
@@ -970,7 +971,7 @@ body.light .keyhint{color:#b45309}
    • Escalas/Setlists  (recência, lista, detalhe, editor, seletor, Apresentação)
    • Sheet & toast · Tema · Busca · Boot
    ========================================================================= */
-const APP_VERSION = "0.66.0";  // ← versão do app (ver CHANGELOG.md)
+const APP_VERSION = "0.67.0";  // ← versão do app (ver CHANGELOG.md)
 
 /* ---------- Música: notas e transposição ---------- */
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -2103,12 +2104,13 @@ function ptrMove(y){
   ptrY=y; const el=$("#ptr"); if(!el) return;
   el.classList.toggle("on",y>0);
   el.style.transform="translate(-50%,"+(y-64)+"px)";
-  if(!ptrOcupado) ptrPinta(y>=PTR_TRIGGER?"Solte para atualizar":"Puxe para atualizar", y>=PTR_TRIGGER?"solta":"");
+  // mesmo nome da ação nas três portas (v0.67.0): botão da folha, botão da nuvem e este gesto
+  if(!ptrOcupado) ptrPinta(y>=PTR_TRIGGER?"Solte para atualizar o repertório":"Puxe para atualizar o repertório", y>=PTR_TRIGGER?"solta":"");
 }
 function ptrSolta(){ ptrAtivo=false; ptrAssumido=false; ptrMove(0); }
 async function ptrDispara(){
   ptrOcupado=true; ptrAssumido=false; ptrAtivo=false;
-  ptrMove(PTR_TRIGGER); ptrPinta("Atualizando…","spin");
+  ptrMove(PTR_TRIGGER); ptrPinta("Atualizando repertório…","spin");
   try{ await pullRepo(); } finally { ptrOcupado=false; ptrMove(0); }
 }
 function ptrPodeComecar(e){
@@ -2987,7 +2989,7 @@ $("#backupBtn").onclick=()=>{
   // O primeiro item BAIXA na hora (v0.64.0): puxar era 3 toques e passava pela folha de
   // configuração da nuvem (campo de URL, token…) — coisa de configurar, não de domingo de manhã.
   openSheet("Repertório",[
-    {ic:icon("download"),label:"Atualizar do repertório",fn:()=>{ closeSheet(); pullRepo(); }},
+    {ic:icon("download"),label:"Atualizar repertório",fn:()=>{ closeSheet(); pullRepo(); }},
     {ic:icon("cloud"),label:"Nuvem: configurar / publicar…",fn:()=>{closeSheet();openRepoSheet();}},
     {ic:icon("file-down"),label:"Exportar TODO o repertório (.json)",fn:()=>{ sendFile(); recordBackup(); closeSheet(); }},
     {ic:icon("link"),label:"Enviar link do repertório",fn:()=>{
@@ -3056,7 +3058,9 @@ async function pullRepo(opts){
   if(data.app) settings.repoCloudApp=String(data.app);        // versão do snapshot que veio da nuvem
   settings.repoCloudAt=data.publishedAt||null;                // quando foi publicado (se o snapshot tiver o carimbo)
   saveSettings();
-  importJSON(txt, {silent, sync:true});   // sync: respeita as lápides (não ressuscita o excluído). Reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
+  // depois de mesclar, o pull PEDIDO pelo usuário conta o que a equipe ainda não tem (v0.67.0)
+  // depois de mesclar, o pull PEDIDO pelo usuário conta o que a equipe ainda não tem (v0.67.0)
+  importJSON(txt, {silent, sync:true, depois: silent?null:()=>avisarDivergencia(data)});   // reusa toda a mesclagem (dedup por id/updatedAt + aviso de duplicado)
 }
 /* "Substituir tudo pelo da nuvem" (v0.66.0) — aparelhos da mesma equipe divergindo (um com 67
    cifras, outro com 70) precisam de um botão que ZERE a dúvida: o aparelho passa a ser uma cópia
@@ -3103,6 +3107,44 @@ async function espelharNuvem(){
     }});
 }
 $("#repo-mirror").onclick=()=>{ closeRepoSheet(); espelharNuvem(); };
+
+/* Depois de atualizar, o que ESTE aparelho tem e a nuvem não (v0.67.0). Mesclar é mão única: as
+   minhas cifras novas — e as que editei depois da última publicação — ficam paradas aqui e a equipe
+   nunca recebe. O app passa a dizer isso e a oferecer a saída: publicar (quem tem token) ou mandar
+   ao líder (todo mundo). Só no sincronismo PEDIDO: no automático de abertura isso seria um aviso
+   toda vez que o app abre — e domingo de manhã não é hora de folha na tela. */
+function divergenciaLocal(nuvem){
+  const nsongs=new Map((nuvem&&nuvem.songs||[]).filter(Boolean).map(s=>[s.id,s]));
+  const nesc=new Set((nuvem&&nuvem.escalas||[]).filter(Boolean).map(e=>e.id));
+  const faltando=songs.filter(s=>!nsongs.has(s.id));
+  const editadas=songs.filter(s=>{ const n=nsongs.get(s.id); return n && (s.updatedAt||0)>(n.updatedAt||0); });
+  const escalasFora=escalas.filter(e=>!nesc.has(e.id));
+  return {faltando, editadas, escalasFora, total:faltando.length+editadas.length+escalasFora.length};
+}
+function avisarDivergencia(nuvem){
+  const d=divergenciaLocal(nuvem);
+  if(!d.total) return;
+  const nomes=arr=>arr.slice(0,3).map(x=>x.title||"(sem título)").join(" · ")+(arr.length>3?"…":"");
+  const linhas=[];
+  if(d.faltando.length) linhas.push(pl(d.faltando.length,"cifra sua não está","cifras suas não estão")+" na nuvem: "+nomes(d.faltando)+".");
+  if(d.editadas.length) linhas.push(pl(d.editadas.length,"cifra você editou","cifras você editou")+" depois da última publicação: "+nomes(d.editadas)+".");
+  if(d.escalasFora.length) linhas.push(pl(d.escalasFora.length,"escala daqui não está","escalas daqui não estão")+" na nuvem: "+nomes(d.escalasFora)+".");
+  const temToken=!!(settings.ghToken||"").trim();
+  confirmDialog({
+    icon:"cloud-upload", danger:false,
+    title:"A equipe ainda não tem isto",
+    lines:linhas,
+    okLabel: temToken ? "Publicar para a equipe" : "Enviar ao líder",
+    onOk: temToken ? ()=>publishRepo() : ()=>enviarAoLider(d),
+  });
+}
+// membro sem token: manda só o que falta (o líder importa e publica)
+function enviarAoLider(d){
+  const env={type:"louvai-full",version:1,app:APP_VERSION,
+    songs:d.faltando.concat(d.editadas), escalas:d.escalasFora};
+  const arquivo=()=>shareFile("para-o-lider.louvai.json",JSON.stringify(env),"Cifras para o líder");
+  shareLink(env,"Cifras para o líder",arquivo);
+}
 
 // auto-sync (v0.37.0): pull silencioso se habilitado e há link; um link em importação tem prioridade.
 // Disparado no boot (sem throttle) e ao voltar pro app (v0.38.0, com throttle p/ não martelar a rede).
@@ -3416,6 +3458,7 @@ function mergeEscala(inc, remap, viaSync){
 }
 function doImport(data,tp,incoming,policy,opts){
   const silent=!!(opts&&opts.silent);
+  const fim=()=>{ if(opts&&typeof opts.depois==="function") opts.depois(); };
   const viaSync=!!(opts&&opts.sync);   // pull do repertório: respeita lápide. Arquivo/link: gesto explícito, vence.
   // Escala avulsa (traz as cifras junto)
   if(tp==="louvai-escala"&&data.escala){
@@ -3426,7 +3469,7 @@ function doImport(data,tp,incoming,policy,opts){
     renderLibrary();            // cifras agregadas pela escala já aparecem na aba Cifras
     switchTab("escalas"); renderEscalas();
     toast("Escala importada"+(added?` (+${added} cifra(s))`:""));
-    return;
+    fim(); return;
   }
   // Snapshot da nuvem: repertório + escalas juntos
   if(tp==="louvai-full"){
@@ -3448,12 +3491,13 @@ function doImport(data,tp,incoming,policy,opts){
     if(eRem)    parts.push("−"+pl(eRem,"escala","escalas"));
     if(parts.length) toast("Sincronizado: "+parts.join(", "),"ok");   // manual e auto-sync: anuncia a novidade
     else if(!silent) toast("Já está tudo sincronizado","ok");          // só o pull manual fala quando não há nada novo (auto-sync cala)
-    return;
+    fim(); return;
   }
   const {added,updated,replaced,remapLocal}=mergeSongs(incoming,policy,viaSync);
   remapEscalasLocais(remapLocal); saveEscalas();
   saveSongs(); renderLibrary(); renderEscalas();
   toast(`Importado: ${added} nova(s)`+(updated?`, ${updated} atualizada(s)`:"")+(replaced?`, ${replaced} substituída(s)`:""));
+  fim();
 }
 
 /* ---------- Receber por LINK (#imp=...) ---------- */
@@ -3964,7 +4008,11 @@ function confirmDialog(o){
   $("#confirm-title").textContent=o.title||"Tem certeza?";
   const sub=$("#confirm-sub"); sub.innerHTML="";
   (o.lines||[]).filter(Boolean).forEach(t=>{ const d=document.createElement("div"); d.textContent=t; sub.appendChild(d); });
-  $("#confirm-ok").textContent=o.okLabel||"Excluir";
+  const btOk=$("#confirm-ok");
+  btOk.textContent=o.okLabel||"Excluir";
+  btOk.classList.toggle("danger",o.danger!==false);      // publicar/enviar não é destrutivo: acento, não vermelho
+  btOk.classList.toggle("primary",o.danger===false);
+  $("#confirmdlg").classList.toggle("neutro",o.danger===false);
   confirmFn=o.onOk||null;
   openS("#confirmbg","#confirmdlg","#confirm-cancel");
 }

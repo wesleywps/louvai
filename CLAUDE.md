@@ -298,6 +298,14 @@ controle + MEDIÇÃO do render, não por `settings`** · **`npm run deploy`** (a
   com fura-cache só em http(s), erros tratados) → `importJSON`, que agora trata `louvai-full` no
   pré-check e no `doImport` (mescla cifras via `mergeSongs` + cada escala via `mergeEscala`,
   extraído). Folha "Repertório na nuvem" (`openRepoSheet`, `#reposheet`).
+- **Avisar o que a equipe não tem (v0.67.0):** `divergenciaLocal(nuvem)` (cifras minhas ausentes na
+  nuvem · editadas depois dela · escalas fora) + `avisarDivergencia` (via `confirmDialog` com
+  `danger:false` = botão de acento) e `enviarAoLider(d)` (envelope `louvai-full` **só com o que
+  falta/mudou**). Chamado pelo `opts.depois` que o `doImport` dispara no fim — precisa ser callback
+  porque a folha de conflito torna o import assíncrono. **Só no pull PEDIDO** (`silent` não passa o
+  callback): o automático de abertura nunca abre folha. Com `settings.ghToken` a saída é
+  `publishRepo()`; sem token, o envio ao líder. **Uma ação, um nome** nas três portas: "Atualizar
+  repertório" (folha, `#repo-pull` e o texto do puxador).
 - **Espelhar a nuvem (v0.66.0):** `espelharNuvem()` + botão `#repo-mirror` (cartão *Baixar* do
   `#reposheet`). Baixa o snapshot, **mostra a diferença no `confirmDialog`** (quantas cifras ficam ×
   quantas há hoje + os NOMES do que só existe aqui — é o diagnóstico de aparelhos divergentes) e só
